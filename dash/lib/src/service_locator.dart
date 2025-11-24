@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import 'database/database_connector.dart';
 import 'panel/panel_config.dart';
+import 'resources/resource_loader.dart';
 
 /// Global service locator instance.
 final inject = GetIt.instance;
@@ -11,9 +12,10 @@ final inject = GetIt.instance;
 /// This registers core services like:
 /// - PanelConfig: The panel configuration
 /// - DatabaseConnector: The database connection
+/// - ResourceLoader: Static asset loader
 ///
 /// Call this during Panel.boot() before starting the server.
-void setupServiceLocator({required PanelConfig config, required DatabaseConnector connector}) {
+Future<void> setupServiceLocator({required PanelConfig config, required DatabaseConnector connector}) async {
   // Register panel config as singleton
   if (!inject.isRegistered<PanelConfig>()) {
     inject.registerSingleton<PanelConfig>(config);
@@ -22,6 +24,12 @@ void setupServiceLocator({required PanelConfig config, required DatabaseConnecto
   // Register database connector as singleton
   if (!inject.isRegistered<DatabaseConnector>()) {
     inject.registerSingleton<DatabaseConnector>(connector);
+  }
+
+  // Initialize and register resource loader
+  if (!inject.isRegistered<ResourceLoader>()) {
+    final resourceLoader = await ResourceLoader.initialize();
+    inject.registerSingleton<ResourceLoader>(resourceLoader);
   }
 }
 

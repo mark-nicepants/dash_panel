@@ -7,6 +7,7 @@ import 'package:shelf/shelf_io.dart' as shelf_io;
 
 import '../auth/auth_middleware.dart';
 import '../auth/auth_service.dart';
+import '../resources/resource_loader.dart';
 import 'panel_config.dart';
 import 'panel_router.dart';
 import 'request_handler.dart';
@@ -18,12 +19,13 @@ import 'request_handler.dart';
 class PanelServer {
   final PanelConfig _config;
   final AuthService _authService;
+  final ResourceLoader _resourceLoader;
   late final PanelRouter _router;
   late final RequestHandler _requestHandler;
   HttpServer? _server;
 
-  PanelServer(this._config, this._authService) {
-    _router = PanelRouter(_config);
+  PanelServer(this._config, this._authService, this._resourceLoader) {
+    _router = PanelRouter(_config, _resourceLoader);
     _requestHandler = RequestHandler(_config, _authService);
   }
 

@@ -5,6 +5,7 @@ import '../database/database_config.dart';
 import '../database/query_builder.dart';
 import '../model/model.dart';
 import '../resource.dart';
+import '../resources/resource_loader.dart';
 import '../service_locator.dart';
 import 'panel_config.dart';
 import 'panel_server.dart';
@@ -37,12 +38,11 @@ import 'panel_server.dart';
 class Panel {
   late final PanelConfig _config;
   late final AuthService _authService;
-  late final PanelServer _server;
+  PanelServer? _server;
 
   Panel() {
     _config = PanelConfig();
     _authService = AuthService();
-    _server = PanelServer(_config, _authService);
   }
 
   /// The unique identifier for this panel.
@@ -107,7 +107,11 @@ class Panel {
       Model.setConnector(_config.databaseConfig!.connector);
 
       // Setup dependency injection
-      setupServiceLocator(config: _config, connector: _config.databaseConfig!.connector);
+      await setupServiceLocator(config: _config, connector: _config.databaseConfig!.connector);
+
+      // Create server after DI is set up (PanelRouter needs ResourceLoader from DI)
+      final resourceLoader = inject<ResourceLoader>();
+      _server = PanelServer(_config, _authService, resourceLoader);
     }
 
     return this;
@@ -118,8 +122,8 @@ class Panel {
   /// This closes the database connection and stops the HTTP server.
   Future<void> shutdown() async {
     // Stop server
-    if (_server.isRunning) {
-      await _server.stop(force: true);
+    if (_server?.isRunning ?? false) {
+      await _server!.stop(force: true);
     }
 
     // Close database
@@ -133,6 +137,12 @@ class Panel {
   /// [host] - The host to bind to (default: 'localhost')
   /// [port] - The port to listen on (default: 8080)
   Future<void> serve({String host = 'localhost', int port = 8080}) async {
-    await _server.start(host: host, port: port);
+    await boot();
+
+    if (_server == null) {
+      throw StateError('Server not initialized. Database configuration is required.');
+    }
+
+    await _server!.start(host: host, port: port);
   }
 }

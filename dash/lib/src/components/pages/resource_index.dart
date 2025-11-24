@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:jaspr/jaspr.dart';
 
 import '../../model/model.dart';
@@ -10,6 +8,7 @@ import '../../table/columns/icon_column.dart';
 import '../../table/columns/text_column.dart';
 import '../../table/table.dart';
 import '../partials/breadcrumbs.dart';
+import '../partials/column_toggle.dart';
 import '../partials/page_header.dart';
 
 /// Resource index page with HTMX-powered interactivity.
@@ -70,78 +69,10 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
     return div(classes: 'resource-table-card', [
       div(classes: 'table-header-actions', [
         if (tableConfig.isSearchable()) _buildSearchBar(),
-        if (toggleableColumns.isNotEmpty) _buildColumnToggle(toggleableColumns),
+        if (toggleableColumns.isNotEmpty) ColumnToggle(columns: toggleableColumns, resourceSlug: resource.slug),
       ]),
       _buildTable(),
     ]);
-  }
-
-  Component _buildColumnToggle(List<TableColumn> columns) {
-    final defaults = {for (final column in columns) column.getName(): !column.isToggledHiddenByDefault()};
-    final encodedDefaults = jsonEncode(defaults);
-    return div(
-      classes: 'column-toggle',
-      attributes: {'x-data': "columnVisibility('${resource.slug}', $encodedDefaults)", 'x-cloak': ''},
-      [
-        button(
-          type: ButtonType.button,
-          classes: 'btn btn-secondary column-toggle-button',
-          attributes: {'x-on:click': 'open = !open', 'x-bind:aria-expanded': 'open', 'aria-haspopup': 'true'},
-          [
-            span(classes: 'btn-icon', [text('☰')]),
-            span([text('Columns')]),
-          ],
-        ),
-        div(
-          classes: 'column-toggle-menu',
-          attributes: {'x-show': 'open', 'x-transition.opacity': '', '@click.outside': 'open = false'},
-          [
-            div(classes: 'column-toggle-header', [text('Toggle columns')]),
-            ul(classes: 'column-toggle-options', [
-              for (final column in columns)
-                li([
-                  button(
-                    type: ButtonType.button,
-                    classes: 'column-toggle-option',
-                    attributes: {
-                      'x-on:click': "toggle('${column.getName()}')",
-                      'x-bind:class': "{'active': isVisible('${column.getName()}')}",
-                    },
-                    [
-                      span(
-                        classes: 'column-toggle-check',
-                        attributes: {'x-show': "isVisible('${column.getName()}')"},
-                        [text('✓')],
-                      ),
-                      span(classes: 'column-toggle-label', [text(column.getLabel())]),
-                    ],
-                  ),
-                ]),
-            ]),
-            div(classes: 'column-toggle-footer', [
-              button(
-                type: ButtonType.button,
-                classes: 'btn btn-secondary',
-                attributes: {'x-on:click': 'showAll()'},
-                [text('Show all')],
-              ),
-              button(
-                type: ButtonType.button,
-                classes: 'btn btn-secondary',
-                attributes: {'x-on:click': 'hideAll()'},
-                [text('Hide all')],
-              ),
-              button(
-                type: ButtonType.button,
-                classes: 'btn btn-secondary',
-                attributes: {'x-on:click': 'reset()'},
-                [text('Reset')],
-              ),
-            ]),
-          ],
-        ),
-      ],
-    );
   }
 
   Component _buildSearchBar() {

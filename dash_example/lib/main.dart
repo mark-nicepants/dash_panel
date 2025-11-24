@@ -14,9 +14,6 @@ Future<void> main({String dbDir = 'database'}) async {
     ..database(DatabaseConfig.using(SqliteConnector('$dbDir/app.db')))
     ..registerResources([UserResource(), PostResource()]);
 
-  // Boot the panel (connects to database)
-  await panel.boot();
-
   // Start the server
   await panel.serve(host: 'localhost', port: 8080);
 

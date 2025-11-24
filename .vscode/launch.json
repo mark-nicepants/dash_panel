@@ -2,19 +2,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Dash Server",
+      "name": "Dash (Production)",
       "type": "dart",
       "request": "launch",
       "program": "dash_example/bin/dash_example.dart",
       "args": ["dash_example/database"],
       "cwd": "${workspaceFolder}",
       "console": "terminal",
+      "env": {
+        "DASH_ENV": "production"
+      },
       "vmAdditionalArgs": [
         "--enable-vm-service"
       ]
     },
     {
-      "name": "Dash Server (Hot Reload)",
+      "name": "Dash (Hot Reload)",
       "type": "dart",
       "request": "launch",
       "program": "dash_example/bin/dash_example.dart",
