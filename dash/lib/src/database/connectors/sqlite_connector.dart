@@ -1,0 +1,198 @@
+import 'dart:io';
+
+import 'package:sqlite3/sqlite3.dart';
+
+import '../database_connector.dart';
+
+/// SQLite database connector implementation.
+///
+/// Provides SQLite database connectivity and operations using the sqlite3 package.
+/// Supports both file-based and in-memory databases.
+///
+/// Example:
+/// ```dart
+/// final connector = SqliteConnector('app.db');
+/// await connector.connect();
+/// final results = await connector.query('SELECT * FROM users');
+/// ```
+class SqliteConnector implements DatabaseConnector {
+  final String path;
+  Database? _database;
+  bool _inTransaction = false;
+
+  /// Creates a new SQLite connector.
+  ///
+  /// [path] can be a file path or ':memory:' for an in-memory database.
+  SqliteConnector(this.path);
+
+  @override
+  String get type => 'sqlite';
+
+  @override
+  bool get isConnected => _database != null;
+
+  @override
+  Future<void> connect() async {
+    if (_database != null) {
+      return; // Already connected
+    }
+
+    // Create directory if it doesn't exist and not in-memory
+    if (path != ':memory:') {
+      final file = File(path);
+      final dir = file.parent;
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+    }
+
+    _database = sqlite3.open(path);
+  }
+
+  @override
+  Future<void> close() async {
+    _database?.close();
+    _database = null;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> query(
+    String sql, [
+    List<dynamic>? parameters,
+  ]) async {
+    _ensureConnected();
+
+    final result = _database!.select(sql, parameters ?? []);
+    return result.map((row) => row).toList();
+  }
+
+  @override
+  Future<int> execute(
+    String sql, [
+    List<dynamic>? parameters,
+  ]) async {
+    _ensureConnected();
+
+    _database!.execute(sql, parameters ?? []);
+    return _database!.lastInsertRowId;
+  }
+
+  @override
+  Future<int> insert(String table, Map<String, dynamic> data) async {
+    _ensureConnected();
+
+    if (data.isEmpty) {
+      throw ArgumentError('Data map cannot be empty');
+    }
+
+    final columns = data.keys.toList();
+    final values = data.values.toList();
+    final placeholders = List.filled(columns.length, '?').join(', ');
+
+    final sql = '''
+      INSERT INTO $table (${columns.join(', ')})
+      VALUES ($placeholders)
+    ''';
+
+    _database!.execute(sql, values);
+    return _database!.lastInsertRowId;
+  }
+
+  @override
+  Future<int> update(
+    String table,
+    Map<String, dynamic> data, {
+    String? where,
+    List<dynamic>? whereArgs,
+  }) async {
+    _ensureConnected();
+
+    if (data.isEmpty) {
+      throw ArgumentError('Data map cannot be empty');
+    }
+
+    final columns = data.keys.toList();
+    final values = data.values.toList();
+    final setClause = columns.map((col) => '$col = ?').join(', ');
+
+    final sql = StringBuffer('UPDATE $table SET $setClause');
+
+    if (where != null && where.isNotEmpty) {
+      sql.write(' WHERE $where');
+      if (whereArgs != null) {
+        values.addAll(whereArgs);
+      }
+    }
+
+    _database!.execute(sql.toString(), values);
+    return _database!.updatedRows;
+  }
+
+  @override
+  Future<int> delete(
+    String table, {
+    String? where,
+    List<dynamic>? whereArgs,
+  }) async {
+    _ensureConnected();
+
+    final sql = StringBuffer('DELETE FROM $table');
+
+    if (where != null && where.isNotEmpty) {
+      sql.write(' WHERE $where');
+    }
+
+    _database!.execute(sql.toString(), whereArgs ?? []);
+    return _database!.updatedRows;
+  }
+
+  @override
+  Future<void> beginTransaction() async {
+    _ensureConnected();
+
+    if (_inTransaction) {
+      throw StateError('Transaction already in progress');
+    }
+
+    _database!.execute('BEGIN TRANSACTION');
+    _inTransaction = true;
+  }
+
+  @override
+  Future<void> commit() async {
+    _ensureConnected();
+
+    if (!_inTransaction) {
+      throw StateError('No transaction in progress');
+    }
+
+    _database!.execute('COMMIT');
+    _inTransaction = false;
+  }
+
+  @override
+  Future<void> rollback() async {
+    _ensureConnected();
+
+    if (!_inTransaction) {
+      throw StateError('No transaction in progress');
+    }
+
+    _database!.execute('ROLLBACK');
+    _inTransaction = false;
+  }
+
+  /// Ensures a database connection exists.
+  void _ensureConnected() {
+    if (_database == null) {
+      throw StateError('Database not connected. Call connect() first.');
+    }
+  }
+
+  /// Executes raw SQL without returning results.
+  /// Useful for DDL statements like CREATE TABLE.
+  Future<void> executeRaw(String sql) async {
+    _ensureConnected();
+    _database!.execute(sql);
+  }
+}
