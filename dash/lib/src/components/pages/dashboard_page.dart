@@ -1,5 +1,8 @@
 import 'package:jaspr/jaspr.dart';
 
+import '../partials/button.dart';
+import '../partials/card.dart';
+
 /// Dashboard home page component.
 class DashboardPage extends StatelessComponent {
   final String? resource;
@@ -10,34 +13,40 @@ class DashboardPage extends StatelessComponent {
   Component build(BuildContext context) {
     final title = resource != null ? resource!.toUpperCase() : 'Dashboard';
 
-    return div(classes: 'dashboard-content', [
+    return div(classes: 'space-y-6', [
       if (resource == null) ...[
         // Dashboard widgets
-        div(classes: 'dashboard-widgets', [
-          div(classes: 'widget-card', [
-            h3([text('Welcome to DASH')]),
-            p([text('Your modern admin panel for Dart applications.')]),
-          ]),
-          div(classes: 'widget-card', [
-            h3([text('Quick Stats')]),
-            ul([
-              li([text('Total Users: 10')]),
-              li([text('Total Posts: 25')]),
-              li([text('Active Sessions: 3')]),
+        div(classes: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6', [
+          Card(
+            child: div([
+              h3(classes: 'text-xl font-semibold text-gray-100 mb-3', [text('Welcome to DASH')]),
+              p(classes: 'text-gray-400', [text('Your modern admin panel for Dart applications.')]),
             ]),
-          ]),
+          ),
+          Card(
+            child: div([
+              h3(classes: 'text-xl font-semibold text-gray-100 mb-3', [text('Quick Stats')]),
+              ul(classes: 'space-y-2 text-gray-300', [
+                li(classes: 'py-2 border-b border-gray-700 last:border-0', [text('Total Users: 10')]),
+                li(classes: 'py-2 border-b border-gray-700 last:border-0', [text('Total Posts: 25')]),
+                li(classes: 'py-2 border-b border-gray-700 last:border-0', [text('Active Sessions: 3')]),
+              ]),
+            ]),
+          ),
         ]),
       ] else ...[
         // Resource list view
-        div(classes: 'resource-content', [
-          div(classes: 'resource-header', [
-            h2([text(title)]),
-            button(classes: 'btn-primary', [text('+ New $resource')]),
+        Card(
+          child: div([
+            div(classes: 'flex justify-between items-center mb-6', [
+              h2(classes: 'text-2xl font-bold text-gray-100', [text(title)]),
+              const Button(label: '+ New', variant: ButtonVariant.primary),
+            ]),
+            div([
+              p(classes: 'text-gray-400', [text('Resource table for $resource will be displayed here.')]),
+            ]),
           ]),
-          div(classes: 'resource-table', [
-            p([text('Resource table for $resource will be displayed here.')]),
-          ]),
-        ]),
+        ),
       ],
     ]);
   }

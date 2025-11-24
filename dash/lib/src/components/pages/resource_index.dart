@@ -8,6 +8,7 @@ import '../../table/columns/icon_column.dart';
 import '../../table/columns/text_column.dart';
 import '../../table/table.dart';
 import '../partials/breadcrumbs.dart';
+import '../partials/button.dart';
 import '../partials/column_toggle.dart';
 import '../partials/page_header.dart';
 
@@ -38,7 +39,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'resource-index-container', [
+    return div(classes: 'flex flex-col gap-6', [
       _buildBreadcrumbs(),
       _buildHeader(),
       _buildTableCard(),
@@ -58,16 +59,14 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   Component _buildHeader() {
     return PageHeader(
       title: resource.label,
-      actions: [
-        button(classes: 'btn btn-primary', [text('New ${resource.singularLabel}')]),
-      ],
+      actions: [Button(label: 'New ${resource.singularLabel}', variant: ButtonVariant.primary)],
     );
   }
 
   Component _buildTableCard() {
     final toggleableColumns = tableConfig.getColumns().where((c) => c.isToggleable()).toList();
-    return div(classes: 'resource-table-card', [
-      div(classes: 'table-header-actions', [
+    return div(classes: 'bg-gray-800 rounded-xl border border-gray-700 overflow-hidden', [
+      div(classes: 'flex items-center justify-end gap-3 px-6 py-4 bg-gray-800 border-b border-gray-700', [
         if (tableConfig.isSearchable()) _buildSearchBar(),
         if (toggleableColumns.isNotEmpty) ColumnToggle(columns: toggleableColumns, resourceSlug: resource.slug),
       ]),
@@ -76,10 +75,11 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   }
 
   Component _buildSearchBar() {
-    return div(classes: 'resource-search', [
+    return div(classes: 'flex-1 max-w-xs', [
       input(
         type: InputType.text,
-        classes: 'search-input',
+        classes:
+            'w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all',
         value: searchQuery ?? '',
         name: 'search',
         attributes: {
@@ -98,13 +98,13 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
     final columns = tableConfig.getColumns().where((c) => !c.isHidden()).toList();
     return div(
       id: 'resource-table-container',
-      classes: 'table-container',
+      classes: 'overflow-x-auto border-t border-gray-700',
       attributes: {'data-table-container': 'true', 'data-resource-slug': resource.slug},
       [
         if (records.isEmpty)
           _buildEmptyState()
         else
-          table(classes: 'resource-table ${tableConfig.isStriped() ? 'table-striped' : ''}', [
+          table(classes: 'w-full border-collapse ${tableConfig.isStriped() ? 'table-striped' : ''}', [
             _buildTableHead(columns),
             _buildTableBody(columns),
           ]),
@@ -113,17 +113,20 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   }
 
   Component _buildTableHead(List<TableColumn> columns) {
-    return thead([
+    return thead(classes: 'bg-gray-800 border-b border-gray-700', [
       tr([
         for (final column in columns)
           th(
-            classes: _buildColumnCellClasses(column, base: 'table-header-cell'),
+            classes: _buildColumnCellClasses(
+              column,
+              base: 'px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap',
+            ),
             attributes: _buildColumnAttributes(column),
             [
               if (column.isSortable())
                 a(
                   href: _buildSortUrl(column.getName()),
-                  classes: 'header-link',
+                  classes: 'block text-gray-400 no-underline',
                   attributes: {
                     'hx-get': _buildSortUrl(column.getName()),
                     'hx-target': '#resource-table-container',
@@ -132,15 +135,15 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
                     'hx-push-url': 'true',
                   },
                   [
-                    div(classes: 'table-header-content', [
-                      span(classes: 'header-label', [text(column.getLabel())]),
+                    div(classes: 'flex items-center gap-2', [
+                      span(classes: 'font-medium', [text(column.getLabel())]),
                       _buildSortIndicator(column),
                     ]),
                   ],
                 )
               else
-                div(classes: 'table-header-content', [
-                  span(classes: 'header-label', [text(column.getLabel())]),
+                div(classes: 'flex items-center gap-2', [
+                  span(classes: 'font-medium', [text(column.getLabel())]),
                 ]),
             ],
           ),
@@ -162,20 +165,24 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   Component _buildSortIndicator(TableColumn column) {
     final isActive = sortColumn == column.getName();
     final direction = isActive ? (sortDirection ?? 'asc') : 'asc';
-    final iconClass = isActive ? (direction == 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-none';
-    return span(classes: 'sort-indicator $iconClass', [text(isActive ? (direction == 'asc' ? '↑' : '↓') : '↕')]);
+    final textColor = isActive ? 'text-gray-200' : 'text-gray-600';
+    return span(classes: 'text-xs $textColor cursor-pointer', [
+      text(isActive ? (direction == 'asc' ? '↑' : '↓') : '↕'),
+    ]);
   }
 
   Component _buildTableBody(List<TableColumn> columns) {
     return tbody([
       for (final record in records)
-        tr(classes: 'table-row', [for (final column in columns) _buildTableCell(column, record)]),
+        tr(classes: 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700 transition-colors', [
+          for (final column in columns) _buildTableCell(column, record),
+        ]),
     ]);
   }
 
   Component _buildTableCell(TableColumn column, T record) {
     return td(
-      classes: _buildColumnCellClasses(column, base: 'table-cell'),
+      classes: _buildColumnCellClasses(column, base: 'px-6 py-4 text-sm text-gray-200'),
       attributes: _buildColumnAttributes(column),
       [_buildCellContent(column, record)],
     );
@@ -196,37 +203,62 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   Component _buildTextColumnContent(TextColumn column, T record, dynamic state) {
     final components = <Component>[];
     if (column.getIcon() != null) {
-      components.add(span(classes: 'column-icon', [text(column.getIcon()!)]));
+      components.add(span(classes: 'inline-flex items-center justify-center w-5 h-5 mr-2', [text(column.getIcon()!)]));
     }
     if (column.isBadge()) {
       final color = column.getColor(record) ?? 'default';
-      components.add(span(classes: 'badge badge-$color', [text(column.formatState(state))]));
+      final badgeClasses = switch (color) {
+        'primary' =>
+          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-300',
+        'success' =>
+          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-900 text-green-300',
+        'danger' =>
+          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-900 text-red-300',
+        'warning' =>
+          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-900 text-yellow-300',
+        'info' =>
+          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-900 text-blue-300',
+        _ =>
+          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-700 text-gray-300',
+      };
+      components.add(span(classes: badgeClasses, [text(column.formatState(state))]));
     } else {
       final formatted = column.formatState(state);
-      components.add(span(classes: 'column-text', [text(formatted)]));
+      components.add(span(classes: 'text-sm text-gray-200', [text(formatted)]));
     }
     if (column.getIconAfter() != null) {
-      components.add(span(classes: 'column-icon', [text(column.getIconAfter()!)]));
+      components.add(
+        span(classes: 'inline-flex items-center justify-center w-5 h-5 ml-2', [text(column.getIconAfter()!)]),
+      );
     }
     final description = column.getDescription(record);
     if (description != null) {
-      components.add(span(classes: 'column-description', [text(description)]));
+      components.add(span(classes: 'text-xs text-gray-400', [text(description)]));
     }
     final url = column.getUrl(record);
     if (url != null) {
       final attrs = column.shouldOpenUrlInNewTab()
           ? {'target': '_blank', 'rel': 'noopener noreferrer'}
           : <String, String>{};
-      return a(href: url, classes: 'column-link', attributes: attrs, components);
+      return a(href: url, classes: 'text-blue-400 hover:underline', attributes: attrs, components);
     }
-    return div(classes: 'column-content', components);
+    return div(classes: 'flex flex-col gap-1', components);
   }
 
   Component _buildIconColumnContent(IconColumn column, T record) {
     final icon = column.getIcon(record);
     final color = column.getColor(record) ?? 'default';
     if (icon == null) return span([]);
-    return span(classes: 'column-icon icon-$color', [text(_getIconCharacter(icon))]);
+    final colorClass = switch (color) {
+      'success' => 'text-green-500',
+      'danger' => 'text-red-500',
+      'warning' => 'text-yellow-500',
+      'info' => 'text-blue-500',
+      _ => 'text-gray-500',
+    };
+    return span(classes: 'inline-flex items-center justify-center w-5 h-5 $colorClass', [
+      text(_getIconCharacter(icon)),
+    ]);
   }
 
   Component _buildBooleanColumnContent(BooleanColumn column, T record) => _buildIconColumnContent(column, record);
@@ -236,12 +268,12 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
     final description =
         tableConfig.getEmptyStateDescription() ??
         'Get started by creating your first ${resource.singularLabel.toLowerCase()}.';
-    return div(classes: 'empty-state', [
-      div(classes: 'empty-state-content', [
-        div(classes: 'empty-state-icon', [text('📭')]),
-        h3(classes: 'empty-state-heading', [text(heading)]),
-        p(classes: 'empty-state-description', [text(description)]),
-        button(classes: 'btn btn-primary', [text('Create ${resource.singularLabel}')]),
+    return div(classes: 'py-16 px-6 text-center', [
+      div(classes: 'max-w-md mx-auto', [
+        div(classes: 'text-5xl mb-4', [text('📭')]),
+        h3(classes: 'text-lg font-semibold text-gray-100 mb-2', [text(heading)]),
+        p(classes: 'text-sm text-gray-400 mb-6', [text(description)]),
+        Button(label: 'Create ${resource.singularLabel}', variant: ButtonVariant.primary),
       ]),
     ]);
   }
@@ -251,13 +283,14 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
     final perPage = tableConfig.getRecordsPerPage();
     final totalPages = (totalRecords / perPage).ceil();
     if (totalPages <= 1) return div([]);
-    return div(classes: 'pagination', [
-      div(classes: 'pagination-info', [text('Page $currentPage of $totalPages ($totalRecords total)')]),
-      div(classes: 'pagination-controls', [
+    return div(classes: 'flex justify-between items-center px-6 py-4 border-t border-gray-700', [
+      div(classes: 'text-sm text-gray-400', [text('Page $currentPage of $totalPages ($totalRecords total)')]),
+      div(classes: 'flex gap-2', [
         if (currentPage > 1)
           a(
             href: _buildPageUrl(currentPage - 1),
-            classes: 'btn btn-secondary',
+            classes:
+                'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
             attributes: {
               'hx-get': _buildPageUrl(currentPage - 1),
               'hx-target': '#resource-table-container',
@@ -268,13 +301,18 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
             [text('← Previous')],
           )
         else
-          span(classes: 'btn btn-secondary disabled', [text('← Previous')]),
+          span(
+            classes:
+                'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 opacity-50 cursor-not-allowed rounded-lg',
+            [text('← Previous')],
+          ),
         for (var i = 1; i <= totalPages; i++)
           if (_shouldShowPage(i, currentPage, totalPages))
             i != currentPage
                 ? a(
                     href: _buildPageUrl(i),
-                    classes: 'btn btn-secondary',
+                    classes:
+                        'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
                     attributes: {
                       'hx-get': _buildPageUrl(i),
                       'hx-target': '#resource-table-container',
@@ -284,13 +322,18 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
                     },
                     [text('$i')],
                   )
-                : span(classes: 'btn btn-secondary active', [text('$i')])
+                : span(
+                    classes:
+                        'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-semibold bg-gray-900 text-gray-100 rounded-lg border border-gray-700',
+                    [text('$i')],
+                  )
           else if (i == currentPage - 2 || i == currentPage + 2)
-            span(classes: 'pagination-ellipsis', [text('...')]),
+            span(classes: 'flex items-center px-2 text-gray-600', [text('...')]),
         if (currentPage < totalPages)
           a(
             href: _buildPageUrl(currentPage + 1),
-            classes: 'btn btn-secondary',
+            classes:
+                'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
             attributes: {
               'hx-get': _buildPageUrl(currentPage + 1),
               'hx-target': '#resource-table-container',
@@ -301,7 +344,11 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
             [text('Next →')],
           )
         else
-          span(classes: 'btn btn-secondary disabled', [text('Next →')]),
+          span(
+            classes:
+                'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 opacity-50 cursor-not-allowed rounded-lg',
+            [text('Next →')],
+          ),
       ]),
     ]);
   }
@@ -325,11 +372,11 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   String _getAlignmentClass(TableColumn column) {
     switch (column.getAlignment()) {
       case ColumnAlignment.start:
-        return 'align-start';
+        return 'text-left';
       case ColumnAlignment.center:
-        return 'align-center';
+        return 'text-center';
       case ColumnAlignment.end:
-        return 'align-end';
+        return 'text-right';
     }
   }
 

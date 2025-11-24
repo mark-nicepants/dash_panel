@@ -7,16 +7,18 @@ class BreadCrumbs extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return nav(classes: 'breadcrumbs', [
-      ol(classes: 'breadcrumb-list', [
+    return nav(classes: 'text-sm', [
+      ol(classes: 'flex items-center gap-2', [
         for (int i = 0; i < items.length; i++) ...[
-          li(classes: 'breadcrumb-item', [
+          li(classes: 'inline-flex', [
             if (items[i].url != null)
-              a(href: items[i].url!, classes: 'breadcrumb-link', [text(items[i].label)])
+              a(href: items[i].url!, classes: 'text-gray-400 hover:text-gray-200 transition-colors', [
+                text(items[i].label),
+              ])
             else
-              span(classes: 'breadcrumb-current', [text(items[i].label)]),
+              span(classes: 'text-gray-200', [text(items[i].label)]),
           ]),
-          if (i < items.length - 1) li(classes: 'breadcrumb-separator', [text('›')]),
+          if (i < items.length - 1) li(classes: 'text-gray-600 select-none', [text('›')]),
         ],
       ]),
     ]);

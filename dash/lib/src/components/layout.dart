@@ -25,35 +25,45 @@ class DashLayout extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'dash-layout', [
+    return div(classes: 'flex min-h-screen bg-gray-900', [
       // Sidebar
-      aside(classes: 'dash-sidebar', [
-        div(classes: 'dash-logo', [
-          h2([text('DASH')]),
+      aside(classes: 'w-64 bg-gray-800 text-white flex flex-col', [
+        div(classes: 'p-6 border-b border-gray-700', [
+          h2(classes: 'text-2xl font-bold text-indigo-500', [text('DASH')]),
         ]),
-        nav(classes: 'dash-nav', [
-          ul([
+        nav(classes: 'flex-1 py-6', [
+          ul(classes: 'space-y-1', [
             li([
-              a(href: basePath, [
-                const Heroicon(HeroIcons.home),
-                span([text('Dashboard')]),
-              ]),
+              a(
+                href: basePath,
+                classes:
+                    'flex items-center gap-3 px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors',
+                [
+                  const Heroicon(HeroIcons.home),
+                  span([text('Dashboard')]),
+                ],
+              ),
             ]),
             // Dynamically generate grouped resource navigation
             ..._buildGroupedNavigation(),
           ]),
         ]),
         // Logout button
-        div(classes: 'dash-sidebar-footer', [
-          a(href: '$basePath/logout', classes: 'logout-button', [
-            const Heroicon(HeroIcons.arrowRightOnRectangle),
-            span([text('Logout')]),
-          ]),
+        div(classes: 'p-6 border-t border-gray-700', [
+          a(
+            href: '$basePath/logout',
+            classes:
+                'flex items-center justify-center gap-2 px-4 py-2.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-700 hover:text-white transition-all',
+            [
+              const Heroicon(HeroIcons.arrowRightOnRectangle),
+              span([text('Logout')]),
+            ],
+          ),
         ]),
       ]),
       // Main content
-      div(classes: 'dash-main', [
-        main_(classes: 'dash-content', [child]),
+      div(classes: 'flex-1 flex flex-col', [
+        main_(classes: 'flex-1 p-8', [child]),
       ]),
     ]);
   }
@@ -78,8 +88,8 @@ class DashLayout extends StatelessComponent {
 
       // Add group header
       items.add(
-        li(classes: 'nav-group-header', [
-          span([text(groupName)]),
+        li(classes: 'mt-6 first:mt-0 mb-2 px-6', [
+          span(classes: 'text-xs uppercase font-semibold tracking-wider text-gray-500', [text(groupName)]),
         ]),
       );
 
@@ -87,10 +97,15 @@ class DashLayout extends StatelessComponent {
       for (final resource in groupResources) {
         items.add(
           li([
-            a(href: '$basePath/resources/${resource.slug}', [
-              resource.iconComponent,
-              span([text(resource.label)]),
-            ]),
+            a(
+              href: '$basePath/resources/${resource.slug}',
+              classes:
+                  'flex items-center gap-3 px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors',
+              [
+                resource.iconComponent,
+                span([text(resource.label)]),
+              ],
+            ),
           ]),
         );
       }

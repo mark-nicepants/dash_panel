@@ -8,9 +8,9 @@ class PageHeader extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'page-header', [
-      h1(classes: 'page-header-title', [text(title)]),
-      if (actions != null && actions!.isNotEmpty) div(classes: 'page-header-actions', actions!),
+    return div(classes: 'flex justify-between items-center gap-4', [
+      h1(classes: 'text-3xl font-bold text-gray-100', [text(title)]),
+      if (actions != null && actions!.isNotEmpty) div(classes: 'flex items-center gap-3', actions!),
     ]);
   }
 }

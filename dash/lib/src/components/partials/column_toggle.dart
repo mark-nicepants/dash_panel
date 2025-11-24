@@ -17,60 +17,66 @@ class ColumnToggle extends StatelessComponent {
     final encodedDefaults = jsonEncode(defaults);
 
     return div(
-      classes: 'column-toggle',
+      classes: 'relative',
       attributes: {'x-data': "columnVisibility('$resourceSlug', $encodedDefaults)", 'x-cloak': ''},
       [
         button(
           type: ButtonType.button,
-          classes: 'btn btn-secondary column-toggle-button',
+          classes:
+              'inline-flex items-center gap-2 px-3 py-2 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
           attributes: {'x-on:click': 'open = !open', 'x-bind:aria-expanded': 'open', 'aria-haspopup': 'true'},
           [
-            span(classes: 'btn-icon', [text('☰')]),
+            span(classes: 'text-base', [text('☰')]),
             span([text('Columns')]),
           ],
         ),
         div(
-          classes: 'column-toggle-menu',
+          classes:
+              'absolute right-0 top-full mt-2 min-w-56 bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-2xl z-50',
           attributes: {'x-show': 'open', 'x-transition.opacity': '', '@click.outside': 'open = false'},
           [
-            div(classes: 'column-toggle-header', [text('Toggle columns')]),
-            ul(classes: 'column-toggle-options', [
+            div(classes: 'text-sm font-semibold text-gray-100 mb-2', [text('Toggle columns')]),
+            ul(classes: 'space-y-1.5 mb-3', [
               for (final column in columns)
                 li([
                   button(
                     type: ButtonType.button,
-                    classes: 'column-toggle-option',
+                    classes:
+                        'w-full flex items-center gap-2 px-2 py-1.5 border border-transparent rounded-lg bg-transparent text-gray-200 hover:bg-gray-800 cursor-pointer transition-all',
                     attributes: {
                       'x-on:click': "toggle('${column.getName()}')",
-                      'x-bind:class': "{'active': isVisible('${column.getName()}')}",
+                      'x-bind:class': "{'border-gray-600 bg-gray-950': isVisible('${column.getName()}')}",
                     },
                     [
                       span(
-                        classes: 'column-toggle-check',
+                        classes: 'w-5 text-center text-lime-500 font-bold',
                         attributes: {'x-show': "isVisible('${column.getName()}')"},
                         [text('✓')],
                       ),
-                      span(classes: 'column-toggle-label', [text(column.getLabel())]),
+                      span(classes: 'flex-1 text-sm text-left', [text(column.getLabel())]),
                     ],
                   ),
                 ]),
             ]),
-            div(classes: 'column-toggle-footer', [
+            div(classes: 'flex gap-2 flex-wrap', [
               button(
                 type: ButtonType.button,
-                classes: 'btn btn-secondary',
+                classes:
+                    'px-2 py-1 text-xs font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-all',
                 attributes: {'x-on:click': 'showAll()'},
                 [text('Show all')],
               ),
               button(
                 type: ButtonType.button,
-                classes: 'btn btn-secondary',
+                classes:
+                    'px-2 py-1 text-xs font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-all',
                 attributes: {'x-on:click': 'hideAll()'},
                 [text('Hide all')],
               ),
               button(
                 type: ButtonType.button,
-                classes: 'btn btn-secondary',
+                classes:
+                    'px-2 py-1 text-xs font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-all',
                 attributes: {'x-on:click': 'reset()'},
                 [text('Reset')],
               ),

@@ -11,10 +11,7 @@
       "console": "terminal",
       "env": {
         "DASH_ENV": "production"
-      },
-      "vmAdditionalArgs": [
-        "--enable-vm-service"
-      ]
+      }
     },
     {
       "name": "Dash (Hot Reload)",
