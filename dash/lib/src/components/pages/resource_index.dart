@@ -59,7 +59,9 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   Component _buildHeader() {
     return PageHeader(
       title: resource.label,
-      actions: [Button(label: 'New ${resource.singularLabel}', variant: ButtonVariant.primary)],
+      actions: [
+        Button(label: 'New ${resource.singularLabel}', variant: ButtonVariant.primary, href: '$basePath/create'),
+      ],
     );
   }
 
@@ -147,6 +149,11 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
                 ]),
             ],
           ),
+        // Actions column header
+        th(
+          classes: 'px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap',
+          [text('Actions')],
+        ),
       ]),
     ]);
   }
@@ -176,8 +183,44 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
       for (final record in records)
         tr(classes: 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700 transition-colors', [
           for (final column in columns) _buildTableCell(column, record),
+          _buildRowActions(record),
         ]),
     ]);
+  }
+
+  Component _buildRowActions(T record) {
+    final recordId = _getRecordId(record);
+    return td(classes: 'px-6 py-4 text-sm text-right whitespace-nowrap', [
+      div(classes: 'flex items-center justify-end gap-2', [
+        // Edit button
+        a(
+          href: '$basePath/$recordId/edit',
+          classes:
+              'inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-md transition-colors',
+          [text('Edit')],
+        ),
+        // Delete button (with confirmation)
+        form(action: '$basePath/$recordId/delete', method: FormMethod.post, classes: 'inline', [
+          button(
+            type: ButtonType.submit,
+            classes:
+                'inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-400 hover:text-white bg-gray-700 hover:bg-red-600 rounded-md transition-colors',
+            attributes: {
+              'onclick':
+                  "return confirm('Are you sure you want to delete this ${resource.singularLabel.toLowerCase()}?')",
+            },
+            [text('Delete')],
+          ),
+        ]),
+      ]),
+    ]);
+  }
+
+  /// Gets the record's primary key value.
+  dynamic _getRecordId(T record) {
+    final fields = record.toMap();
+    final primaryKey = record.primaryKey;
+    return fields[primaryKey];
   }
 
   Component _buildTableCell(TableColumn column, T record) {
@@ -270,7 +313,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
         'Get started by creating your first ${resource.singularLabel.toLowerCase()}.';
     return div(classes: 'py-16 px-6 text-center', [
       div(classes: 'max-w-md mx-auto', [
-        div(classes: 'text-5xl mb-4', [text('📭')]),
+        div(classes: 'text-5xl mb-4', [resource.iconComponent]),
         h3(classes: 'text-lg font-semibold text-gray-100 mb-2', [text(heading)]),
         p(classes: 'text-sm text-gray-400 mb-6', [text(description)]),
         Button(label: 'Create ${resource.singularLabel}', variant: ButtonVariant.primary),

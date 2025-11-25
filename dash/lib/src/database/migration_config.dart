@@ -1,5 +1,5 @@
-import '../resource.dart';
-import '../resource/resource_registration.dart';
+import 'package:dash/src/service_locator.dart';
+
 import 'migrations/schema_definition.dart';
 
 /// Configuration for automatic database migrations.
@@ -47,11 +47,10 @@ class MigrationConfig {
   ///     ),
   ///   );
   /// ```
-  factory MigrationConfig.fromResources({List<Resource>? resources, bool verbose = false}) {
-    final resolvedResources = resources ?? buildRegisteredResources();
+  factory MigrationConfig.fromResources({bool verbose = false}) {
     final schemas = <TableSchema>[];
 
-    for (final resource in resolvedResources) {
+    for (final resource in buildRegisteredResources()) {
       final schema = resource.schema();
       if (schema != null) {
         schemas.add(schema);

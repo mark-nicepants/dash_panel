@@ -9,6 +9,8 @@ export 'src/auth/auth_service.dart' show AuthService, DashUser, Session;
 export 'src/components/layout.dart';
 export 'src/components/pages/dashboard_page.dart';
 export 'src/components/pages/login_page.dart';
+export 'src/components/pages/resource_create.dart';
+export 'src/components/pages/resource_edit.dart';
 export 'src/components/pages/resource_index.dart';
 // Components
 export 'src/components/partials/heroicon.dart';
@@ -25,6 +27,16 @@ export 'src/database/migrations/schema_definition.dart';
 export 'src/database/migrations/schema_inspector.dart';
 export 'src/database/query_builder.dart';
 export 'src/database/schema_builder.dart';
+export 'src/form/fields/checkbox.dart';
+export 'src/form/fields/date_picker.dart';
+export 'src/form/fields/field.dart';
+export 'src/form/fields/form_renderer.dart';
+export 'src/form/fields/select.dart';
+export 'src/form/fields/text_input.dart';
+export 'src/form/fields/textarea.dart';
+export 'src/form/fields/toggle.dart';
+// Forms
+export 'src/form/form_schema.dart';
 // Models
 export 'src/model/annotations.dart';
 export 'src/model/model.dart';

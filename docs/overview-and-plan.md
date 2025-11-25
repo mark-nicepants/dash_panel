@@ -64,42 +64,162 @@ Dash is a modern, full-featured admin panel framework for Dart, inspired by Fila
 
 ## Recent Improvements (November 2025)
 
-### Configuration & Developer Experience
-- ✅ **Command-line database path**: Added support for specifying database directory via CLI args
-- ✅ **VS Code integration**: Updated launch configurations to pass database directory
-- ✅ **Resource defaults**: Auto-generate labels from model names, reducing boilerplate
-- ✅ **Navigation groups**: Organized sidebar navigation with collapsible groups
-- ✅ **Cleaner resources**: Minimal resource definitions with smart defaults
-- ✅ **Column visibility toggles**: Alpine.js-powered dropdown with client-side persistence per resource
+### 🗄️ Automatic Database Migrations
+- ✅ **Schema Generation from Annotations**: `@DashModel` annotations auto-generate `TableSchema` definitions
+- ✅ **Automatic Table Creation**: Detects missing tables and creates them on startup
+- ✅ **Column Addition**: Adds missing columns to existing tables without data loss
+- ✅ **Database Agnostic**: Abstract `MigrationBuilder`, `SchemaInspector` interfaces
+- ✅ **SQLite Implementation**: Full SQLite support with `SqliteMigrationBuilder` and `SqliteSchemaInspector`
+- ✅ **Migration Runner**: Orchestrates schema comparison and SQL execution
+- ✅ **Type Mapping**: Automatic Dart → SQL type conversion (int→INTEGER, String→TEXT, DateTime→DATETIME, etc.)
 
-### Example Resource Before:
+### 📊 Table Builder System
+- ✅ **Table Class**: Fluent API for configuring data tables
+- ✅ **Column Types**: `TextColumn`, `IconColumn`, `BooleanColumn` with full feature set
+- ✅ **Sorting**: Configurable sortable columns with default sort and direction
+- ✅ **Searching**: Searchable columns with HTMX-powered live search
+- ✅ **Pagination**: Configurable records per page with page size options
+- ✅ **Column Visibility Toggle**: Alpine.js dropdown with localStorage persistence per resource
+- ✅ **Toggleable Columns**: Mark columns as toggleable with optional hidden-by-default
+- ✅ **Empty State**: Customizable heading, description, and icon for empty tables
+- ✅ **Column Formatting**: Date/time, money, percentage, badge, icon support
+- ✅ **Column Alignment**: Start, center, end alignment options
+- ✅ **Column Width**: Fixed width or grow to fill available space
+
+### 📝 Form Builder System
+- ✅ **FormSchema Class**: Container for form fields with grid layout support
+- ✅ **FormField Base Class**: Abstract base with common field behaviors
+- ✅ **TextInput Field**: Text, email, password, URL, tel, search variants
+- ✅ **Textarea Field**: Multi-line with rows, auto-resize, character count
+- ✅ **Select Field**: Dropdown with options, groups, multiple selection
+- ✅ **Checkbox Field**: Boolean toggle with accepted validation
+- ✅ **Toggle Field**: Styled switch with on/off labels and colors
+- ✅ **DatePicker Field**: Date, time, datetime-local with min/max constraints
+- ✅ **FieldGroup**: Organize fields with collapsible sections
+- ✅ **FormRenderer**: Renders form schema with grid layout and buttons
+- ✅ **Field Validation**: Required, Email, MinLength, MaxLength, Regex, URL, InList, etc.
+- ✅ **Form Operations**: Create, Edit, View modes with appropriate defaults
+- ✅ **Column Spanning**: Fields can span multiple columns with breakpoint support
+
+### 🔄 CRUD Operations
+- ✅ **ResourceCreate Page**: Form-based create page with breadcrumbs and card layout
+- ✅ **ResourceEdit Page**: Pre-populated edit form with record data
+- ✅ **Row Actions**: Edit and Delete buttons on each table row
+- ✅ **Create Record**: `resource.createRecord(data)` with form data mapping
+- ✅ **Update Record**: `resource.updateRecord(record, data)` with model hydration
+- ✅ **Delete Record**: `resource.deleteRecord(record)` with confirmation dialog
+- ✅ **Form Validation**: Server-side validation with error display
+- ✅ **Form Repopulation**: Old input preserved on validation errors
+- ✅ **Route Handling**: Full routing for index, create, edit, store, update, delete
+- ✅ **Method Spoofing**: PUT/PATCH/DELETE via POST with `_method` field
+- ✅ **HTMX Integration**: HX-Redirect header for post-submission redirects
+
+### 🧭 Navigation & Layout
+- ✅ **Breadcrumbs Component**: Full breadcrumb navigation with links
+- ✅ **Page Header Component**: Title with action buttons
+- ✅ **Navigation Groups**: Organized sidebar with collapsible groups
+- ✅ **Resource Sorting**: Sort resources within navigation groups
+- ✅ **Heroicons Integration**: 300+ generated Heroicon components
+
+### 🎨 UI Components (Tailwind CSS)
+- ✅ **Button Component**: Primary, secondary, danger, ghost variants with sizes
+- ✅ **Badge Component**: Status indicators with color variants
+- ✅ **Card Component**: Container with consistent styling and padding options
+- ✅ **Input Component**: Form inputs with labels and validation styling
+- ✅ **Form Group**: Layout container for form fields
+
+### 🔐 Authentication System
+- ✅ **AuthService**: User authentication with bcrypt password hashing
+- ✅ **Session Management**: Secure session tokens with expiration
+- ✅ **Login Page**: Styled login form with remember me option
+- ✅ **Auth Middleware**: Request authentication with session cookies
+- ✅ **Logout Functionality**: Session cleanup and redirect
+
+### 🏗️ Model System
+- ✅ **@DashModel Annotation**: Mark classes for code generation
+- ✅ **@Column Annotation**: Customize column names and nullability
+- ✅ **@PrimaryKey Annotation**: Define primary keys with auto-increment
+- ✅ **@BelongsTo/@HasMany Annotations**: Relationship definitions
+- ✅ **Code Generator**: Auto-generates `toMap`, `fromMap`, `getFields`, `schema`
+- ✅ **ModelQueryBuilder**: Eloquent-style typed query builder
+- ✅ **Validation Rules**: Required, Email, MinLength, MaxLength, Numeric, Min, Max, InList
+- ✅ **Lifecycle Hooks**: `onCreating`, `onCreated`, `onUpdating`, `onUpdated`, etc.
+
+### ⚙️ Configuration & Developer Experience
+- ✅ **Command-line database path**: Support for specifying database directory via CLI args
+- ✅ **VS Code integration**: Launch configurations to pass database directory
+- ✅ **Resource defaults**: Auto-generate labels from model names
+- ✅ **Cleaner resources**: Minimal resource definitions with smart defaults
+- ✅ **Service Locator**: Dependency injection for ResourceLoader and other services
+- ✅ **Panel Server**: Shelf-based HTTP server with hot reload support
+
+### Example Resource (Minimal):
 ```dart
 class UserResource extends Resource<User> {
   @override
-  Type get model => User;
-  @override
-  String get label => 'Users';
-  @override
-  String get singularLabel => 'User';
+  Heroicon get iconComponent => const Heroicon(HeroIcons.userGroup);
+
   @override
   String? get navigationGroup => 'Administration';
+
   @override
-  int get navigationSort => 1;
+  Table<User> table(Table<User> table) {
+    return table
+        .columns([
+          TextColumn.make('id').sortable().width('80px'),
+          TextColumn.make('name').searchable().sortable().grow(),
+          TextColumn.make('email').searchable().sortable(),
+          TextColumn.make('created_at').dateTime().toggleable(isToggledHiddenByDefault: true),
+        ])
+        .defaultSort('name');
+  }
+
   @override
-  Heroicon get iconComponent => const Heroicon(HeroIcons.userGroup);
+  FormSchema<User> form(FormSchema<User> form) {
+    return form
+        .columns(2)
+        .fields([
+          TextInput.make('name')
+              .required()
+              .minLength(2)
+              .columnSpanFull(),
+          TextInput.make('email')
+              .email()
+              .required(),
+          Select.make('role')
+              .options([
+                SelectOption('user', 'User'),
+                SelectOption('admin', 'Administrator'),
+                SelectOption('moderator', 'Moderator'),
+              ])
+              .required(),
+          DatePicker.make('created_at')
+              .label('Joined')
+              .disabled(),
+        ]);
+  }
+  // label, singularLabel, slug auto-derived from User model name!
 }
 ```
 
-### Example Resource After:
+### Example Model with Annotations:
 ```dart
-class UserResource extends Resource<User> {
+@DashModel(table: 'users')
+class User extends Model with _$UserModelMixin {
+  int? id;
+  String? name;
+  String? email;
+  String? role;
+
+  @Column(name: 'created_at')
+  DateTime? createdAt;
+
   @override
-  Type get model => User;
-  @override
-  Heroicon get iconComponent => const Heroicon(HeroIcons.userGroup);
-  @override
-  String? get navigationGroup => 'Administration';
-  // label and singularLabel auto-derived from User model name!
+  Map<String, List<ValidationRule>> get rules => {
+    'name': [Required(), MinLength(2)],
+    'email': [Required(), Email()],
+    'role': [Required(), InList(['user', 'admin', 'moderator'])],
+  };
 }
 ```
 
@@ -117,13 +237,13 @@ class UserResource extends Resource<User> {
 
 #### 1.2 Core Architecture
 - [ ] Design plugin/extension system
-- [ ] Create service container for dependency injection
+- [x] Create service container for dependency injection
 - [ ] Implement event system for hooks and listeners
-- [ ] Design configuration system
+- [x] Design configuration system
 - [x] Create base Panel class (main entry point)
-- [IN PROGRESS] Implement routing system integration with Jaspr
-- [IN PROGRESS] Set up Jaspr server with Shelf handler
-- [IN PROGRESS] Create server bootstrapping in Panel
+- [x] Implement routing system integration with Jaspr
+- [x] Set up Jaspr server with Shelf handler
+- [x] Create server bootstrapping in Panel
 
 #### 1.3 Basic Layout System
 - [x] Create base Page component (abstract class)
@@ -131,58 +251,59 @@ class UserResource extends Resource<User> {
 - [x] Build Navigation component with group support
 - [x] Add navigation group headers
 - [x] Implement resource sorting within groups
-- [ ] Create Breadcrumb component
-- [x] Implement basic theme system (CSS-based)
+- [x] Create Breadcrumb component
+- [x] Implement basic theme system (CSS-based with Tailwind)
 - [ ] Add responsive utilities
 
 ### Phase 2: Form & Field System (Weeks 5-8)
 
 #### 2.1 Form Foundation
-- [ ] Create Form builder class
-- [ ] Implement Field abstract class
-- [ ] Build validation system
-- [ ] Create form state management
-- [ ] Implement error handling and display
-- [ ] Add form submission handling
+- [x] Create Form builder class (FormSchema)
+- [x] Implement Field abstract class (FormField)
+- [x] Build validation system (FieldValidationRule classes)
+- [x] Create form state management (fill, getInitialData)
+- [x] Implement error handling and display (FormRenderer)
+- [x] Add form submission handling (FormRenderer with action/method)
 
 #### 2.2 Basic Form Fields
-- [ ] TextInput field
-- [ ] TextArea field
-- [ ] Select field
-- [ ] Checkbox field
+- [x] TextInput field (with email, password, url, tel variants)
+- [x] TextArea field (with auto-resize, character count)
+- [x] Select field (with options, groups, placeholder)
+- [x] Checkbox field (with accepted validation)
 - [ ] Radio field
-- [ ] Toggle/Switch field
-- [ ] Number input field
-- [ ] Date/DateTime picker
+- [x] Toggle/Switch field (with on/off labels, colors)
+- [x] Number input field (via TextInput.numeric())
+- [x] DatePicker field (with date, time, datetime-local)
 
 #### 2.3 Advanced Form Fields
 - [ ] Rich text editor integration
 - [ ] File upload component
-- [ ] Multi-select with search
+- [ ] Multi-select with search (Select.multiple().searchable())
 - [ ] Relationship select (async search)
 - [ ] Repeater field (dynamic lists)
 - [ ] Key-value field
 - [ ] Color picker
 - [ ] Tags input
+- [x] FieldGroup (for organizing fields, collapsible)
 
 ### Phase 3: Table & Data Display (Weeks 9-12)
 
 #### 3.1 Table Foundation
-- [ ] Create Table builder class
-- [ ] Implement Column system
-- [ ] Build pagination component
-- [ ] Create sort functionality
-- [ ] Implement server-side data loading
-- [ ] Add loading states
+- [x] Create Table builder class
+- [x] Implement Column system (TextColumn, IconColumn, BooleanColumn)
+- [x] Build pagination component
+- [x] Create sort functionality
+- [x] Implement server-side data loading (HTMX)
+- [x] Add loading states (HTMX indicators)
 
 #### 3.2 Table Features
 - [ ] Filter system architecture
-- [ ] Search functionality
+- [x] Search functionality (HTMX live search)
 - [ ] Bulk selection
 - [ ] Bulk actions
 - [x] Column visibility toggle
 - [ ] Responsive table view
-- [ ] Empty state handling
+- [x] Empty state handling (customizable heading, description, icon)
 
 #### 3.3 Advanced Table Features
 - [ ] Advanced filters (date ranges, relationships, etc.)
@@ -201,20 +322,22 @@ class UserResource extends Resource<User> {
 - [x] Implement navigationSort property
 - [x] Build resource registration system
 - [x] Implement resource navigation with groups
-- [ ] Implement automatic CRUD operations
-- [ ] Create resource routes
+- [x] Implement resource schema getter (auto-generated)
+- [x] Create ModelQueryBuilder for typed queries
+- [x] Implement automatic CRUD operations (createRecord, updateRecord, deleteRecord)
+- [x] Create resource routes (index, create, edit, store, update, delete)
 - [ ] Add resource authorization
 
 #### 4.2 Resource Pages
-- [ ] List page (with table)
-- [ ] Create page (with form)
-- [ ] Edit page (with form)
+- [x] List page (with table) - ResourceIndex component with row actions
+- [x] Create page (with form) - ResourceCreate component
+- [x] Edit page (with form) - ResourceEdit component
 - [ ] View page (read-only display)
 - [ ] Custom actions on pages
 - [ ] Page hooks for customization
 
 #### 4.3 Relationships
-- [ ] Define relationship types
+- [x] Define relationship types (@BelongsTo, @HasMany annotations)
 - [ ] HasMany display and management
 - [ ] BelongsTo select handling
 - [ ] ManyToMany with pivot tables
@@ -224,7 +347,7 @@ class UserResource extends Resource<User> {
 ### Phase 5: Dashboard & Widgets (Weeks 17-20)
 
 #### 5.1 Dashboard System
-- [ ] Create Dashboard class
+- [x] Create Dashboard page (basic)
 - [ ] Implement widget system
 - [ ] Build grid layout system
 - [ ] Add widget positioning
@@ -248,11 +371,12 @@ class UserResource extends Resource<User> {
 ### Phase 6: Authentication & Authorization (Weeks 21-24)
 
 #### 6.1 Authentication
-- [IN PROGRESS] Create Auth provider interface
-- [IN PROGRESS] Implement login system
-- [IN PROGRESS] Build login page/component
-- [IN PROGRESS] Add session management
-- [IN PROGRESS] Implement logout functionality
+- [x] Create Auth provider interface (AuthService)
+- [x] Implement login system (bcrypt password hashing)
+- [x] Build login page/component
+- [x] Add session management (secure tokens with expiration)
+- [x] Implement logout functionality
+- [x] Auth middleware for protected routes
 - [ ] Password reset flow
 - [ ] Two-factor authentication (optional)
 
@@ -293,18 +417,18 @@ class UserResource extends Resource<User> {
 - [ ] Dropdown component
 - [ ] Tabs component
 - [ ] Accordion component
-- [ ] Card component
-- [ ] Badge component
+- [x] Card component
+- [x] Badge component
 - [ ] Avatar component
 - [ ] Command palette (global search)
 
 ### Phase 8: Theming & Customization (Weeks 29-32)
 
 #### 8.1 Theme System
-- [ ] Create theme configuration
-- [ ] Implement CSS variable system
-- [ ] Build default theme
-- [ ] Add dark mode support
+- [x] Create theme configuration (Tailwind CSS)
+- [x] Implement CSS variable system (dash.css)
+- [x] Build default theme (dark theme)
+- [x] Add dark mode support (default dark)
 - [ ] Create theme builder/customizer
 - [ ] Support custom themes
 
@@ -326,21 +450,22 @@ class UserResource extends Resource<User> {
 - [ ] Add development server command
 
 #### 9.2 Documentation
-- [ ] Getting started guide
+- [x] Getting started guide (GETTING_STARTED.md)
 - [ ] Installation instructions
-- [ ] Resource documentation
+- [x] Resource documentation (overview-and-plan.md)
 - [ ] Form builder documentation
 - [ ] Table builder documentation
+- [x] Database migrations documentation (database-migrations.md)
 - [ ] Widget documentation
 - [ ] Theming guide
 - [ ] API reference
-- [ ] Example applications
+- [x] Example application (dash_example)
 
 #### 9.3 Testing & Examples
-- [ ] Create example application
+- [x] Create example application
 - [ ] Build demo site
-- [ ] Write unit tests
-- [ ] Create integration tests
+- [x] Write unit tests (auth, database, utils)
+- [x] Create integration tests (migrations)
 - [ ] Performance benchmarks
 - [ ] Migration guides
 

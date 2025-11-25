@@ -1,8 +1,11 @@
 import 'package:jaspr/jaspr.dart';
 
+import 'components/pages/resource_create.dart';
+import 'components/pages/resource_edit.dart';
 import 'components/pages/resource_index.dart';
 import 'components/partials/heroicon.dart';
 import 'database/migrations/schema_definition.dart';
+import 'form/form_schema.dart';
 import 'model/model.dart';
 import 'model/model_metadata.dart';
 import 'model/model_query_builder.dart';
@@ -83,6 +86,35 @@ abstract class Resource<T extends Model> {
   /// ```
   Table<T> table(Table<T> table) {
     return table;
+  }
+
+  /// Defines the form configuration for creating and editing this resource.
+  ///
+  /// Override this method to configure the form fields.
+  ///
+  /// Example:
+  /// ```dart
+  /// @override
+  /// FormSchema form(FormSchema form) {
+  ///   return form
+  ///     .columns(2)
+  ///     .fields([
+  ///       TextInput.make('name')
+  ///         .required()
+  ///         .columnSpanFull(),
+  ///       TextInput.make('email')
+  ///         .email()
+  ///         .required(),
+  ///       Select.make('role')
+  ///         .options([
+  ///           SelectOption('user', 'User'),
+  ///           SelectOption('admin', 'Admin'),
+  ///         ]),
+  ///     ]);
+  /// }
+  /// ```
+  FormSchema<T> form(FormSchema<T> form) {
+    return form;
   }
 
   /// Creates a new instance of the model.
@@ -266,5 +298,115 @@ abstract class Resource<T extends Model> {
       sortDirection: sortDirection,
       currentPage: currentPage,
     );
+  }
+
+  /// Creates a ResourceCreate component for this resource.
+  Component buildCreatePage({Map<String, List<String>>? errors, Map<String, dynamic>? oldInput}) {
+    return ResourceCreate<T>(resource: this, errors: errors, oldInput: oldInput);
+  }
+
+  /// Creates a ResourceEdit component for this resource with the provided record.
+  Component buildEditPage({required T record, Map<String, List<String>>? errors, Map<String, dynamic>? oldInput}) {
+    return ResourceEdit<T>(resource: this, record: record, errors: errors, oldInput: oldInput);
+  }
+
+  /// Creates a new FormSchema instance for this resource.
+  /// Used internally by the router for form validation.
+  FormSchema<T> newFormSchema() {
+    return FormSchema<T>();
+  }
+
+  /// Creates a new record with the given data.
+  /// Override this method to customize record creation.
+  Future<T> createRecord(Map<String, dynamic> data) async {
+    final instance = newModelInstance();
+
+    // Apply the form data to the model
+    _applyDataToModel(instance, data);
+
+    // Save the model
+    await instance.save();
+
+    return instance;
+  }
+
+  /// Updates an existing record with the given data.
+  /// Override this method to customize record updates.
+  Future<T> updateRecord(T record, Map<String, dynamic> data) async {
+    // Apply the form data to the model
+    _applyDataToModel(record, data);
+
+    // Save the model
+    await record.save();
+
+    return record;
+  }
+
+  /// Deletes a record.
+  /// Override this method to customize record deletion.
+  Future<void> deleteRecord(T record) async {
+    await record.delete();
+  }
+
+  /// Applies form data to a model instance.
+  /// Maps form field names to model fields.
+  void _applyDataToModel(T model, Map<String, dynamic> data) {
+    // Get the form schema to understand field mappings
+    final formSchema = form(FormSchema<T>());
+    final fields = formSchema.getFields();
+
+    // Build a map of converted values
+    final convertedData = <String, dynamic>{};
+
+    for (final field in fields) {
+      final fieldName = field.getName();
+      if (data.containsKey(fieldName)) {
+        final value = data[fieldName];
+        convertedData[fieldName] = _convertFieldValue(field, value);
+      }
+    }
+
+    // Merge with existing model data and apply
+    final existingData = model.toMap();
+    final mergedData = {...existingData, ...convertedData};
+    model.fromMap(mergedData);
+  }
+
+  /// Converts a form field value to the appropriate type.
+  dynamic _convertFieldValue(dynamic field, dynamic value) {
+    if (value == null || (value is String && value.isEmpty)) {
+      return null;
+    }
+
+    // Handle different field types
+    final fieldType = field.runtimeType.toString();
+
+    if (fieldType.contains('Checkbox') || fieldType.contains('Toggle')) {
+      // Boolean fields
+      if (value is bool) return value;
+      if (value is String) {
+        return value == 'true' || value == '1' || value == 'on';
+      }
+      return false;
+    }
+
+    if (fieldType.contains('DatePicker')) {
+      // DateTime fields
+      if (value is DateTime) return value;
+      if (value is String) {
+        return DateTime.tryParse(value);
+      }
+      return null;
+    }
+
+    if (fieldType.contains('Select') && field.isMultiple()) {
+      // Multiple select - return list
+      if (value is List) return value;
+      if (value is String) return [value];
+      return [];
+    }
+
+    // Default - return as-is (usually String)
+    return value;
   }
 }
