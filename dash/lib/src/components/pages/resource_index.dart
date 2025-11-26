@@ -4,7 +4,9 @@ import 'package:dash/src/components/partials/column_toggle.dart';
 import 'package:dash/src/components/partials/page_header.dart';
 import 'package:dash/src/components/partials/table/table_components.dart';
 import 'package:dash/src/model/model.dart';
+import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/resource.dart';
+import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/table/table.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -19,7 +21,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   final String? sortDirection;
   final int currentPage;
 
-  String get basePath => '/admin/resources/${resource.slug}';
+  String get basePath => '${inject<PanelConfig>().path}/resources/${resource.slug}';
   Table<T> get tableConfig => resource.table(Table<T>());
 
   const ResourceIndex({

@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -25,7 +26,7 @@ import 'package:jaspr/jaspr.dart';
 /// ```
 class TextInput extends FormField {
   /// The input type (text, email, password, url, tel, search).
-  TextInputType _type = TextInputType.text;
+  InputType _type = InputType.text;
 
   /// Minimum length validation.
   int? _minLength;
@@ -65,17 +66,17 @@ class TextInput extends FormField {
   }
 
   /// Sets the input type.
-  TextInput type(TextInputType type) {
+  TextInput type(InputType type) {
     _type = type;
     return this;
   }
 
   /// Gets the input type.
-  TextInputType getType() => _type;
+  InputType getType() => _type;
 
   /// Sets the input type to email and adds email validation.
   TextInput email() {
-    _type = TextInputType.email;
+    _type = InputType.email;
     rule(EmailRule());
     autocomplete('email');
     return this;
@@ -83,21 +84,21 @@ class TextInput extends FormField {
 
   /// Sets the input type to password.
   TextInput password() {
-    _type = TextInputType.password;
+    _type = InputType.password;
     autocomplete('current-password');
     return this;
   }
 
   /// Sets the input type to new password (for registration/change password).
   TextInput newPassword() {
-    _type = TextInputType.password;
+    _type = InputType.password;
     autocomplete('new-password');
     return this;
   }
 
   /// Sets the input type to URL and adds URL validation.
   TextInput url() {
-    _type = TextInputType.url;
+    _type = InputType.url;
     rule(UrlRule());
     autocomplete('url');
     return this;
@@ -105,14 +106,14 @@ class TextInput extends FormField {
 
   /// Sets the input type to telephone.
   TextInput tel() {
-    _type = TextInputType.tel;
+    _type = InputType.tel;
     autocomplete('tel');
     return this;
   }
 
   /// Sets the input type to search.
   TextInput search() {
-    _type = TextInputType.search;
+    _type = InputType.search;
     return this;
   }
 
@@ -226,107 +227,59 @@ class TextInput extends FormField {
     final inputId = getId();
     final hasAdornments = _prefix != null || _suffix != null || _prefixIcon != null || _suffixIcon != null;
 
-    return div(classes: 'space-y-2 ${getExtraClasses() ?? ''}'.trim(), [
-      // Label
-      if (!isHidden())
-        label(
-          attributes: {'for': inputId},
-          classes: 'block text-sm font-medium text-gray-300',
-          [
-            text(getLabel()),
-            if (isRequired()) span(classes: 'text-red-500 ml-1', [text('*')]),
-            if (getHint() != null) span(classes: 'text-gray-500 ml-2 font-normal', [text('(${getHint()})')]),
-          ],
-        ),
+    return FormFieldWrapper(
+      extraClasses: getExtraClasses(),
+      children: [
+        // Label
+        if (!isHidden()) FormLabel(labelText: getLabel(), forId: inputId, required: isRequired(), hint: getHint()),
 
-      // Input wrapper (for prefix/suffix)
-      if (hasAdornments) _buildInputWithAdornments(inputId) else _buildInput(inputId),
+        // Input wrapper (for prefix/suffix)
+        if (hasAdornments) _buildInputWithAdornments(inputId) else _buildInput(inputId),
 
-      // Helper text
-      if (getHelperText() != null) p(classes: 'text-sm text-gray-400', [text(getHelperText()!)]),
+        // Helper text
+        if (getHelperText() != null) FormHelperText(helperText: getHelperText()!),
 
-      // Character count
-      if (_showCharacterCount && _maxLength != null)
-        p(classes: 'text-xs text-gray-500 text-right', [text('0 / $_maxLength')]),
+        // Character count
+        if (_showCharacterCount && _maxLength != null) FormCharacterCount(max: _maxLength!, alignRight: true),
 
-      // Datalist - using raw HTML approach since Jaspr doesn't have datalist
-      // The datalist will be rendered as part of the attributes
-    ]);
-  }
-
-  Component _buildInput(String inputId) {
-    final inputType = switch (_type) {
-      TextInputType.text => InputType.text,
-      TextInputType.email => InputType.email,
-      TextInputType.password => InputType.password,
-      TextInputType.url => InputType.url,
-      TextInputType.tel => InputType.tel,
-      TextInputType.search => InputType.search,
-    };
-
-    final attrs = buildInputAttributes();
-    if (_maxLength != null) attrs['maxlength'] = _maxLength.toString();
-    if (_minLength != null) attrs['minlength'] = _minLength.toString();
-    if (_pattern != null) attrs['pattern'] = _pattern!.pattern;
-    if (_datalist != null) attrs['list'] = '$inputId-list';
-
-    return input(
-      type: inputType,
-      id: inputId,
-      name: getName(),
-      value: getDefaultValue()?.toString(),
-      classes: _getInputClasses(),
-      attributes: attrs.isEmpty ? null : attrs,
-    );
-  }
-
-  Component _buildInputWithAdornments(String inputId) {
-    return div(
-      classes:
-          'flex rounded-lg overflow-hidden border border-gray-600 focus-within:ring-2 focus-within:ring-lime-500 focus-within:border-transparent',
-      [
-        // Prefix
-        if (_prefix != null)
-          span(classes: 'inline-flex items-center px-3 bg-gray-700 text-gray-400 text-sm border-r border-gray-600', [
-            text(_prefix!),
-          ]),
-
-        // Prefix icon
-        if (_prefixIcon != null)
-          span(classes: 'inline-flex items-center px-3 bg-gray-700 text-gray-400 border-r border-gray-600', [
-            // Icon would go here
-            text(_prefixIcon!),
-          ]),
-
-        // Input
-        div(classes: 'flex-1', [_buildInput(inputId)]),
-
-        // Suffix icon
-        if (_suffixIcon != null)
-          span(classes: 'inline-flex items-center px-3 bg-gray-700 text-gray-400 border-l border-gray-600', [
-            text(_suffixIcon!),
-          ]),
-
-        // Suffix
-        if (_suffix != null)
-          span(classes: 'inline-flex items-center px-3 bg-gray-700 text-gray-400 text-sm border-l border-gray-600', [
-            text(_suffix!),
-          ]),
+        // Datalist - using raw HTML approach since Jaspr doesn't have datalist
+        // The datalist will be rendered as part of the attributes
       ],
     );
   }
 
-  String _getInputClasses() {
+  Component _buildInput(String inputId) {
     final hasAdornments = _prefix != null || _suffix != null || _prefixIcon != null || _suffixIcon != null;
 
-    if (hasAdornments) {
-      // Simpler classes when inside wrapper
-      return 'w-full px-3 py-2 bg-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed';
-    }
-
-    return 'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed';
+    return FormInput(
+      type: _type,
+      id: inputId,
+      name: getName(),
+      value: getDefaultValue()?.toString(),
+      placeholder: getPlaceholder(),
+      required: isRequired(),
+      disabled: isDisabled(),
+      readonly: isReadonly(),
+      autofocus: shouldAutofocus(),
+      autocomplete: getAutocomplete(),
+      tabindex: getTabindex(),
+      maxLength: _maxLength,
+      minLength: _minLength,
+      pattern: _pattern?.pattern,
+      listId: _datalist != null ? '$inputId-list' : null,
+      hasAdornments: hasAdornments,
+    );
   }
-}
 
-/// The type of text input.
-enum TextInputType { text, email, password, url, tel, search }
+  Component _buildInputWithAdornments(String inputId) {
+    return InputWithAdornments.build(
+      input: _buildInput(inputId),
+      prefixText: _prefix,
+      suffixText: _suffix,
+      prefixIcon: _prefixIcon != null ? text(_prefixIcon!) : null,
+      suffixIcon: _suffixIcon != null ? text(_suffixIcon!) : null,
+    );
+  }
+
+  // _getInputClasses is no longer needed - using FormInput component
+}

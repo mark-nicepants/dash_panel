@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/form/form_schema.dart';
 import 'package:jaspr/jaspr.dart';
@@ -68,19 +69,17 @@ class FormRenderer extends StatelessComponent {
       ]),
 
       // Form actions
-      div(classes: 'flex items-center justify-end gap-3 pt-4 border-t border-gray-700', [
+      div(classes: FormStyles.formActions, [
         if (schema.shouldShowCancelButton())
           button(
             type: ButtonType.button,
-            classes:
-                'px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors',
+            classes: FormStyles.buttonSecondary,
             attributes: {'onclick': 'history.back()'},
             [text(schema.getCancelLabel())],
           ),
         button(
           type: ButtonType.submit,
-          classes:
-              'px-4 py-2 text-sm font-medium text-white bg-lime-500 hover:bg-lime-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+          classes: FormStyles.buttonPrimary,
           attributes: schema.isDisabled() ? {'disabled': ''} : null,
           [text(schema.getSubmitLabel())],
         ),
@@ -95,10 +94,7 @@ class FormRenderer extends StatelessComponent {
     return div(classes: spanClasses, [
       field.build(context),
       // Field errors
-      if (fieldErrors != null && fieldErrors.isNotEmpty)
-        ul(classes: 'mt-2 text-sm text-red-400 list-disc list-inside', [
-          for (final error in fieldErrors) li([text(error)]),
-        ]),
+      if (fieldErrors != null && fieldErrors.isNotEmpty) FormFieldErrors(errors: fieldErrors),
     ]);
   }
 }

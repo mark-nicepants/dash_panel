@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -172,73 +173,54 @@ class Select extends FormField {
   }
 
   Component _buildNativeSelect(String inputId) {
-    final attrs = buildInputAttributes();
-    if (_multiple) attrs['multiple'] = 'true';
-    if (_size != null) attrs['size'] = _size.toString();
-
     final defaultVal = getDefaultValue();
 
-    return div(classes: 'space-y-2 ${getExtraClasses() ?? ''}'.trim(), [
-      // Label
-      if (!isHidden())
-        label(
-          attributes: {'for': inputId},
-          classes: 'block text-sm font-medium text-gray-300',
-          [
-            text(getLabel()),
-            if (isRequired()) span(classes: 'text-red-500 ml-1', [text('*')]),
-            if (getHint() != null) span(classes: 'text-gray-500 ml-2 font-normal', [text('(${getHint()})')]),
-          ],
+    // Convert internal SelectOption to FormSelectOption
+    final formOptions = _options
+        .map((opt) => FormSelectOption(value: opt.value, label: opt.label, disabled: opt.disabled))
+        .toList();
+
+    // Convert internal SelectOptionGroup to FormSelectOptionGroup
+    final formGroups = _groups
+        ?.map(
+          (group) => FormSelectOptionGroup(
+            label: group.label,
+            options: group.options
+                .map((opt) => FormSelectOption(value: opt.value, label: opt.label, disabled: opt.disabled))
+                .toList(),
+          ),
+        )
+        .toList();
+
+    return FormFieldWrapper(
+      extraClasses: getExtraClasses(),
+      children: [
+        // Label
+        if (!isHidden()) FormLabel(labelText: getLabel(), forId: inputId, required: isRequired(), hint: getHint()),
+
+        // Select
+        FormSelect(
+          id: inputId,
+          name: getName(),
+          options: formOptions,
+          groups: formGroups,
+          selectedValue: defaultVal?.toString(),
+          placeholder: getSelectPlaceholder(),
+          multiple: _multiple,
+          size: _size,
+          required: isRequired(),
+          disabled: isDisabled(),
+          autofocus: shouldAutofocus(),
+          tabindex: getTabindex(),
         ),
 
-      // Select
-      select(
-        id: inputId,
-        name: getName(),
-        classes:
-            'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer',
-        attributes: attrs.isEmpty ? null : attrs,
-        [
-          // Placeholder option
-          if (getSelectPlaceholder() != null)
-            option(
-              value: '',
-              classes: 'text-gray-400',
-              attributes: {
-                'disabled': '',
-                'selected': defaultVal == null ? '' : null,
-              }.entries.where((e) => e.value != null).fold<Map<String, String>>({}, (m, e) => m..[e.key] = e.value!),
-              [text(getSelectPlaceholder()!)],
-            ),
-
-          // Grouped options
-          if (_groups != null)
-            for (final group in _groups!) _buildOptgroup(group, defaultVal)
-          else
-            // Flat options
-            for (final opt in _options) _buildOption(opt, defaultVal),
-        ],
-      ),
-
-      // Helper text
-      if (getHelperText() != null) p(classes: 'text-sm text-gray-400', [text(getHelperText()!)]),
-    ]);
+        // Helper text
+        if (getHelperText() != null) FormHelperText(helperText: getHelperText()!),
+      ],
+    );
   }
 
-  Component _buildOptgroup(SelectOptionGroup group, dynamic defaultVal) {
-    return optgroup(label: group.label, classes: 'bg-gray-800 text-gray-100', [
-      for (final opt in group.options) _buildOption(opt, defaultVal),
-    ]);
-  }
-
-  Component _buildOption(SelectOption opt, dynamic defaultVal) {
-    final isSelected = defaultVal != null && opt.value.toString() == defaultVal.toString();
-    final attrs = <String, String>{};
-    if (isSelected) attrs['selected'] = '';
-    if (opt.disabled) attrs['disabled'] = '';
-
-    return option(value: opt.value, attributes: attrs.isEmpty ? null : attrs, [text(opt.label)]);
-  }
+  // Remove old _buildOptgroup and _buildOption methods - now using FormSelect
 }
 
 /// A single option in a select field.

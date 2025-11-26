@@ -1,5 +1,4 @@
-import 'package:dash/src/components/pages/resource_create.dart';
-import 'package:dash/src/components/pages/resource_edit.dart';
+import 'package:dash/src/components/pages/resource_form.dart';
 import 'package:dash/src/components/pages/resource_index.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
@@ -299,14 +298,14 @@ abstract class Resource<T extends Model> {
     );
   }
 
-  /// Creates a ResourceCreate component for this resource.
+  /// Creates a ResourceForm component for creating a new record.
   Component buildCreatePage({Map<String, List<String>>? errors, Map<String, dynamic>? oldInput}) {
-    return ResourceCreate<T>(resource: this, errors: errors, oldInput: oldInput);
+    return ResourceForm<T>(resource: this, errors: errors, oldInput: oldInput);
   }
 
-  /// Creates a ResourceEdit component for this resource with the provided record.
+  /// Creates a ResourceForm component for editing an existing record.
   Component buildEditPage({required T record, Map<String, List<String>>? errors, Map<String, dynamic>? oldInput}) {
-    return ResourceEdit<T>(resource: this, record: record, errors: errors, oldInput: oldInput);
+    return ResourceForm<T>(resource: this, record: record, errors: errors, oldInput: oldInput);
   }
 
   /// Creates a new FormSchema instance for this resource.

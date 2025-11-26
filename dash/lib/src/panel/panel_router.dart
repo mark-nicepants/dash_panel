@@ -2,7 +2,7 @@ import 'package:dash/src/components/layout.dart';
 import 'package:dash/src/components/pages/dashboard_page.dart';
 import 'package:dash/src/components/pages/login_page.dart';
 import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/resources/resource_loader.dart';
+import 'package:dash/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
 
 /// Handles routing and page rendering for the Dash panel.
@@ -66,7 +66,7 @@ class PanelRouter {
     }
 
     // Unknown action, redirect back
-    return Response.found('/admin');
+    return Response.found(_config.path);
   }
 
   /// Handles creating a new record.
@@ -91,7 +91,7 @@ class PanelRouter {
       await resource.createRecord(formData);
 
       // Redirect to index with success message
-      final basePath = '/admin/resources/${resource.slug}';
+      final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath, headers: {'HX-Redirect': basePath});
     } catch (e) {
       // Handle error - re-render create page
@@ -144,11 +144,11 @@ class PanelRouter {
       await resource.updateRecord(record, formData);
 
       // Redirect to index with success message
-      final basePath = '/admin/resources/${resource.slug}';
+      final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath, headers: {'HX-Redirect': basePath});
     } catch (e) {
       // Handle error
-      final basePath = '/admin/resources/${resource.slug}';
+      final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found('$basePath/$recordId/edit');
     }
   }
@@ -163,10 +163,10 @@ class PanelRouter {
       }
 
       // Redirect to index
-      final basePath = '/admin/resources/${resource.slug}';
+      final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath, headers: {'HX-Redirect': basePath});
     } catch (e) {
-      final basePath = '/admin/resources/${resource.slug}';
+      final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath);
     }
   }

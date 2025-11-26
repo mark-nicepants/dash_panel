@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -113,76 +114,33 @@ class Toggle extends FormField {
   @override
   Component build(BuildContext context) {
     final inputId = getId();
-    final attrs = buildInputAttributes();
 
     final defaultVal = getDefaultValue();
     final isChecked = defaultVal == true || defaultVal == 1 || defaultVal == '1' || defaultVal == _onValue;
 
-    // Size classes
-    final (toggleWidth, toggleHeight, knobSize, translateX) = switch (_size) {
-      ToggleSize.sm => ('w-8', 'h-4', 'w-3 h-3', 'translate-x-4'),
-      ToggleSize.md => ('w-11', 'h-6', 'w-5 h-5', 'translate-x-5'),
-      ToggleSize.lg => ('w-14', 'h-7', 'w-6 h-6', 'translate-x-7'),
+    // Map internal size to FormToggleSize
+    final toggleSize = switch (_size) {
+      ToggleSize.sm => FormToggleSize.sm,
+      ToggleSize.md => FormToggleSize.md,
+      ToggleSize.lg => FormToggleSize.lg,
     };
 
-    return div(classes: 'space-y-2 ${getExtraClasses() ?? ''}'.trim(), [
-      div(classes: 'flex items-center justify-between', [
-        // Label
-        if (getLabel().isNotEmpty)
-          label(
-            attributes: {'for': inputId},
-            classes: 'text-sm font-medium text-gray-300',
-            [
-              text(getLabel()),
-              if (isRequired()) span(classes: 'text-red-500 ml-1', [text('*')]),
-            ],
-          ),
-
-        // Toggle container
-        div(classes: 'flex items-center gap-3', [
-          // Off label
-          if (_offLabel != null) span(classes: 'text-sm text-gray-400', [text(_offLabel!)]),
-
-          // Toggle switch using Alpine.js for interactivity
-          label(
-            classes: 'relative inline-flex cursor-pointer',
-            attributes: {'x-data': '{checked: $isChecked}'},
-            [
-              // Hidden checkbox
-              input(
-                type: InputType.checkbox,
-                id: inputId,
-                name: getName(),
-                value: _onValue,
-                classes: 'sr-only peer',
-                attributes: {...attrs, if (isChecked) 'checked': '', 'x-model': 'checked'},
-              ),
-              // Toggle background
-              div(
-                classes:
-                    '$toggleWidth $toggleHeight bg-gray-600 rounded-full peer peer-checked:bg-$_onColor-500 peer-focus:ring-2 peer-focus:ring-$_onColor-500/50 transition-colors duration-200',
-                [],
-              ),
-              // Toggle knob
-              div(
-                classes:
-                    'absolute top-0.5 left-0.5 $knobSize bg-white rounded-full shadow-md transition-transform duration-200 peer-checked:$translateX',
-                [],
-              ),
-            ],
-          ),
-
-          // On label
-          if (_onLabel != null) span(classes: 'text-sm text-gray-400', [text(_onLabel!)]),
-        ]),
-      ]),
-
-      // Helper text
-      if (getHelperText() != null) p(classes: 'text-sm text-gray-400', [text(getHelperText()!)]),
-
-      // Hidden input for off value
-      input(type: InputType.hidden, name: getName(), value: _offValue, attributes: {'x-bind:disabled': 'checked'}),
-    ]);
+    return FormToggleField(
+      id: inputId,
+      name: getName(),
+      labelText: getLabel(),
+      helperText: getHelperText(),
+      onLabel: _onLabel,
+      offLabel: _offLabel,
+      onValue: _onValue,
+      offValue: _offValue,
+      checked: isChecked,
+      onColor: _onColor,
+      required: isRequired(),
+      disabled: isDisabled(),
+      size: toggleSize,
+      extraClasses: getExtraClasses(),
+    );
   }
 }
 

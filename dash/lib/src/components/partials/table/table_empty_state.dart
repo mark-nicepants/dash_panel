@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/styles/default_icon_style.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Empty state component for tables when no records are found.
@@ -30,7 +31,7 @@ class TableEmptyState extends StatelessComponent {
   Component build(BuildContext context) {
     return div(classes: 'py-16 px-6 text-center', [
       div(classes: 'max-w-md mx-auto', [
-        if (icon != null) div(classes: 'text-5xl mb-4', [icon!]),
+        if (icon != null) DefaultIconStyle(size: 64, child: div(classes: 'flex justify-center mb-4', [icon!])),
         h3(classes: 'text-lg font-semibold text-gray-100 mb-2', [text(heading)]),
         p(classes: 'text-sm text-gray-400 mb-6', [text(description)]),
         if (action != null) action!,

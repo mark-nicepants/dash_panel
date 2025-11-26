@@ -2,7 +2,7 @@ import 'package:dash/src/database/database_connector.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/resource.dart';
-import 'package:dash/src/resources/resource_loader.dart';
+import 'package:dash/src/utils/resource_loader.dart';
 import 'package:get_it/get_it.dart';
 
 /// Global service locator instance.

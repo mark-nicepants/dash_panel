@@ -7,8 +7,8 @@ import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_server.dart';
 import 'package:dash/src/resource.dart';
-import 'package:dash/src/resources/resource_loader.dart';
 import 'package:dash/src/service_locator.dart';
+import 'package:dash/src/utils/resource_loader.dart';
 
 /// The main entry point for a Dash admin panel.
 ///

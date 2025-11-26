@@ -146,7 +146,7 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
     buffer.writeln('  static ModelQueryBuilder<$className> query() {');
     buffer.writeln('    return ModelQueryBuilder<$className>(');
     buffer.writeln('      Model.connector,');
-    buffer.writeln('      modelFactory: () => $className(),');
+    buffer.writeln('      modelFactory: $className.new,');
     buffer.writeln('    ).table(\'$tableName\');');
     buffer.writeln('  }');
     buffer.writeln();
@@ -196,7 +196,7 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
     buffer.writeln();
     buffer.writeln('    registerModelMetadata<$className>(');
     buffer.writeln('      ModelMetadata<$className>(');
-    buffer.writeln('        modelFactory: () => $className(),');
+    buffer.writeln('        modelFactory: $className.new,');
     buffer.writeln('        schema: ${className}Model.schema,');
     buffer.writeln('      ),');
     buffer.writeln('    );');

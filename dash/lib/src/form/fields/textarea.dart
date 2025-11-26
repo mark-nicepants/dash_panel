@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -136,50 +137,33 @@ class Textarea extends FormField {
   Component build(BuildContext context) {
     final inputId = getId();
 
-    final attrs = buildInputAttributes();
-    attrs['rows'] = _rows.toString();
-    if (_maxLength != null) attrs['maxlength'] = _maxLength.toString();
-    if (_minLength != null) attrs['minlength'] = _minLength.toString();
+    return FormFieldWrapper(
+      extraClasses: getExtraClasses(),
+      children: [
+        // Label
+        if (!isHidden()) FormLabel(labelText: getLabel(), forId: inputId, required: isRequired(), hint: getHint()),
 
-    final resizeClass = switch (_resize) {
-      TextareaResize.none => 'resize-none',
-      TextareaResize.vertical => 'resize-y',
-      TextareaResize.horizontal => 'resize-x',
-      TextareaResize.both => 'resize',
-    };
-
-    return div(classes: 'space-y-2 ${getExtraClasses() ?? ''}'.trim(), [
-      // Label
-      if (!isHidden())
-        label(
-          attributes: {'for': inputId},
-          classes: 'block text-sm font-medium text-gray-300',
-          [
-            text(getLabel()),
-            if (isRequired()) span(classes: 'text-red-500 ml-1', [text('*')]),
-            if (getHint() != null) span(classes: 'text-gray-500 ml-2 font-normal', [text('(${getHint()})')]),
-          ],
+        // Textarea
+        FormTextarea(
+          id: inputId,
+          name: getName(),
+          value: getDefaultValue()?.toString(),
+          placeholder: getPlaceholder(),
+          rows: _rows,
+          required: isRequired(),
+          disabled: isDisabled(),
+          readonly: isReadonly(),
+          autofocus: shouldAutofocus(),
+          tabindex: getTabindex(),
+          maxLength: _maxLength,
+          minLength: _minLength,
+          resize: _resize,
         ),
 
-      // Textarea
-      textarea(
-        id: inputId,
-        name: getName(),
-        classes:
-            'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed $resizeClass',
-        attributes: attrs.isEmpty ? null : attrs,
-        [if (getDefaultValue() != null) text(getDefaultValue().toString())],
-      ),
-
-      // Helper text and character count row
-      if (getHelperText() != null || (_showCharacterCount && _maxLength != null))
-        div(classes: 'flex justify-between items-center', [
-          if (getHelperText() != null) p(classes: 'text-sm text-gray-400', [text(getHelperText()!)]) else div([]),
-          if (_showCharacterCount && _maxLength != null) p(classes: 'text-xs text-gray-500', [text('0 / $_maxLength')]),
-        ]),
-    ]);
+        // Helper text and character count row
+        if (getHelperText() != null || (_showCharacterCount && _maxLength != null))
+          FormHelperRow(helperText: getHelperText(), maxLength: _showCharacterCount ? _maxLength : null),
+      ],
+    );
   }
 }
-
-/// The resize behavior for textareas.
-enum TextareaResize { none, vertical, horizontal, both }

@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -78,44 +79,40 @@ class Checkbox extends FormField {
   @override
   Component build(BuildContext context) {
     final inputId = getId();
-    final attrs = buildInputAttributes();
-    attrs['value'] = _checkedValue;
 
     final defaultVal = getDefaultValue();
     final isChecked = defaultVal == true || defaultVal == 1 || defaultVal == '1' || defaultVal == _checkedValue;
-    if (isChecked) attrs['checked'] = '';
 
-    return div(classes: 'space-y-2 ${getExtraClasses() ?? ''}'.trim(), [
-      div(classes: 'flex items-start gap-3', [
-        // Checkbox
-        div(classes: 'flex items-center h-5', [
-          input(
-            type: InputType.checkbox,
-            id: inputId,
-            name: getName(),
-            classes:
-                'w-4 h-4 bg-gray-700 border-gray-600 rounded text-lime-500 focus:ring-2 focus:ring-lime-500 focus:ring-offset-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
-            attributes: attrs.isEmpty ? null : attrs,
-          ),
-        ]),
+    return FormFieldWrapper(
+      extraClasses: getExtraClasses(),
+      children: [
+        FormFieldWrapperInline(
+          children: [
+            // Checkbox
+            CheckboxInputContainer(
+              child: FormCheckbox(
+                id: inputId,
+                name: getName(),
+                value: _checkedValue,
+                checked: isChecked,
+                required: isRequired(),
+                disabled: isDisabled(),
+                tabindex: getTabindex(),
+              ),
+            ),
 
-        // Label
-        label(
-          attributes: {'for': inputId},
-          classes: 'text-sm text-gray-300 cursor-pointer select-none',
-          [
-            text(getLabel()),
-            if (isRequired() || _mustBeAccepted) span(classes: 'text-red-500 ml-1', [text('*')]),
+            // Label
+            InlineFieldLabel(labelText: getLabel(), forId: inputId, required: isRequired() || _mustBeAccepted),
           ],
         ),
-      ]),
 
-      // Helper text
-      if (getHelperText() != null) p(classes: 'text-sm text-gray-400 ml-7', [text(getHelperText()!)]),
+        // Helper text
+        if (getHelperText() != null) p(classes: '${FormStyles.helperText} ml-7', [text(getHelperText()!)]),
 
-      // Hidden input for unchecked value
-      if (_uncheckedValue != null) input(type: InputType.hidden, name: getName(), value: _uncheckedValue),
-    ]);
+        // Hidden input for unchecked value
+        if (_uncheckedValue != null) input(type: InputType.hidden, name: getName(), value: _uncheckedValue),
+      ],
+    );
   }
 }
 

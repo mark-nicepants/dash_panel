@@ -6,7 +6,7 @@ import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_router.dart';
 import 'package:dash/src/panel/request_handler.dart';
-import 'package:dash/src/resources/resource_loader.dart';
+import 'package:dash/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;

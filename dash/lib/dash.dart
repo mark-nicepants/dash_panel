@@ -9,8 +9,7 @@ export 'src/auth/auth_service.dart' show AuthService, DashUser, Session;
 export 'src/components/layout.dart';
 export 'src/components/pages/dashboard_page.dart';
 export 'src/components/pages/login_page.dart';
-export 'src/components/pages/resource_create.dart';
-export 'src/components/pages/resource_edit.dart';
+export 'src/components/pages/resource_form.dart';
 export 'src/components/pages/resource_index.dart';
 // Components
 export 'src/components/partials/heroicon.dart';

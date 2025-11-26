@@ -129,28 +129,6 @@ class HasOne {
   const HasOne({required this.foreignKey, this.localKey = 'id'});
 }
 
-/// Marks a field as fillable via mass assignment.
-///
-/// Example:
-/// ```dart
-/// @Fillable()
-/// String? name;
-/// ```
-class Fillable {
-  const Fillable();
-}
-
-/// Marks a field as guarded from mass assignment.
-///
-/// Example:
-/// ```dart
-/// @Guarded()
-/// String? role;
-/// ```
-class Guarded {
-  const Guarded();
-}
-
 /// Adds validation rules to a field.
 ///
 /// Example:

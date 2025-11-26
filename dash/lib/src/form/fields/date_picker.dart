@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -153,7 +154,6 @@ class DatePicker extends FormField {
   @override
   Component build(BuildContext context) {
     final inputId = getId();
-    final attrs = buildInputAttributes();
 
     // Determine input type
     final inputType = _timeOnly
@@ -163,11 +163,16 @@ class DatePicker extends FormField {
         : InputType.date;
 
     // Format dates for HTML5 inputs
+    final attrs = <String, String>{};
     if (_minDate != null) {
       attrs['min'] = _formatDateForInput(_minDate!);
     }
     if (_maxDate != null) {
       attrs['max'] = _formatDateForInput(_maxDate!);
+    }
+    // Handle datetime-local type which Jaspr doesn't support directly
+    if (inputType is String) {
+      attrs['type'] = inputType;
     }
 
     // Default value
@@ -181,33 +186,31 @@ class DatePicker extends FormField {
       }
     }
 
-    return div(classes: 'space-y-2 ${getExtraClasses() ?? ''}'.trim(), [
-      // Label
-      if (!isHidden())
-        label(
-          attributes: {'for': inputId},
-          classes: 'block text-sm font-medium text-gray-300',
-          [
-            text(getLabel()),
-            if (isRequired()) span(classes: 'text-red-500 ml-1', [text('*')]),
-            if (getHint() != null) span(classes: 'text-gray-500 ml-2 font-normal', [text('(${getHint()})')]),
-          ],
+    return FormFieldWrapper(
+      extraClasses: getExtraClasses(),
+      children: [
+        // Label
+        if (!isHidden()) FormLabel(labelText: getLabel(), forId: inputId, required: isRequired(), hint: getHint()),
+
+        // Input
+        FormInput(
+          type: inputType is InputType ? inputType : InputType.text,
+          id: inputId,
+          name: getName(),
+          value: valueStr,
+          required: isRequired(),
+          disabled: isDisabled(),
+          readonly: isReadonly(),
+          autofocus: shouldAutofocus(),
+          autocomplete: getAutocomplete(),
+          tabindex: getTabindex(),
+          attributes: attrs.isEmpty ? null : attrs,
         ),
 
-      // Input
-      input(
-        type: inputType is InputType ? inputType : InputType.text,
-        id: inputId,
-        name: getName(),
-        value: valueStr,
-        classes:
-            'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed',
-        attributes: {...attrs, if (inputType is String) 'type': inputType},
-      ),
-
-      // Helper text
-      if (getHelperText() != null) p(classes: 'text-sm text-gray-400', [text(getHelperText()!)]),
-    ]);
+        // Helper text
+        if (getHelperText() != null) FormHelperText(helperText: getHelperText()!),
+      ],
+    );
   }
 
   /// Formats a DateTime for HTML5 date/time inputs.
