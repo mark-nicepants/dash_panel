@@ -38,24 +38,27 @@ class PostResource extends Resource<Post> {
   @override
   FormSchema<Post> form(FormSchema<Post> form) {
     return form.fields([
-      Section.make(
-        'Post Details',
-      ).description('Basic information about the blog post').icon('document-text').collapsible().columns(2).schema([
-        TextInput.make('title') //
-            .minLength(3)
-            .maxLength(200)
-            .label('Post Title')
-            .placeholder('Enter post title')
-            .required()
-            .columnSpanFull(),
+      Section.make('Post Details') //
+          .description('Basic information about the blog post')
+          .icon('document-text')
+          .collapsible()
+          .columns(2)
+          .schema([
+            TextInput.make('title') //
+                .minLength(3)
+                .maxLength(200)
+                .label('Post Title')
+                .placeholder('Enter post title')
+                .required()
+                .columnSpanFull(),
 
-        Textarea.make('content') //
-            .rows(8)
-            .label('Content')
-            .placeholder('Write your post content here...')
-            .required()
-            .columnSpanFull(),
-      ]),
+            Textarea.make('content') //
+                .rows(8)
+                .label('Content')
+                .placeholder('Write your post content here...')
+                .required()
+                .columnSpanFull(),
+          ]),
 
       Section.make(
         'Publishing Options',
