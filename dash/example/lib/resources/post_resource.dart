@@ -20,8 +20,8 @@ class PostResource extends Resource<Post> {
               .sortable()
               .grow(),
 
-          TextColumn.make('user_id') //
-              .label('Author ID')
+          TextColumn.make('author.name') //
+              .label('Author')
               .sortable()
               .width('100px'),
 

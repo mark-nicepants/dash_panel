@@ -1,4 +1,5 @@
 import 'package:dash/src/database/database_connector.dart';
+import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model_query_builder.dart';
 import 'package:dash/src/model/soft_deletes.dart';
 import 'package:dash/src/validation/validation.dart';
@@ -101,6 +102,15 @@ abstract class Model {
   /// Returns a list of all database column names for this model.
   /// This is generated automatically by the @DashModel annotation.
   List<String> getFields();
+
+  /// Returns the value of a relationship by name.
+  /// Override this in generated code to provide relationship access.
+  /// Returns null if the relationship doesn't exist or isn't loaded.
+  Model? getRelation(String name) => null;
+
+  /// Returns metadata about relationships defined on this model.
+  /// Override this in generated code to provide relationship metadata.
+  List<RelationshipMeta> getRelationships() => [];
 
   // ===== Helper Methods for Subclasses =====
 

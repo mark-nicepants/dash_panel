@@ -205,7 +205,19 @@ abstract class TableColumn {
         } else if (part == value.updatedAtColumn) {
           value = value.updatedAt;
         } else {
-          value = value.toMap()[part];
+          // First try to get the value from the regular fields map
+          final mapValue = value.toMap()[part];
+          if (mapValue != null) {
+            value = mapValue;
+          } else {
+            // If not found in map, try to get it as a relationship
+            final relationValue = value.getRelation(part);
+            if (relationValue != null) {
+              value = relationValue;
+            } else {
+              value = null;
+            }
+          }
         }
       } else if (value is Map) {
         value = value[part];

@@ -54,11 +54,4 @@ class Post extends Model with _$PostModelMixin {
   static Future<List<Post>> drafts() async {
     return PostModel.query().where('status', 'draft').get();
   }
-
-  /// Loads the author relationship.
-  Future<void> loadAuthor() async {
-    if (userId != null) {
-      author = await UserModel.find(userId!);
-    }
-  }
 }

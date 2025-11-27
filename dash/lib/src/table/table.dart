@@ -1,5 +1,4 @@
 import 'package:dash/src/model/model.dart';
-
 import 'package:dash/src/table/columns/column.dart';
 
 /// Represents a table in the admin panel.
@@ -165,4 +164,18 @@ class Table<T extends Model> {
 
   /// Gets the search placeholder.
   String getSearchPlaceholder() => _searchPlaceholder;
+
+  /// Gets the list of relationship names required by columns.
+  /// For columns with dot notation (e.g., 'author.name'), returns the relationship name ('author').
+  Set<String> getRequiredRelationships() {
+    final relationships = <String>{};
+    for (final column in _columns) {
+      final name = column.getName();
+      if (name.contains('.')) {
+        // Extract the first part as the relationship name
+        relationships.add(name.split('.').first);
+      }
+    }
+    return relationships;
+  }
 }

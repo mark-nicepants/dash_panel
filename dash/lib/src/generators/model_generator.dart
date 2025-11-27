@@ -137,6 +137,69 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
     buffer.writeln('    ];');
     buffer.writeln('  }');
 
+    // Generate getRelation - returns a relationship by name
+    final relationshipFields = fields.where((f) => f.isRelationship).toList();
+    if (relationshipFields.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('  @override');
+      buffer.writeln('  Model? getRelation(String name) {');
+      buffer.writeln('    final self = this as $className;');
+      buffer.writeln('    switch (name) {');
+      for (final field in relationshipFields) {
+        buffer.writeln('      case \'${field.fieldName}\':');
+        buffer.writeln('        return self.${field.fieldName};');
+      }
+      buffer.writeln('      default:');
+      buffer.writeln('        return null;');
+      buffer.writeln('    }');
+      buffer.writeln('  }');
+      buffer.writeln();
+      buffer.writeln('  @override');
+      buffer.writeln('  List<RelationshipMeta> getRelationships() {');
+      buffer.writeln('    return const [');
+      for (final field in relationshipFields) {
+        final relType = switch (field.relationshipType) {
+          'BelongsTo' => 'RelationshipType.belongsTo',
+          'HasOne' => 'RelationshipType.hasOne',
+          'HasMany' => 'RelationshipType.hasMany',
+          _ => 'RelationshipType.belongsTo',
+        };
+        // Get the base type without nullability and List wrapper
+        var modelType = field.dartType.replaceAll('?', '');
+        if (modelType.startsWith('List<')) {
+          modelType = modelType.substring(5, modelType.length - 1);
+        }
+        buffer.writeln('      RelationshipMeta(');
+        buffer.writeln('        name: \'${field.fieldName}\',');
+        buffer.writeln('        type: $relType,');
+        buffer.writeln('        foreignKey: \'${field.foreignKey}\',');
+        buffer.writeln('        relatedKey: \'${field.relatedKey}\',');
+        buffer.writeln('        relatedModelType: \'$modelType\',');
+        buffer.writeln('      ),');
+      }
+      buffer.writeln('    ];');
+      buffer.writeln('  }');
+      buffer.writeln();
+
+      // Generate setRelation - sets a relationship value by name
+      buffer.writeln('  /// Sets a relationship value by name.');
+      buffer.writeln('  void setRelation(String name, Model? value) {');
+      buffer.writeln('    final self = this as $className;');
+      buffer.writeln('    switch (name) {');
+      for (final field in relationshipFields) {
+        // Get the base type for casting
+        var modelType = field.dartType.replaceAll('?', '');
+        if (modelType.startsWith('List<')) {
+          modelType = modelType.substring(5, modelType.length - 1);
+        }
+        buffer.writeln('      case \'${field.fieldName}\':');
+        buffer.writeln('        self.${field.fieldName} = value as $modelType?;');
+        buffer.writeln('        break;');
+      }
+      buffer.writeln('    }');
+      buffer.writeln('  }');
+    }
+
     buffer.writeln('}');
     buffer.writeln();
 
@@ -243,6 +306,9 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
           isNullable: field.type.nullabilitySuffix == NullabilitySuffix.question,
           isPrimaryKey: isPrimaryKey,
           isRelationship: (annotations['isRelationship'] as bool?) ?? false,
+          relationshipType: annotations['relationshipType'] as String?,
+          foreignKey: annotations['foreignKey'] as String?,
+          relatedKey: annotations['relatedKey'] as String?,
         ),
       );
     }
@@ -288,6 +354,30 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
         }
       } else if (typeName == 'BelongsTo' || typeName == 'HasMany' || typeName == 'HasOne') {
         result['isRelationship'] = true;
+        result['relationshipType'] = typeName;
+
+        // Extract relationship keys
+        final foreignKeyValue = constantValue.getField('foreignKey');
+        if (foreignKeyValue != null && !foreignKeyValue.isNull) {
+          result['foreignKey'] = foreignKeyValue.toStringValue();
+        }
+
+        // Get the related key (ownerKey for BelongsTo, localKey for HasOne/HasMany)
+        if (typeName == 'BelongsTo') {
+          final ownerKeyValue = constantValue.getField('ownerKey');
+          if (ownerKeyValue != null && !ownerKeyValue.isNull) {
+            result['relatedKey'] = ownerKeyValue.toStringValue();
+          } else {
+            result['relatedKey'] = 'id';
+          }
+        } else {
+          final localKeyValue = constantValue.getField('localKey');
+          if (localKeyValue != null && !localKeyValue.isNull) {
+            result['relatedKey'] = localKeyValue.toStringValue();
+          } else {
+            result['relatedKey'] = 'id';
+          }
+        }
       }
     }
 
@@ -356,6 +446,9 @@ class _FieldInfo {
   final bool isNullable;
   final bool isPrimaryKey;
   final bool isRelationship;
+  final String? relationshipType; // 'BelongsTo', 'HasMany', 'HasOne'
+  final String? foreignKey;
+  final String? relatedKey;
 
   _FieldInfo({
     required this.fieldName,
@@ -364,5 +457,8 @@ class _FieldInfo {
     required this.isNullable,
     required this.isPrimaryKey,
     required this.isRelationship,
+    this.relationshipType,
+    this.foreignKey,
+    this.relatedKey,
   });
 }

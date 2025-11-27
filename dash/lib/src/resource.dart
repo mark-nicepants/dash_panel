@@ -3,6 +3,7 @@ import 'package:dash/src/components/pages/resource_index.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/form/form_schema.dart';
+import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/model/model_metadata.dart';
 import 'package:dash/src/model/model_query_builder.dart';
@@ -163,11 +164,31 @@ abstract class Resource<T extends Model> {
       modelColumns.add(instance.updatedAtColumn);
     }
 
+    // Get relationship names for validation of dot notation columns
+    final relationshipNames = instance.getRelationships().map((r) => r.name).toSet();
+
     final errors = <String>[];
 
     // Check all table columns
     for (final column in tableConfig.getColumns()) {
       final columnName = column.getName();
+
+      // Handle dot notation (e.g., 'author.name')
+      if (columnName.contains('.')) {
+        final parts = columnName.split('.');
+        final relationName = parts.first;
+
+        // Validate that the relationship exists
+        if (!relationshipNames.contains(relationName)) {
+          errors.add(
+            '  - Relationship "$relationName" (from column "$columnName") does not exist in model ${model.toString()}.\n'
+            '    Available relationships: ${relationshipNames.join(", ")}',
+          );
+        }
+        // Note: We can't validate nested property names at this level without loading the related model
+        continue;
+      }
+
       if (!modelColumns.contains(columnName)) {
         errors.add(
           '  - Column "$columnName" does not exist in model ${model.toString()}.\n'
@@ -243,7 +264,12 @@ abstract class Resource<T extends Model> {
       q = q.limit(perPage).offset(offset);
     }
 
-    return await q.get();
+    final records = await q.get();
+
+    // Load required relationships
+    await loadRelationships(records, tableConfig);
+
+    return records;
   }
 
   /// Gets the total count of records for pagination.
@@ -283,6 +309,83 @@ abstract class Resource<T extends Model> {
   /// Finds a specific record by ID.
   Future<T?> findRecord(dynamic id) async {
     return await query().find(id);
+  }
+
+  /// Loads relationships required by the table configuration.
+  /// Uses eager loading to minimize database queries.
+  Future<void> loadRelationships(List<T> records, Table<T> tableConfig) async {
+    if (records.isEmpty) return;
+
+    final requiredRelations = tableConfig.getRequiredRelationships();
+    if (requiredRelations.isEmpty) return;
+
+    // Get the first record to inspect its relationship metadata
+    final sampleRecord = records.first;
+    final relationships = sampleRecord.getRelationships();
+
+    for (final relationName in requiredRelations) {
+      // Find the relationship metadata
+      final relationMeta = relationships.where((r) => r.name == relationName).firstOrNull;
+      if (relationMeta == null) continue;
+
+      // Only handle BelongsTo for now (most common for table display)
+      if (relationMeta.type == RelationshipType.belongsTo) {
+        await _loadBelongsToRelation(records, relationMeta);
+      }
+    }
+  }
+
+  /// Loads a BelongsTo relationship for a list of records.
+  /// Uses a single query to fetch all related records efficiently.
+  Future<void> _loadBelongsToRelation(List<T> records, RelationshipMeta meta) async {
+    final relatedMetadata = getModelMetadataByName(meta.relatedModelType);
+    if (relatedMetadata == null) return;
+
+    // Collect all foreign key values
+    final foreignKeyValues = <dynamic>{};
+    for (final record in records) {
+      final fkValue = record.toMap()[meta.foreignKey];
+      if (fkValue != null) {
+        foreignKeyValues.add(fkValue);
+      }
+    }
+
+    if (foreignKeyValues.isEmpty) return;
+
+    // Fetch all related records in a single query
+    final relatedModel = relatedMetadata.modelFactory();
+    final relatedRecords = await ModelQueryBuilder<Model>(
+      Model.connector,
+      modelFactory: relatedMetadata.modelFactory,
+      modelTable: relatedModel.table,
+      modelPrimaryKey: relatedModel.primaryKey,
+    ).whereIn(meta.relatedKey, foreignKeyValues.toList()).get();
+
+    // Create a lookup map by the related key
+    final relatedMap = <dynamic, Model>{};
+    for (final related in relatedRecords) {
+      final keyValue = related.toMap()[meta.relatedKey];
+      if (keyValue != null) {
+        relatedMap[keyValue] = related;
+      }
+    }
+
+    // Assign the related records to each parent record
+    for (final record in records) {
+      final fkValue = record.toMap()[meta.foreignKey];
+      if (fkValue != null && relatedMap.containsKey(fkValue)) {
+        _setRelation(record, meta.name, relatedMap[fkValue]!);
+      }
+    }
+  }
+
+  /// Sets a relationship value on a model.
+  void _setRelation(T record, String relationName, Model relatedRecord) {
+    try {
+      (record as dynamic).setRelation(relationName, relatedRecord);
+    } catch (_) {
+      // Model doesn't support setRelation
+    }
   }
 
   /// Creates a ResourceIndex component for this resource with the provided records and query state.
