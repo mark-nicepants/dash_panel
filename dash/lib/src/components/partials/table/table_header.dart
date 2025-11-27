@@ -72,8 +72,8 @@ class TableHeader<T> extends StatelessComponent {
       classes: 'block text-gray-400 no-underline',
       attributes: {
         'hx-get': url,
-        'hx-target': 'closest [data-table-container]',
-        'hx-select': '[data-table-container]',
+        'hx-target': '#resource-table-wrapper',
+        'hx-select': '#resource-table-wrapper',
         'hx-swap': 'outerHTML',
         'hx-push-url': 'true',
       },

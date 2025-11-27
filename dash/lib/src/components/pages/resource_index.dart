@@ -40,9 +40,20 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
     return div(classes: 'flex flex-col gap-6', [
       _buildBreadcrumbs(),
       _buildHeader(),
-      _buildTableCard(),
-      _buildPagination(),
+      _buildTableWithPagination(),
     ]);
+  }
+
+  /// Builds the table and pagination wrapped in a single container for HTMX updates.
+  Component _buildTableWithPagination() {
+    return div(
+      id: 'resource-table-wrapper',
+      classes: 'flex flex-col gap-6',
+      [
+        _buildTableCard(),
+        _buildPagination(),
+      ],
+    );
   }
 
   Component _buildBreadcrumbs() {
@@ -91,6 +102,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   Component _buildSearchBar() {
     return div(classes: 'flex-1 max-w-xs', [
       input(
+        id: 'resource-search-input',
         type: InputType.text,
         classes:
             'w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all',
@@ -100,9 +112,11 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
           'placeholder': tableConfig.getSearchPlaceholder(),
           'hx-get': basePath,
           'hx-trigger': 'keyup changed delay:300ms',
-          'hx-target': '#resource-table-container',
-          'hx-select': '#resource-table-container',
+          'hx-target': '#resource-table-wrapper',
+          'hx-select': '#resource-table-wrapper',
           'hx-swap': 'outerHTML',
+          'hx-on::after-swap': 'document.getElementById("resource-search-input")?.focus(); '
+              'document.getElementById("resource-search-input")?.setSelectionRange(-1, -1)',
         },
       ),
     ]);
@@ -166,8 +180,8 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
                 'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
             attributes: {
               'hx-get': _buildPageUrl(currentPage - 1),
-              'hx-target': '#resource-table-container',
-              'hx-select': '#resource-table-container',
+              'hx-target': '#resource-table-wrapper',
+              'hx-select': '#resource-table-wrapper',
               'hx-swap': 'outerHTML',
               'hx-push-url': 'true',
             },
@@ -188,8 +202,8 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
                         'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
                     attributes: {
                       'hx-get': _buildPageUrl(i),
-                      'hx-target': '#resource-table-container',
-                      'hx-select': '#resource-table-container',
+                      'hx-target': '#resource-table-wrapper',
+                      'hx-select': '#resource-table-wrapper',
                       'hx-swap': 'outerHTML',
                       'hx-push-url': 'true',
                     },
@@ -209,8 +223,8 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
                 'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
             attributes: {
               'hx-get': _buildPageUrl(currentPage + 1),
-              'hx-target': '#resource-table-container',
-              'hx-select': '#resource-table-container',
+              'hx-target': '#resource-table-wrapper',
+              'hx-select': '#resource-table-wrapper',
               'hx-swap': 'outerHTML',
               'hx-push-url': 'true',
             },

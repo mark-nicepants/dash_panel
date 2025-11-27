@@ -30,6 +30,11 @@ class UserResource extends Resource<User> {
               .grow()
               .toggleable(),
 
+          TextColumn.make('role') //
+              .label('Role')
+              .sortable()
+              .toggleable(),
+
           TextColumn.make('created_at') //
               .dateTime()
               .label('Joined')
