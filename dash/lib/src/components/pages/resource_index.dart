@@ -37,23 +37,12 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'flex flex-col gap-6', [
-      _buildBreadcrumbs(),
-      _buildHeader(),
-      _buildTableWithPagination(),
-    ]);
+    return div(classes: 'flex flex-col gap-6', [_buildBreadcrumbs(), _buildHeader(), _buildTableWithPagination()]);
   }
 
   /// Builds the table and pagination wrapped in a single container for HTMX updates.
   Component _buildTableWithPagination() {
-    return div(
-      id: 'resource-table-wrapper',
-      classes: 'flex flex-col gap-6',
-      [
-        _buildTableCard(),
-        _buildPagination(),
-      ],
-    );
+    return div(id: 'resource-table-wrapper', classes: 'flex flex-col gap-6', [_buildTableCard(), _buildPagination()]);
   }
 
   Component _buildBreadcrumbs() {
@@ -115,7 +104,8 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
           'hx-target': '#resource-table-wrapper',
           'hx-select': '#resource-table-wrapper',
           'hx-swap': 'outerHTML',
-          'hx-on::after-swap': 'document.getElementById("resource-search-input")?.focus(); '
+          'hx-on::after-swap':
+              'document.getElementById("resource-search-input")?.focus(); '
               'document.getElementById("resource-search-input")?.setSelectionRange(-1, -1)',
         },
       ),
