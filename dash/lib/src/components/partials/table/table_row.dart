@@ -30,7 +30,7 @@ class TableRow<T extends Model> extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return tr(classes: 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700 transition-colors', [
+    return tr(classes: 'bg-gray-800 border-b border-gray-700 last:border-0 hover:bg-gray-700 transition-colors', [
       for (final column in columns) _buildCell(column),
       if (actions != null) _buildActionsCell(),
     ]);

@@ -186,6 +186,20 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
       buffer.writeln('        ),');
     }
 
+    // Add timestamp columns if timestamps are enabled
+    if (timestamps) {
+      buffer.writeln('        ColumnDefinition(');
+      buffer.writeln('          name: \'$createdAtColumn\',');
+      buffer.writeln('          type: ColumnType.text,');
+      buffer.writeln('          nullable: true,');
+      buffer.writeln('        ),');
+      buffer.writeln('        ColumnDefinition(');
+      buffer.writeln('          name: \'$updatedAtColumn\',');
+      buffer.writeln('          type: ColumnType.text,');
+      buffer.writeln('          nullable: true,');
+      buffer.writeln('        ),');
+    }
+
     buffer.writeln('      ],');
     buffer.writeln('    );');
     buffer.writeln('  }');

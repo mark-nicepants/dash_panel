@@ -1,4 +1,5 @@
 import 'package:dash/dash.dart';
+import 'package:dash_example/commands/seed_commands.dart';
 import 'package:dash_example/models/post.dart';
 import 'package:dash_example/models/user.dart';
 import 'package:dash_example/resources/post_resource.dart';
@@ -17,6 +18,7 @@ Future<void> main({String dbDir = 'database'}) async {
   final panel = Panel()
     ..setId('admin')
     ..setPath('/admin')
+    ..addDevCommands([seedUsersCommand(), seedPostsCommand(), seedAllCommand(), clearDatabaseCommand()])
     ..database(
       DatabaseConfig.using(SqliteConnector('$dbDir/app.db'), migrations: MigrationConfig.fromResources(verbose: true)),
     );
@@ -24,8 +26,6 @@ Future<void> main({String dbDir = 'database'}) async {
   print('🔄 Running automatic migrations...\n');
 
   // Start the server (migrations run automatically on connect)
+  // The dev console provides interactive commands while the server is running
   await panel.serve(host: 'localhost', port: 8080);
-
-  // Keep the server running
-  print('\n⌨️  Press Ctrl+C to stop the server\n');
 }

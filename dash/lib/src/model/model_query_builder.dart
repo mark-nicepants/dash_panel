@@ -49,6 +49,7 @@ class ModelQueryBuilder<T extends Model> {
     return results.map((row) {
       final model = _modelFactory();
       model.fromMap(row);
+      _populateTimestamps(model, row);
       return model;
     }).toList();
   }
@@ -65,7 +66,16 @@ class ModelQueryBuilder<T extends Model> {
 
     final model = _modelFactory();
     model.fromMap(result);
+    _populateTimestamps(model, result);
     return model;
+  }
+
+  /// Populates the base class timestamp fields from database row.
+  void _populateTimestamps(T model, Map<String, dynamic> row) {
+    if (model.timestamps) {
+      model.createdAt = model.parseDateTime(row[model.createdAtColumn]);
+      model.updatedAt = model.parseDateTime(row[model.updatedAtColumn]);
+    }
   }
 
   /// Executes the query and returns raw maps instead of typed models.

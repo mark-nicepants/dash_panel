@@ -1,4 +1,5 @@
 import 'package:dash/src/database/database_config.dart';
+import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/resource.dart';
 
 /// Configuration for a Dash panel.
@@ -9,6 +10,7 @@ class PanelConfig {
   String _id = 'admin';
   String _path = '/admin';
   final List<Resource> _resources = [];
+  final List<DevCommand> _devCommands = [];
   DatabaseConfig? _databaseConfig;
 
   /// The unique identifier for this panel.
@@ -22,6 +24,9 @@ class PanelConfig {
 
   /// The database configuration for this panel.
   DatabaseConfig? get databaseConfig => _databaseConfig;
+
+  /// Custom dev commands registered with this panel.
+  List<DevCommand> get devCommands => List.unmodifiable(_devCommands);
 
   /// Sets the unique identifier for this panel.
   void setId(String id) {
@@ -46,6 +51,11 @@ class PanelConfig {
         _resources.add(resource);
       }
     }
+  }
+
+  /// Registers custom dev commands with this panel.
+  void registerDevCommands(List<DevCommand> commands) {
+    _devCommands.addAll(commands);
   }
 
   /// Validates the configuration.

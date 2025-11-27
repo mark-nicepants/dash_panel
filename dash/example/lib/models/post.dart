@@ -4,7 +4,7 @@ import 'package:dash_example/models/user.dart';
 part 'post.model.g.dart';
 
 /// Post model representing blog posts.
-@DashModel(table: 'posts', timestamps: false)
+@DashModel(table: 'posts')
 class Post extends Model with _$PostModelMixin {
   int? id;
   String? title;
@@ -18,14 +18,11 @@ class Post extends Model with _$PostModelMixin {
   @Column(name: 'published_at')
   DateTime? publishedAt;
 
-  @Column(name: 'created_at')
-  DateTime? createdAt;
-
   // Relationship
   @BelongsTo(foreignKey: 'user_id')
   User? author;
 
-  Post({this.id, this.title, this.content, this.userId, this.status, this.publishedAt, this.createdAt, this.author});
+  Post({this.id, this.title, this.content, this.userId, this.status, this.publishedAt, this.author});
 
   // ===== Validation Rules =====
   @override

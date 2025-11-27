@@ -4,6 +4,7 @@ import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/model/model.dart';
+import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_server.dart';
 import 'package:dash/src/resource.dart';
@@ -81,6 +82,28 @@ class Panel {
   /// Registers resources with this panel.
   Panel registerResources(List<Resource> resources) {
     _config.registerResources(resources);
+    return this;
+  }
+
+  /// Adds custom dev commands to this panel.
+  ///
+  /// These commands will be available in the interactive dev console
+  /// when running the server in development mode.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.addDevCommands([
+  ///   DevCommand(
+  ///     name: 'seed',
+  ///     description: 'Seed the database with test data',
+  ///     handler: (args) async {
+  ///       // Your seeding logic here
+  ///     },
+  ///   ),
+  /// ]);
+  /// ```
+  Panel addDevCommands(List<DevCommand> commands) {
+    _config.registerDevCommands(commands);
     return this;
   }
 

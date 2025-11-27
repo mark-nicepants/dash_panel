@@ -65,24 +65,26 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
 
   Component _buildTableCard() {
     final toggleableColumns = tableConfig.getColumns().where((c) => c.isToggleable()).toList();
-    return div(classes: 'bg-gray-800 rounded-xl border border-gray-700 overflow-hidden', [
-      div(classes: 'flex items-center justify-end gap-3 px-6 py-4 bg-gray-800 border-b border-gray-700', [
+    return div(classes: 'bg-gray-800 rounded-xl border border-gray-700', [
+      div(classes: 'flex items-center justify-end gap-3 px-6 py-4 bg-gray-800 border-b border-gray-700 rounded-t-xl', [
         if (tableConfig.isSearchable()) _buildSearchBar(),
         if (toggleableColumns.isNotEmpty) ColumnToggle(columns: toggleableColumns, resourceSlug: resource.slug),
       ]),
-      DataTable<T>(
-        tableConfig: tableConfig,
-        records: records,
-        sortColumn: sortColumn,
-        sortDirection: sortDirection,
-        onSortUrl: _buildSortUrl,
-        containerId: 'resource-table-container',
-        resourceSlug: resource.slug,
-        emptyStateIcon: resource.iconComponent,
-        emptyStateHeading: 'No ${resource.label.toLowerCase()} found',
-        emptyStateDescription: 'Get started by creating your first ${resource.singularLabel.toLowerCase()}.',
-        rowActions: _buildRowActions,
-      ),
+      div(classes: 'overflow-hidden rounded-b-xl', [
+        DataTable<T>(
+          tableConfig: tableConfig,
+          records: records,
+          sortColumn: sortColumn,
+          sortDirection: sortDirection,
+          onSortUrl: _buildSortUrl,
+          containerId: 'resource-table-container',
+          resourceSlug: resource.slug,
+          emptyStateIcon: resource.iconComponent,
+          emptyStateHeading: 'No ${resource.label.toLowerCase()} found',
+          emptyStateDescription: 'Get started by creating your first ${resource.singularLabel.toLowerCase()}.',
+          rowActions: _buildRowActions,
+        ),
+      ]),
     ]);
   }
 

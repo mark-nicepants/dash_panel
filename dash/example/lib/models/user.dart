@@ -3,17 +3,14 @@ import 'package:dash/dash.dart';
 part 'user.model.g.dart';
 
 /// User model demonstrating Dash's improved model features.
-@DashModel(table: 'users', timestamps: false)
+@DashModel(table: 'users')
 class User extends Model with _$UserModelMixin {
   int? id;
   String? name;
   String? email;
   String? role;
 
-  @Column(name: 'created_at')
-  DateTime? createdAt;
-
-  User({this.id, this.name, this.email, this.role, this.createdAt});
+  User({this.id, this.name, this.email, this.role});
 
   // ===== Validation Rules =====
   @override

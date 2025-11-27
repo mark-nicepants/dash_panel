@@ -199,7 +199,14 @@ abstract class TableColumn {
       if (value == null) break;
 
       if (value is Model) {
-        value = value.toMap()[part];
+        // Check for base class timestamp fields first
+        if (part == value.createdAtColumn) {
+          value = value.createdAt;
+        } else if (part == value.updatedAtColumn) {
+          value = value.updatedAt;
+        } else {
+          value = value.toMap()[part];
+        }
       } else if (value is Map) {
         value = value[part];
       } else {

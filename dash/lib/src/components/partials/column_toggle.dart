@@ -31,54 +31,29 @@ class ColumnToggle extends StatelessComponent {
         ),
         div(
           classes:
-              'absolute right-0 top-full mt-2 min-w-56 bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-2xl z-50',
+              'absolute right-0 top-full mt-2 min-w-48 bg-gray-900 border border-gray-700 rounded-lg p-2 shadow-2xl z-50',
           attributes: {'x-show': 'open', 'x-transition.opacity': '', '@click.outside': 'open = false'},
           [
-            div(classes: 'text-sm font-semibold text-gray-100 mb-2', [text('Toggle columns')]),
-            ul(classes: 'space-y-1.5 mb-3', [
+            ul(classes: 'space-y-0.5', [
               for (final column in columns)
                 li([
-                  button(
-                    type: ButtonType.button,
+                  label(
                     classes:
-                        'w-full flex items-center gap-2 px-2 py-1.5 border border-transparent rounded-lg bg-transparent text-gray-200 hover:bg-gray-800 cursor-pointer transition-all',
-                    attributes: {
-                      'x-on:click': "toggle('${column.getName()}')",
-                      'x-bind:class': "{'border-gray-600 bg-gray-950': isVisible('${column.getName()}')}",
-                    },
+                        'flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-gray-200 hover:bg-gray-800 cursor-pointer transition-all',
                     [
-                      span(
-                        classes: 'w-5 text-center text-lime-500 font-bold',
-                        attributes: {'x-show': "isVisible('${column.getName()}')"},
-                        [text('✓')],
+                      input(
+                        classes:
+                            'w-4 h-4 rounded border-gray-600 bg-gray-800 text-lime-500 focus:ring-lime-500 focus:ring-offset-gray-900 cursor-pointer',
+                        type: InputType.checkbox,
+                        attributes: {
+                          'x-bind:checked': "isVisible('${column.getName()}')",
+                          'x-on:change': "toggle('${column.getName()}')",
+                        },
                       ),
-                      span(classes: 'flex-1 text-sm text-left', [text(column.getLabel())]),
+                      span(classes: 'text-sm select-none', [text(column.getLabel())]),
                     ],
                   ),
                 ]),
-            ]),
-            div(classes: 'flex gap-2 flex-wrap', [
-              button(
-                type: ButtonType.button,
-                classes:
-                    'px-2 py-1 text-xs font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-all',
-                attributes: {'x-on:click': 'showAll()'},
-                [text('Show all')],
-              ),
-              button(
-                type: ButtonType.button,
-                classes:
-                    'px-2 py-1 text-xs font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-all',
-                attributes: {'x-on:click': 'hideAll()'},
-                [text('Hide all')],
-              ),
-              button(
-                type: ButtonType.button,
-                classes:
-                    'px-2 py-1 text-xs font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 rounded transition-all',
-                attributes: {'x-on:click': 'reset()'},
-                [text('Reset')],
-              ),
             ]),
           ],
         ),

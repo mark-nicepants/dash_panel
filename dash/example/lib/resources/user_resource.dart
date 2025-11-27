@@ -17,15 +17,18 @@ class UserResource extends Resource<User> {
               .label('ID')
               .sortable()
               .width('80px'),
+
           TextColumn.make('name') //
               .searchable()
               .sortable()
-              .grow(),
+              .grow()
+              .toggleable(),
 
           TextColumn.make('email') //
               .searchable()
               .sortable()
-              .grow(),
+              .grow()
+              .toggleable(),
 
           TextColumn.make('created_at') //
               .dateTime()

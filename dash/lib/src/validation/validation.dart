@@ -41,7 +41,7 @@ class Email extends ValidationRule {
     if (value == null || value == '') return null; // Use Required for non-null
     if (value is! String) return 'The $field must be a string.';
     if (!_emailRegex.hasMatch(value)) {
-      return 'The $field must be a valid email address.';
+      return 'The $field must be a valid email address (Value: $value).';
     }
     return null;
   }

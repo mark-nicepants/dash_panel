@@ -58,6 +58,16 @@ abstract class Model {
     return _connector!;
   }
 
+  // ===== Automatic Timestamp Fields =====
+
+  /// The timestamp when this model was created.
+  /// Automatically populated when [timestamps] is true.
+  DateTime? createdAt;
+
+  /// The timestamp when this model was last updated.
+  /// Automatically populated when [timestamps] is true.
+  DateTime? updatedAt;
+
   /// The table name for this model.
   String get table;
 
@@ -286,11 +296,14 @@ abstract class Model {
     final data = toMap();
 
     if (timestamps) {
-      final now = DateTime.now().toIso8601String();
+      final now = DateTime.now();
+      final nowIso = now.toIso8601String();
       if (isCreating) {
-        data[createdAtColumn] = now;
+        data[createdAtColumn] = nowIso;
+        createdAt = now;
       }
-      data[updatedAtColumn] = now;
+      data[updatedAtColumn] = nowIso;
+      updatedAt = now;
     }
 
     if (isCreating) {
@@ -403,7 +416,14 @@ abstract class Model {
       throw StateError('Model not found in database.');
     }
 
-    fromMap(result.first);
+    final row = result.first;
+    fromMap(row);
+
+    // Populate base class timestamps
+    if (timestamps) {
+      createdAt = parseDateTime(row[createdAtColumn]);
+      updatedAt = parseDateTime(row[updatedAtColumn]);
+    }
   }
 
   /// Updates the model with the given attributes.

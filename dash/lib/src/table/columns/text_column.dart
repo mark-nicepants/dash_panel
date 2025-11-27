@@ -1,6 +1,6 @@
 import 'package:dash/src/model/model.dart';
-
 import 'package:dash/src/table/columns/column.dart';
+import 'package:intl/intl.dart';
 
 /// A column that displays text.
 ///
@@ -327,21 +327,18 @@ class TextColumn extends TableColumn {
 
     // Handle date/time formatting
     if (_isDate || _isDateTime) {
+      DateTime? dt;
       if (state is DateTime) {
-        if (_dateFormat != null) {
-          // In a real implementation, you'd use intl package
-          return state.toIso8601String();
-        }
-        return _isDate ? state.toIso8601String().split('T')[0] : state.toIso8601String();
+        dt = state;
+      } else if (state is String) {
+        dt = DateTime.tryParse(state);
       }
-      if (state is String) {
-        try {
-          final dt = DateTime.parse(state);
-          return _isDate ? dt.toIso8601String().split('T')[0] : dt.toIso8601String();
-        } catch (e) {
-          return state;
-        }
+
+      if (dt != null) {
+        final format = _dateFormat ?? (_isDate ? 'yyyy-MM-dd' : 'yyyy-MM-dd HH:mm:ss');
+        return DateFormat(format).format(dt);
       }
+      return state.toString();
     }
 
     // Handle time since

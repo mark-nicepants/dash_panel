@@ -44,6 +44,8 @@ export 'src/model/model.dart';
 export 'src/model/model_metadata.dart';
 export 'src/model/model_query_builder.dart';
 export 'src/model/soft_deletes.dart';
+// Panel
+export 'src/panel/dev_console.dart';
 export 'src/panel/panel.dart';
 export 'src/panel/panel_config.dart';
 export 'src/panel/panel_router.dart';

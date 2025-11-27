@@ -156,6 +156,13 @@ abstract class Resource<T extends Model> {
     final tableConfig = table(Table<T>());
     final instance = newModelInstance();
     final modelColumns = instance.getFields().toSet();
+
+    // Include timestamp columns if timestamps are enabled
+    if (instance.timestamps) {
+      modelColumns.add(instance.createdAtColumn);
+      modelColumns.add(instance.updatedAtColumn);
+    }
+
     final errors = <String>[];
 
     // Check all table columns
