@@ -94,9 +94,14 @@ class ResourceLoader {
 
   /// Renders an HTML template with the given variables.
   String renderTemplate({required String title, required String body}) {
+    // In development, add Tailwind CDN for full utility access
+    final styles = _useMinified
+        ? '<style>$_css</style>'
+        : '<script src="https://cdn.tailwindcss.com"></script><style type="text/tailwindcss">$_css</style>';
+
     return _htmlTemplate
         .replaceAll('@title', title)
-        .replaceAll('@styles', '<style>$_css</style>')
+        .replaceAll('@styles', styles)
         .replaceAll('@scripts', '<script>$_js</script>')
         .replaceAll('@body', body);
   }
