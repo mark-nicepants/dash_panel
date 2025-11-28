@@ -54,8 +54,10 @@ class PanelServer {
     Jaspr.initializeApp();
 
     // Build request pipeline
+    // Static assets are served BEFORE auth middleware to avoid redirects
     final pipeline = const Pipeline()
         .addMiddleware(_conditionalLogRequests())
+        .addMiddleware(_staticAssetsMiddleware())
         .addMiddleware(authMiddleware(_authService, basePath: _config.path))
         .addHandler(_handleRequest);
 
@@ -238,7 +240,7 @@ class PanelServer {
 
   /// Main request handler that coordinates between custom and routed requests.
   Future<Response> _handleRequest(Request request) async {
-    // Try custom handler first (login, logout, etc.)
+    // Try custom handler (login, logout, etc.)
     final customResponse = await _requestHandler.handle(request);
     if (customResponse.statusCode != 404) {
       return customResponse;
@@ -246,6 +248,83 @@ class PanelServer {
 
     // Fall back to router for page rendering
     return await _router.route(request);
+  }
+
+  /// Middleware that serves static assets (CSS, JS, images) before auth.
+  ///
+  /// Assets are served from:
+  /// - /admin/assets/css/* -> resources/dist/css/*
+  /// - /admin/assets/js/*  -> resources/dist/js/*
+  /// - /admin/assets/img/* -> resources/img/*
+  Middleware _staticAssetsMiddleware() {
+    return (Handler innerHandler) {
+      return (Request request) async {
+        final path = request.url.path;
+        final basePath = _config.path.replaceFirst('/', '');
+        final assetsPrefix = '$basePath/assets/';
+
+        // Not an asset request, continue to next handler
+        if (!path.startsWith(assetsPrefix)) {
+          return innerHandler(request);
+        }
+
+        final assetPath = path.substring(assetsPrefix.length);
+        String fileSystemPath;
+
+        if (assetPath.startsWith('css/')) {
+          // CSS files from dist/css
+          fileSystemPath = '${_resourceLoader.distDir}/css/${assetPath.substring(4)}';
+        } else if (assetPath.startsWith('js/')) {
+          // JS files from dist/js
+          fileSystemPath = '${_resourceLoader.distDir}/js/${assetPath.substring(3)}';
+        } else if (assetPath.startsWith('img/')) {
+          // Image files from img/
+          fileSystemPath = '${_resourceLoader.imagesDir}/${assetPath.substring(4)}';
+        } else {
+          // Unknown asset type, continue to next handler
+          return innerHandler(request);
+        }
+
+        final file = File(fileSystemPath);
+        if (!await file.exists()) {
+          return Response.notFound('Asset not found: $assetPath');
+        }
+
+        // Determine content type
+        final contentType = _getContentType(fileSystemPath);
+        final bytes = await file.readAsBytes();
+
+        return Response.ok(
+          bytes,
+          headers: {
+            'content-type': contentType,
+            'cache-control': _resourceLoader.isProduction
+                ? 'public, max-age=31536000' // 1 year for production
+                : 'no-cache', // No cache for development
+          },
+        );
+      };
+    };
+  }
+
+  /// Gets the content type for a file based on its extension.
+  String _getContentType(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    return switch (ext) {
+      'css' => 'text/css; charset=utf-8',
+      'js' => 'application/javascript; charset=utf-8',
+      'png' => 'image/png',
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'gif' => 'image/gif',
+      'svg' => 'image/svg+xml',
+      'ico' => 'image/x-icon',
+      'webp' => 'image/webp',
+      'woff' => 'font/woff',
+      'woff2' => 'font/woff2',
+      'ttf' => 'font/ttf',
+      'eot' => 'application/vnd.ms-fontobject',
+      _ => 'application/octet-stream',
+    };
   }
 
   /// Creates a middleware that conditionally logs requests based on [httpLoggingEnabled].

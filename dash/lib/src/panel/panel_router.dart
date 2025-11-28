@@ -314,7 +314,7 @@ class PanelRouter {
     final rendered = await renderComponent(page);
 
     // Render the template with pre-loaded resources
-    final html = _resourceLoader.renderTemplate(title: 'DASH Admin', body: rendered.body);
+    final html = _resourceLoader.renderTemplate(title: 'DASH Admin', body: rendered.body, basePath: _config.path);
 
     return Response.ok(html, headers: {'content-type': 'text/html; charset=utf-8'});
   }

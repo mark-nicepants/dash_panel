@@ -131,7 +131,7 @@ abstract final class FormStyles {
 
   /// Primary submit button.
   static const String buttonPrimary =
-      'px-4 py-2 text-sm font-medium text-white bg-lime-500 hover:bg-lime-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+      'px-4 py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
   /// Secondary/cancel button.
   static const String buttonSecondary =

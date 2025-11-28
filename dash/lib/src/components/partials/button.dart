@@ -146,7 +146,7 @@ class Button extends StatelessComponent {
   /// Filled/prominent button styles (default)
   String _buildFilledVariantClasses() => switch (variant) {
     ButtonVariant.primary =>
-      'bg-lime-500 text-white hover:bg-lime-600 active:bg-lime-700 focus:ring-2 focus:ring-lime-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+      'bg-cyan-500 text-white hover:bg-cyan-600 active:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900',
     ButtonVariant.secondary =>
       'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 active:bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900',
     ButtonVariant.danger =>
@@ -162,7 +162,7 @@ class Button extends StatelessComponent {
 
   /// Subtle button styles (colored text on gray background)
   String _buildSubtleVariantClasses() => switch (variant) {
-    ButtonVariant.primary => 'text-lime-400 hover:text-lime-300 bg-gray-700 hover:bg-gray-600',
+    ButtonVariant.primary => 'text-cyan-400 hover:text-cyan-300 bg-gray-700 hover:bg-gray-600',
     ButtonVariant.secondary => 'text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600',
     ButtonVariant.danger => 'text-red-400 hover:text-white bg-gray-700 hover:bg-red-600',
     ButtonVariant.warning => 'text-amber-400 hover:text-amber-300 bg-gray-700 hover:bg-gray-600',
