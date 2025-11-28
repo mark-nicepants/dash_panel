@@ -71,6 +71,11 @@ dash/lib/src/
 ├── generators/     # Code generation (model generator)
 ├── model/          # ORM layer (Model base, annotations, query builder)
 ├── panel/          # Admin panel core (router, server, config)
+├── plugin/         # Plugin system
+│   ├── plugin.dart # Plugin interface
+│   ├── render_hook.dart # Render hooks for content injection
+│   ├── navigation_item.dart # Custom navigation items
+│   └── asset.dart  # CSS/JS asset management
 ├── resources/      # Resource loading utilities
 ├── table/          # Table builder system
 │   └── columns/    # Column types (TextColumn, BooleanColumn, etc.)
@@ -93,6 +98,7 @@ dash/lib/src/
 | Table Columns | `<Type>Column` | `TextColumn`, `BooleanColumn`, `IconColumn` |
 | Form Fields | Descriptive | `TextInput`, `DatePicker`, `Toggle`, `Select` |
 | Actions | `<Verb>Action` | `CreateAction`, `EditAction`, `DeleteAction` |
+| Plugins | `<Name>Plugin` | `BlogPlugin`, `AnalyticsPlugin` |
 | Validation Rules | Descriptive noun | `Required`, `Email`, `MinLength`, `Pattern` |
 
 ### Methods
@@ -187,6 +193,42 @@ Fluent interface for database operations:
 - Chain methods: `where()`, `orderBy()`, `limit()`, `offset()`
 - Execute with: `get()`, `first()`, `count()`, `insert()`, `update()`, `delete()`
 - `ModelQueryBuilder` wraps base builder to return typed model instances
+
+### 9. Plugin Pattern
+
+Plugins extend panel functionality with a two-phase lifecycle:
+
+**Plugin Interface:**
+```dart
+class MyPlugin implements Plugin {
+  static MyPlugin make() => MyPlugin();
+  
+  @override
+  String getId() => 'my-plugin';
+  
+  @override
+  void register(Panel panel) {
+    // Called immediately - configure resources, navigation, hooks
+    panel.registerResources([...]);
+    panel.navigationItems([...]);
+    panel.renderHook(RenderHook.sidebarFooter, () => ...);
+  }
+  
+  @override
+  void boot(Panel panel) {
+    // Called during Panel.boot() - runtime initialization
+  }
+}
+```
+
+**Plugin Capabilities:**
+- Register resources via `panel.registerResources()`
+- Add navigation items via `panel.navigationItems()`
+- Inject content via `panel.renderHook()`
+- Load assets via `panel.assets()`
+- Access panel config during boot
+
+**Render Hooks:** `sidebarNavStart`, `sidebarNavEnd`, `sidebarFooter`, `contentBefore`, `contentAfter`, `dashboardStart`, `dashboardEnd`, etc.
 
 ---
 

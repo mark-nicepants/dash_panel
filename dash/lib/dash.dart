@@ -70,6 +70,11 @@ export 'src/panel/panel_config.dart';
 export 'src/panel/panel_router.dart';
 export 'src/panel/panel_server.dart';
 export 'src/panel/request_handler.dart';
+// Plugins
+export 'src/plugin/asset.dart';
+export 'src/plugin/navigation_item.dart';
+export 'src/plugin/plugin.dart';
+export 'src/plugin/render_hook.dart';
 export 'src/resource.dart';
 // Service Locator
 export 'src/service_locator.dart' show inject, registerResourceFactory;

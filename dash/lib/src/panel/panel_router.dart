@@ -15,6 +15,18 @@ class PanelRouter {
 
   PanelRouter(this._config, this._resourceLoader);
 
+  /// Creates a DashLayout with all required properties from config.
+  DashLayout _wrapInLayout({required String title, required Component child}) {
+    return DashLayout(
+      basePath: _config.path,
+      resources: _config.resources,
+      navigationItems: _config.navigationItems,
+      renderHooks: _config.renderHooks,
+      title: title,
+      child: child,
+    );
+  }
+
   /// Routes a request to the appropriate page handler.
   Future<Response> route(Request request) async {
     final path = request.url.path;
@@ -78,12 +90,7 @@ class PanelRouter {
       if (errors.isNotEmpty) {
         // Re-render create page with errors
         final page = resource.buildCreatePage(errors: errors, oldInput: formData);
-        final wrapped = DashLayout(
-          basePath: _config.path,
-          resources: _config.resources,
-          title: 'Create ${resource.singularLabel}',
-          child: page,
-        );
+        final wrapped = _wrapInLayout(title: 'Create ${resource.singularLabel}', child: page);
         return await _renderPage(wrapped);
       }
 
@@ -101,12 +108,7 @@ class PanelRouter {
         },
         oldInput: formData,
       );
-      final wrapped = DashLayout(
-        basePath: _config.path,
-        resources: _config.resources,
-        title: 'Create ${resource.singularLabel}',
-        child: page,
-      );
+      final wrapped = _wrapInLayout(title: 'Create ${resource.singularLabel}', child: page);
       return await _renderPage(wrapped);
     }
   }
@@ -131,12 +133,7 @@ class PanelRouter {
       if (errors.isNotEmpty) {
         // Re-render edit page with errors
         final page = resource.buildEditPage(record: record, errors: errors, oldInput: formData);
-        final wrapped = DashLayout(
-          basePath: _config.path,
-          resources: _config.resources,
-          title: 'Edit ${resource.singularLabel}',
-          child: page,
-        );
+        final wrapped = _wrapInLayout(title: 'Edit ${resource.singularLabel}', child: page);
         return await _renderPage(wrapped);
       }
 
@@ -227,12 +224,7 @@ class PanelRouter {
       if (action == 'create') {
         // Create page
         final createPage = resource.buildCreatePage();
-        return DashLayout(
-          basePath: _config.path,
-          resources: _config.resources,
-          title: 'Create ${resource.singularLabel}',
-          child: createPage,
-        );
+        return _wrapInLayout(title: 'Create ${resource.singularLabel}', child: createPage);
       }
 
       if (action != null && parts.length > resourceIndex + 3 && parts[resourceIndex + 3] == 'edit') {
@@ -245,12 +237,7 @@ class PanelRouter {
         }
 
         final editPage = resource.buildEditPage(record: record);
-        return DashLayout(
-          basePath: _config.path,
-          resources: _config.resources,
-          title: 'Edit ${resource.singularLabel}',
-          child: editPage,
-        );
+        return _wrapInLayout(title: 'Edit ${resource.singularLabel}', child: editPage);
       }
 
       // View page - /resources/{slug}/{id} (when action looks like an ID and no further path segment)
@@ -262,12 +249,7 @@ class PanelRouter {
 
           if (record != null) {
             final viewPage = resource.buildViewPage(record: record);
-            return DashLayout(
-              basePath: _config.path,
-              resources: _config.resources,
-              title: resource.singularLabel,
-              child: viewPage,
-            );
+            return _wrapInLayout(title: resource.singularLabel, child: viewPage);
           }
         }
       }
@@ -297,16 +279,11 @@ class PanelRouter {
         sortDirection: sortDirection,
         currentPage: pageNum,
       );
-      return DashLayout(basePath: _config.path, resources: _config.resources, title: resource.label, child: indexPage);
+      return _wrapInLayout(title: resource.label, child: indexPage);
     }
 
     // Default dashboard page
-    return DashLayout(
-      basePath: _config.path,
-      resources: _config.resources,
-      title: 'Dashboard',
-      child: const DashboardPage(),
-    );
+    return _wrapInLayout(title: 'Dashboard', child: const DashboardPage());
   }
 
   /// Renders a Jaspr component into a complete HTML response.

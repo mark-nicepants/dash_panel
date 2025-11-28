@@ -10,10 +10,15 @@ import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_server.dart';
+import 'package:dash/src/plugin/asset.dart';
+import 'package:dash/src/plugin/navigation_item.dart';
+import 'package:dash/src/plugin/plugin.dart';
+import 'package:dash/src/plugin/render_hook.dart';
 import 'package:dash/src/resource.dart';
 import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
+import 'package:jaspr/jaspr.dart';
 
 /// The main entry point for a Dash admin panel.
 ///
@@ -181,6 +186,107 @@ class Panel {
     return this;
   }
 
+  // ============================================================
+  // Plugin Methods
+  // ============================================================
+
+  /// Registers a single plugin with this panel.
+  ///
+  /// The plugin's `register()` method is called immediately.
+  /// The `boot()` method is called later during `Panel.boot()`.
+  ///
+  /// Example:
+  /// ```dart
+  /// final panel = Panel()
+  ///   ..plugin(BlogPlugin.make()
+  ///     .commentsEnabled(true));
+  /// ```
+  Panel plugin(Plugin plugin) {
+    plugin.register(this);
+    _config.registerPlugin(plugin);
+    return this;
+  }
+
+  /// Registers multiple plugins with this panel.
+  ///
+  /// Example:
+  /// ```dart
+  /// final panel = Panel()
+  ///   ..plugins([
+  ///     BlogPlugin.make(),
+  ///     AnalyticsPlugin.make(),
+  ///   ]);
+  /// ```
+  Panel plugins(List<Plugin> plugins) {
+    for (final p in plugins) {
+      plugin(p);
+    }
+    return this;
+  }
+
+  /// Gets a registered plugin by its ID.
+  ///
+  /// Throws [StateError] if the plugin is not found.
+  ///
+  /// Example:
+  /// ```dart
+  /// final blogPlugin = panel.getPlugin<BlogPlugin>('blog');
+  /// ```
+  T getPlugin<T extends Plugin>(String id) {
+    return _config.getPlugin(id) as T;
+  }
+
+  /// Checks if a plugin with the given ID is registered.
+  bool hasPlugin(String id) => _config.hasPlugin(id);
+
+  /// Adds custom navigation items to the sidebar.
+  ///
+  /// These items appear alongside resource navigation links.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.navigationItems([
+  ///   NavigationItem.make('Documentation')
+  ///     .url('https://docs.example.com')
+  ///     .icon(HeroIcons.bookOpen)
+  ///     .openInNewTab(),
+  /// ]);
+  /// ```
+  Panel navigationItems(List<NavigationItem> items) {
+    _config.registerNavigationItems(items);
+    return this;
+  }
+
+  /// Registers a render hook to inject content at specific locations.
+  ///
+  /// Multiple hooks can be registered for the same location.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.renderHook(
+  ///   RenderHook.sidebarFooter,
+  ///   () => div([text('v1.0.0')]),
+  /// );
+  /// ```
+  Panel renderHook(RenderHook hook, Component Function() builder) {
+    _config.registerRenderHook(hook, builder);
+    return this;
+  }
+
+  /// Registers CSS/JS assets to be loaded in the panel.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.assets([
+  ///   CssAsset.url('my-plugin', 'https://cdn.example.com/styles.css'),
+  ///   JsAsset.inline('my-plugin', 'console.log("loaded");'),
+  /// ]);
+  /// ```
+  Panel assets(List<Asset> assets) {
+    _config.registerAssets(assets);
+    return this;
+  }
+
   /// Adds custom dev commands to this panel.
   ///
   /// These commands will be available in the interactive dev console
@@ -254,9 +360,19 @@ class Panel {
           inject.registerSingleton<StorageManager>(_storageConfig!.createManager());
         }
       }
+
+      // Boot all registered plugins
+      _bootPlugins();
     }
 
     return this;
+  }
+
+  /// Boots all registered plugins.
+  void _bootPlugins() {
+    for (final plugin in _config.plugins.values) {
+      plugin.boot(this);
+    }
   }
 
   /// Initializes the auth service with the configured user model.

@@ -1,12 +1,16 @@
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_colors.dart';
+import 'package:dash/src/plugin/asset.dart';
+import 'package:dash/src/plugin/navigation_item.dart';
+import 'package:dash/src/plugin/plugin.dart';
+import 'package:dash/src/plugin/render_hook.dart';
 import 'package:dash/src/resource.dart';
 
 /// Configuration for a Dash panel.
 ///
 /// Holds all the configuration data for a panel including
-/// identification, resources, and database settings.
+/// identification, resources, plugins, and database settings.
 class PanelConfig {
   String _id = 'admin';
   String _path = '/admin';
@@ -14,6 +18,12 @@ class PanelConfig {
   final List<DevCommand> _devCommands = [];
   DatabaseConfig? _databaseConfig;
   PanelColors _colors = PanelColors.defaults;
+
+  // Plugin system
+  final Map<String, Plugin> _plugins = {};
+  final List<NavigationItem> _navigationItems = [];
+  final RenderHookRegistry _renderHookRegistry = RenderHookRegistry();
+  final AssetRegistry _assetRegistry = AssetRegistry();
 
   /// The unique identifier for this panel.
   String get id => _id;
@@ -32,6 +42,18 @@ class PanelConfig {
 
   /// The color configuration for this panel.
   PanelColors get colors => _colors;
+
+  /// The registered plugins in this panel.
+  Map<String, Plugin> get plugins => Map.unmodifiable(_plugins);
+
+  /// Custom navigation items added by plugins.
+  List<NavigationItem> get navigationItems => List.unmodifiable(_navigationItems);
+
+  /// The render hook registry for this panel.
+  RenderHookRegistry get renderHooks => _renderHookRegistry;
+
+  /// The asset registry for this panel.
+  AssetRegistry get assets => _assetRegistry;
 
   /// Sets the unique identifier for this panel.
   void setId(String id) {
@@ -66,6 +88,52 @@ class PanelConfig {
   /// Registers custom dev commands with this panel.
   void registerDevCommands(List<DevCommand> commands) {
     _devCommands.addAll(commands);
+  }
+
+  // ============================================================
+  // Plugin Methods
+  // ============================================================
+
+  /// Registers a plugin with this panel.
+  ///
+  /// Throws [StateError] if a plugin with the same ID is already registered.
+  void registerPlugin(Plugin plugin) {
+    final id = plugin.getId();
+    if (_plugins.containsKey(id)) {
+      throw StateError('Plugin with ID "$id" is already registered');
+    }
+    _plugins[id] = plugin;
+  }
+
+  /// Gets a plugin by its ID.
+  ///
+  /// Throws [StateError] if the plugin is not found.
+  Plugin getPlugin(String id) {
+    final plugin = _plugins[id];
+    if (plugin == null) {
+      throw StateError('Plugin with ID "$id" not found');
+    }
+    return plugin;
+  }
+
+  /// Checks if a plugin with the given ID is registered.
+  bool hasPlugin(String id) => _plugins.containsKey(id);
+
+  /// Registers custom navigation items.
+  void registerNavigationItems(List<NavigationItem> items) {
+    _navigationItems.addAll(items);
+  }
+
+  /// Registers a render hook.
+  void registerRenderHook(RenderHook hook, RenderHookBuilder builder) {
+    _renderHookRegistry.register(hook, builder);
+  }
+
+  /// Registers assets (CSS/JS).
+  void registerAssets(List<Asset> assets) {
+    for (final asset in assets) {
+      _assetRegistry.register(asset);
+    }
   }
 
   /// Validates the configuration.
