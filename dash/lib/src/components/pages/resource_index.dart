@@ -90,12 +90,13 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   }
 
   Component _buildSearchBar() {
+    final primary = panelColors.primary;
     return div(classes: 'flex-1 max-w-xs', [
       input(
         id: 'resource-search-input',
         type: InputType.text,
         classes:
-            'w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all',
+            'w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-$primary-500 focus:border-transparent transition-all',
         value: searchQuery ?? '',
         name: 'search',
         attributes: {

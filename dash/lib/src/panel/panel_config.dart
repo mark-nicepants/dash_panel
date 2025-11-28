@@ -1,5 +1,6 @@
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/panel/dev_console.dart';
+import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/resource.dart';
 
 /// Configuration for a Dash panel.
@@ -12,6 +13,7 @@ class PanelConfig {
   final List<Resource> _resources = [];
   final List<DevCommand> _devCommands = [];
   DatabaseConfig? _databaseConfig;
+  PanelColors _colors = PanelColors.defaults;
 
   /// The unique identifier for this panel.
   String get id => _id;
@@ -28,6 +30,9 @@ class PanelConfig {
   /// Custom dev commands registered with this panel.
   List<DevCommand> get devCommands => List.unmodifiable(_devCommands);
 
+  /// The color configuration for this panel.
+  PanelColors get colors => _colors;
+
   /// Sets the unique identifier for this panel.
   void setId(String id) {
     _id = id;
@@ -41,6 +46,11 @@ class PanelConfig {
   /// Configures the database connection for this panel.
   void setDatabase(DatabaseConfig config) {
     _databaseConfig = config;
+  }
+
+  /// Sets the color configuration for this panel.
+  void setColors(PanelColors colors) {
+    _colors = colors;
   }
 
   /// Registers resources with this panel.

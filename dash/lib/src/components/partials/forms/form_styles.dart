@@ -1,7 +1,11 @@
+import 'package:dash/src/service_locator.dart';
+
 /// Centralized Tailwind CSS class definitions for form components.
 ///
 /// This file contains all the CSS class strings used across form fields,
 /// ensuring consistent styling and making it easy to update the design system.
+///
+/// Colors are derived from [PanelColors] configured on the Panel, defaulting to cyan.
 ///
 /// Example:
 /// ```dart
@@ -23,28 +27,28 @@ abstract final class FormStyles {
   static const String labelHint = 'text-gray-500 ml-2 font-normal';
 
   // ============================================
-  // INPUTS
+  // INPUTS (using dynamic primary color)
   // ============================================
 
   /// Base input field styling with full border radius.
-  static const String inputBase =
-      'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed';
+  static String get inputBase =>
+      'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-${panelColors.primary}-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed';
 
   /// Input field styling without border (for use inside adornment wrapper).
   static const String inputBaseNoBorder =
       'w-full px-3 py-2 bg-gray-700 text-gray-100 placeholder-gray-400 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed';
 
   /// Textarea styling.
-  static const String textarea =
-      'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed';
+  static String get textarea =>
+      'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-${panelColors.primary}-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed';
 
   /// Select/dropdown styling.
-  static const String select =
-      'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer';
+  static String get select =>
+      'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-${panelColors.primary}-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer';
 
   /// Checkbox styling.
-  static const String checkbox =
-      'w-4 h-4 bg-gray-700 border-gray-600 rounded text-lime-500 focus:ring-2 focus:ring-lime-500 focus:ring-offset-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+  static String get checkbox =>
+      'w-4 h-4 bg-gray-700 border-gray-600 rounded text-${panelColors.primary}-500 focus:ring-2 focus:ring-${panelColors.primary}-500 focus:ring-offset-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
   // ============================================
   // HELPER TEXT & DESCRIPTIONS
@@ -80,8 +84,8 @@ abstract final class FormStyles {
   // ============================================
 
   /// Wrapper for inputs with prefix/suffix adornments.
-  static const String adornmentWrapper =
-      'flex rounded-lg overflow-hidden border border-gray-600 focus-within:ring-2 focus-within:ring-lime-500 focus-within:border-transparent';
+  static String get adornmentWrapper =>
+      'flex rounded-lg overflow-hidden border border-gray-600 focus-within:ring-2 focus-within:ring-${panelColors.primary}-500 focus-within:border-transparent';
 
   /// Text prefix/suffix styling.
   static const String adornmentText =

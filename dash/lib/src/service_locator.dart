@@ -1,5 +1,6 @@
 import 'package:dash/src/database/database_connector.dart';
 import 'package:dash/src/model/model.dart';
+import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/resource.dart';
 import 'package:dash/src/utils/resource_loader.dart';
@@ -7,6 +8,16 @@ import 'package:get_it/get_it.dart';
 
 /// Global service locator instance.
 final inject = GetIt.instance;
+
+/// Gets the current panel colors from the registered config.
+///
+/// Returns [PanelColors.defaults] if no config is registered yet.
+PanelColors get panelColors {
+  if (inject.isRegistered<PanelConfig>()) {
+    return inject<PanelConfig>().colors;
+  }
+  return PanelColors.defaults;
+}
 
 typedef _ResourceFactory = Resource Function();
 

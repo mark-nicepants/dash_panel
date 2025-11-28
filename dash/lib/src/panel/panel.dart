@@ -7,6 +7,7 @@ import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/model/model_metadata.dart';
 import 'package:dash/src/panel/dev_console.dart';
+import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_server.dart';
 import 'package:dash/src/resource.dart';
@@ -125,6 +126,31 @@ class Panel {
   /// Configures the database connection for this panel.
   Panel database(DatabaseConfig config) {
     _config.setDatabase(config);
+    return this;
+  }
+
+  /// Configures the color scheme for this panel.
+  ///
+  /// Colors are specified as Tailwind CSS color names (without shade),
+  /// e.g., 'cyan', 'blue', 'indigo', 'violet', 'purple', etc.
+  ///
+  /// Example:
+  /// ```dart
+  /// final panel = Panel()
+  ///   ..colors(PanelColors(
+  ///     primary: 'indigo',  // Use indigo as primary color
+  ///     danger: 'rose',     // Use rose for destructive actions
+  ///   ));
+  /// ```
+  ///
+  /// Default colors:
+  /// - primary: 'cyan'
+  /// - danger: 'red'
+  /// - warning: 'amber'
+  /// - success: 'green'
+  /// - info: 'blue'
+  Panel colors(PanelColors colors) {
+    _config.setColors(colors);
     return this;
   }
 

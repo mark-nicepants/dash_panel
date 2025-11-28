@@ -64,6 +64,7 @@ export 'src/model/soft_deletes.dart';
 // Panel
 export 'src/panel/dev_console.dart';
 export 'src/panel/panel.dart';
+export 'src/panel/panel_colors.dart';
 export 'src/panel/panel_config.dart';
 export 'src/panel/panel_router.dart';
 export 'src/panel/panel_server.dart';

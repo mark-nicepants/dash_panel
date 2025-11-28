@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/table/columns/column.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -14,6 +15,7 @@ class ColumnToggle extends StatelessComponent {
   Component build(BuildContext context) {
     final defaults = {for (final column in columns) column.getName(): !column.isToggledHiddenByDefault()};
     final encodedDefaults = jsonEncode(defaults);
+    final primary = panelColors.primary;
 
     return div(
       classes: 'relative',
@@ -43,7 +45,7 @@ class ColumnToggle extends StatelessComponent {
                     [
                       input(
                         classes:
-                            'w-4 h-4 rounded border-gray-600 bg-gray-800 text-lime-500 focus:ring-lime-500 focus:ring-offset-gray-900 cursor-pointer',
+                            'w-4 h-4 rounded border-gray-600 bg-gray-800 text-$primary-500 focus:ring-$primary-500 focus:ring-offset-gray-900 cursor-pointer',
                         type: InputType.checkbox,
                         attributes: {
                           'x-bind:checked': "isVisible('${column.getName()}')",

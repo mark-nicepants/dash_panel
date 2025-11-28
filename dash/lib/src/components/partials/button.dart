@@ -1,4 +1,5 @@
 import 'package:dash/src/components/partials/heroicon.dart';
+import 'package:dash/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Button variants matching ActionColor options
@@ -144,30 +145,39 @@ class Button extends StatelessComponent {
   }
 
   /// Filled/prominent button styles (default)
-  String _buildFilledVariantClasses() => switch (variant) {
-    ButtonVariant.primary =>
-      'bg-cyan-500 text-white hover:bg-cyan-600 active:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-    ButtonVariant.secondary =>
-      'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 active:bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-    ButtonVariant.danger =>
-      'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-    ButtonVariant.warning =>
-      'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-    ButtonVariant.success =>
-      'bg-green-600 text-white hover:bg-green-700 active:bg-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-    ButtonVariant.info =>
-      'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-    ButtonVariant.ghost => 'text-gray-300 hover:bg-gray-700 hover:text-white active:bg-gray-800',
-  };
+  String _buildFilledVariantClasses() {
+    final colors = panelColors;
+    return switch (variant) {
+      ButtonVariant.primary =>
+        'bg-${colors.primary}-500 text-white hover:bg-${colors.primary}-600 active:bg-${colors.primary}-700 focus:ring-2 focus:ring-${colors.primary}-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+      ButtonVariant.secondary =>
+        'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 active:bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+      ButtonVariant.danger =>
+        'bg-${colors.danger}-600 text-white hover:bg-${colors.danger}-700 active:bg-${colors.danger}-800 focus:ring-2 focus:ring-${colors.danger}-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+      ButtonVariant.warning =>
+        'bg-${colors.warning}-500 text-white hover:bg-${colors.warning}-600 active:bg-${colors.warning}-700 focus:ring-2 focus:ring-${colors.warning}-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+      ButtonVariant.success =>
+        'bg-${colors.success}-600 text-white hover:bg-${colors.success}-700 active:bg-${colors.success}-800 focus:ring-2 focus:ring-${colors.success}-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+      ButtonVariant.info =>
+        'bg-${colors.info}-600 text-white hover:bg-${colors.info}-700 active:bg-${colors.info}-800 focus:ring-2 focus:ring-${colors.info}-500 focus:ring-offset-2 focus:ring-offset-gray-900',
+      ButtonVariant.ghost => 'text-gray-300 hover:bg-gray-700 hover:text-white active:bg-gray-800',
+    };
+  }
 
   /// Subtle button styles (colored text on gray background)
-  String _buildSubtleVariantClasses() => switch (variant) {
-    ButtonVariant.primary => 'text-cyan-400 hover:text-cyan-300 bg-gray-700 hover:bg-gray-600',
-    ButtonVariant.secondary => 'text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600',
-    ButtonVariant.danger => 'text-red-400 hover:text-white bg-gray-700 hover:bg-red-600',
-    ButtonVariant.warning => 'text-amber-400 hover:text-amber-300 bg-gray-700 hover:bg-gray-600',
-    ButtonVariant.success => 'text-green-400 hover:text-green-300 bg-gray-700 hover:bg-gray-600',
-    ButtonVariant.info => 'text-blue-400 hover:text-blue-300 bg-gray-700 hover:bg-gray-600',
-    ButtonVariant.ghost => 'text-gray-300 hover:bg-gray-700 hover:text-white',
-  };
+  String _buildSubtleVariantClasses() {
+    final colors = panelColors;
+    return switch (variant) {
+      ButtonVariant.primary =>
+        'text-${colors.primary}-400 hover:text-${colors.primary}-300 bg-gray-700 hover:bg-gray-600',
+      ButtonVariant.secondary => 'text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600',
+      ButtonVariant.danger => 'text-${colors.danger}-400 hover:text-white bg-gray-700 hover:bg-${colors.danger}-600',
+      ButtonVariant.warning =>
+        'text-${colors.warning}-400 hover:text-${colors.warning}-300 bg-gray-700 hover:bg-gray-600',
+      ButtonVariant.success =>
+        'text-${colors.success}-400 hover:text-${colors.success}-300 bg-gray-700 hover:bg-gray-600',
+      ButtonVariant.info => 'text-${colors.info}-400 hover:text-${colors.info}-300 bg-gray-700 hover:bg-gray-600',
+      ButtonVariant.ghost => 'text-gray-300 hover:bg-gray-700 hover:text-white',
+    };
+  }
 }

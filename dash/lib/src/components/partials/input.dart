@@ -1,3 +1,4 @@
+import 'package:dash/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Input field component with consistent Tailwind styling.
@@ -28,9 +29,10 @@ class Input extends StatelessComponent {
   @override
   Component build(BuildContext context) {
     final inputId = id ?? name ?? 'input-$hashCode';
+    final primary = panelColors.primary;
 
     final inputClasses =
-        'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed';
+        'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-$primary-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed';
 
     final inputAttrs = {
       ...?attributes,

@@ -1,5 +1,6 @@
 import 'package:dash/src/components/partials/button.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
+import 'package:dash/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Login page component for the admin panel.
@@ -22,13 +23,14 @@ class LoginPage extends StatelessComponent {
 
   /// Builds the left branding panel with logo and tagline.
   Component _buildBrandingPanel() {
+    final primary = panelColors.primary;
     return div(
       classes:
           'hidden lg:flex lg:w-1/2 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 relative overflow-hidden',
       [
         // Glow effect
-        div(classes: 'absolute top-1/4 -left-20 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl', []),
-        div(classes: 'absolute bottom-1/4 -right-20 w-80 h-80 bg-cyan-400/10 rounded-full blur-3xl', []),
+        div(classes: 'absolute top-1/4 -left-20 w-80 h-80 bg-$primary-500/20 rounded-full blur-3xl', []),
+        div(classes: 'absolute bottom-1/4 -right-20 w-80 h-80 bg-$primary-400/10 rounded-full blur-3xl', []),
         // Content
         div(classes: 'relative z-10 flex flex-col items-center justify-center w-full px-12', [
           // Logo
@@ -36,7 +38,7 @@ class LoginPage extends StatelessComponent {
           // Tagline
           p(classes: 'text-zinc-400 text-lg text-center max-w-md leading-relaxed', [
             text('A modern admin panel framework for Dart. '),
-            span(classes: 'text-cyan-400 font-medium', [text('Build beautiful interfaces with ease.')]),
+            span(classes: 'text-$primary-400 font-medium', [text('Build beautiful interfaces with ease.')]),
           ]),
           // Feature highlights
           div(classes: 'mt-12 space-y-4', [
@@ -51,9 +53,10 @@ class LoginPage extends StatelessComponent {
 
   /// Builds a feature item with a checkmark icon.
   Component _buildFeatureItem(String featureText) {
+    final primary = panelColors.primary;
     return div(classes: 'flex items-center gap-3 text-zinc-400', [
-      div(classes: 'w-5 h-5 rounded-full bg-cyan-500/20 flex items-center justify-center', [
-        const Heroicon(HeroIcons.check, size: 12, color: 'text-cyan-400'),
+      div(classes: 'w-5 h-5 rounded-full bg-$primary-500/20 flex items-center justify-center', [
+        Heroicon(HeroIcons.check, size: 12, color: 'text-$primary-400'),
       ]),
       span(classes: 'text-sm', [text(featureText)]),
     ]);
@@ -61,6 +64,7 @@ class LoginPage extends StatelessComponent {
 
   /// Builds the right login panel with the form.
   Component _buildLoginPanel() {
+    final primary = panelColors.primary;
     return div(classes: 'w-full lg:w-1/2 flex items-center justify-center bg-zinc-950 px-6 py-12', [
       div(classes: 'w-full max-w-md', [
         // Mobile logo (hidden on large screens)
@@ -86,7 +90,7 @@ class LoginPage extends StatelessComponent {
               id: 'email',
               name: 'email',
               classes:
-                  'w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all',
+                  'w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-$primary-500/50 focus:border-$primary-500 transition-all',
               attributes: {'placeholder': 'you@example.com', 'required': 'true', 'autocomplete': 'email'},
             ),
           ]),
@@ -104,7 +108,7 @@ class LoginPage extends StatelessComponent {
               id: 'password',
               name: 'password',
               classes:
-                  'w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all',
+                  'w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-$primary-500/50 focus:border-$primary-500 transition-all',
               attributes: {'placeholder': '••••••••', 'required': 'true', 'autocomplete': 'current-password'},
             ),
           ]),
@@ -115,7 +119,7 @@ class LoginPage extends StatelessComponent {
                 type: InputType.checkbox,
                 name: 'remember',
                 classes:
-                    'w-4 h-4 bg-zinc-900 border-zinc-700 rounded text-cyan-500 focus:ring-cyan-500/50 focus:ring-offset-0',
+                    'w-4 h-4 bg-zinc-900 border-zinc-700 rounded text-$primary-500 focus:ring-$primary-500/50 focus:ring-offset-0',
               ),
               span(classes: 'text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors', [text('Remember me')]),
             ]),
@@ -135,7 +139,7 @@ class LoginPage extends StatelessComponent {
         div(classes: 'mt-8 pt-6 border-t border-zinc-800 text-center', [
           p(classes: 'text-xs text-zinc-500', [
             text('Powered by '),
-            span(classes: 'text-cyan-500 font-medium', [text('Dash')]),
+            span(classes: 'text-$primary-500 font-medium', [text('Dash')]),
             text(' — The Dart Admin Panel Framework'),
           ]),
         ]),
