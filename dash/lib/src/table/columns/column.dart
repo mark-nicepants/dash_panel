@@ -64,9 +64,9 @@ abstract class TableColumn {
   String getName() => _name;
 
   /// Sets the label for the column header.
-  T label<T extends TableColumn>(String label) {
+  TableColumn label(String label) {
     _label = label;
-    return this as T;
+    return this;
   }
 
   /// Gets the label for the column.
@@ -85,28 +85,28 @@ abstract class TableColumn {
   }
 
   /// Makes the column sortable.
-  T sortable<T extends TableColumn>([bool sortable = true]) {
+  TableColumn sortable([bool sortable = true]) {
     _sortable = sortable;
-    return this as T;
+    return this;
   }
 
   /// Checks if the column is sortable.
   bool isSortable() => _sortable;
 
   /// Makes the column searchable.
-  T searchable<T extends TableColumn>([bool searchable = true]) {
+  TableColumn searchable([bool searchable = true]) {
     _searchable = searchable;
-    return this as T;
+    return this;
   }
 
   /// Checks if the column is searchable.
   bool isSearchable() => _searchable;
 
   /// Makes the column toggleable (can be shown/hidden by user).
-  T toggleable<T extends TableColumn>({bool toggleable = true, bool isToggledHiddenByDefault = false}) {
+  TableColumn toggleable({bool toggleable = true, bool isToggledHiddenByDefault = false}) {
     _toggleable = toggleable;
     _toggledHiddenByDefault = isToggledHiddenByDefault;
-    return this as T;
+    return this;
   }
 
   /// Checks if the column is toggleable.
@@ -116,72 +116,72 @@ abstract class TableColumn {
   bool isToggledHiddenByDefault() => _toggledHiddenByDefault;
 
   /// Hides the column completely.
-  T hidden<T extends TableColumn>([bool hidden = true]) {
+  TableColumn hidden([bool hidden = true]) {
     _hidden = hidden;
-    return this as T;
+    return this;
   }
 
   /// Checks if the column is hidden.
   bool isHidden() => _hidden;
 
   /// Sets the alignment of the column content.
-  T alignment<T extends TableColumn>(ColumnAlignment alignment) {
+  TableColumn alignment(ColumnAlignment alignment) {
     _alignment = alignment;
-    return this as T;
+    return this;
   }
 
   /// Aligns the column content to the start.
-  T alignStart<T extends TableColumn>() => alignment(ColumnAlignment.start);
+  TableColumn alignStart() => alignment(ColumnAlignment.start);
 
   /// Aligns the column content to the center.
-  T alignCenter<T extends TableColumn>() => alignment(ColumnAlignment.center);
+  TableColumn alignCenter() => alignment(ColumnAlignment.center);
 
   /// Aligns the column content to the end.
-  T alignEnd<T extends TableColumn>() => alignment(ColumnAlignment.end);
+  TableColumn alignEnd() => alignment(ColumnAlignment.end);
 
   /// Gets the alignment of the column.
   ColumnAlignment getAlignment() => _alignment;
 
   /// Sets the width of the column.
-  T width<T extends TableColumn>(String width) {
+  TableColumn width(String width) {
     _width = width;
-    return this as T;
+    return this;
   }
 
   /// Gets the width of the column.
   String? getWidth() => _width;
 
   /// Makes the column grow to fill available space.
-  T grow<T extends TableColumn>([bool grow = true]) {
+  TableColumn grow([bool grow = true]) {
     _grow = grow;
-    return this as T;
+    return this;
   }
 
   /// Checks if the column can grow.
   bool canGrow() => _grow;
 
   /// Sets placeholder text for null values.
-  T placeholder<T extends TableColumn>(String text) {
+  TableColumn placeholder(String text) {
     _placeholder = text;
-    return this as T;
+    return this;
   }
 
   /// Gets the placeholder text.
   String? getPlaceholder() => _placeholder;
 
   /// Sets a default value for null values.
-  T defaultValue<T extends TableColumn>(dynamic value) {
+  TableColumn defaultValue(dynamic value) {
     _default = value;
-    return this as T;
+    return this;
   }
 
   /// Gets the default value.
   dynamic getDefaultValue() => _default;
 
   /// Sets a custom state resolver function.
-  T state<T extends TableColumn>(dynamic Function(Model) resolver) {
+  TableColumn state(dynamic Function(Model) resolver) {
     _stateResolver = resolver;
-    return this as T;
+    return this;
   }
 
   /// Gets the state (value) for this column from a model.

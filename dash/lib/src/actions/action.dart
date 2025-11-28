@@ -134,6 +134,21 @@ class Action<T extends Model> {
     return this;
   }
 
+  /// Sets the action color to danger (red).
+  Action<T> danger() => color(ActionColor.danger);
+
+  /// Sets the action color to success (green).
+  Action<T> success() => color(ActionColor.success);
+
+  /// Sets the action color to warning (yellow/orange).
+  Action<T> warning() => color(ActionColor.warning);
+
+  /// Sets the action color to info (blue).
+  Action<T> info() => color(ActionColor.info);
+
+  /// Sets the action color to secondary (gray).
+  Action<T> secondary() => color(ActionColor.secondary);
+
   // ============================================================
   // Visibility & State
   // ============================================================
@@ -352,6 +367,20 @@ class Action<T extends Model> {
 
   /// Checks if this is a POST action.
   bool isPostAction() => _actionUrl != null;
+
+  // ============================================================
+  // Helper Methods
+  // ============================================================
+
+  /// Gets the record's primary key value.
+  ///
+  /// This is a helper method for building URLs that reference a specific record.
+  /// Subclasses can use this to construct action URLs.
+  dynamic getRecordId(T record) {
+    final fields = record.toMap();
+    final primaryKey = record.primaryKey;
+    return fields[primaryKey];
+  }
 
   // ============================================================
   // Type Conversions

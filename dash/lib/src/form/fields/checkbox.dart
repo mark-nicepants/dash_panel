@@ -39,6 +39,134 @@ class Checkbox extends FormField {
     return Checkbox(name);
   }
 
+  // ============================================================
+  // Covariant overrides for fluent API
+  // ============================================================
+
+  @override
+  Checkbox id(String id) {
+    super.id(id);
+    return this;
+  }
+
+  @override
+  Checkbox label(String label) {
+    super.label(label);
+    return this;
+  }
+
+  @override
+  Checkbox placeholder(String placeholder) {
+    super.placeholder(placeholder);
+    return this;
+  }
+
+  @override
+  Checkbox helperText(String text) {
+    super.helperText(text);
+    return this;
+  }
+
+  @override
+  Checkbox hint(String hint) {
+    super.hint(hint);
+    return this;
+  }
+
+  @override
+  Checkbox defaultValue(dynamic value) {
+    super.defaultValue(value);
+    return this;
+  }
+
+  @override
+  Checkbox required([bool required = true]) {
+    super.required(required);
+    return this;
+  }
+
+  @override
+  Checkbox disabled([bool disabled = true]) {
+    super.disabled(disabled);
+    return this;
+  }
+
+  @override
+  Checkbox readonly([bool readonly = true]) {
+    super.readonly(readonly);
+    return this;
+  }
+
+  @override
+  Checkbox hidden([bool hidden = true]) {
+    super.hidden(hidden);
+    return this;
+  }
+
+  @override
+  Checkbox columnSpan(int span) {
+    super.columnSpan(span);
+    return this;
+  }
+
+  @override
+  Checkbox columnSpanBreakpoint(String breakpoint, int span) {
+    super.columnSpanBreakpoint(breakpoint, span);
+    return this;
+  }
+
+  @override
+  Checkbox columnSpanFull() {
+    super.columnSpanFull();
+    return this;
+  }
+
+  @override
+  Checkbox extraClasses(String classes) {
+    super.extraClasses(classes);
+    return this;
+  }
+
+  @override
+  Checkbox rule(ValidationRule rule) {
+    super.rule(rule);
+    return this;
+  }
+
+  @override
+  Checkbox rules(List<ValidationRule> rules) {
+    super.rules(rules);
+    return this;
+  }
+
+  @override
+  Checkbox validationMessage(String rule, String message) {
+    super.validationMessage(rule, message);
+    return this;
+  }
+
+  @override
+  Checkbox autofocus([bool autofocus = true]) {
+    super.autofocus(autofocus);
+    return this;
+  }
+
+  @override
+  Checkbox autocomplete(String value) {
+    super.autocomplete(value);
+    return this;
+  }
+
+  @override
+  Checkbox tabindex(int index) {
+    super.tabindex(index);
+    return this;
+  }
+
+  // ============================================================
+  // Checkbox-specific methods
+  // ============================================================
+
   /// Displays the checkbox inline with the label.
   Checkbox inline([bool inline = true]) {
     _inline = inline;

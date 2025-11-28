@@ -62,6 +62,134 @@ class Select extends FormField {
     return Select(name);
   }
 
+  // ============================================================
+  // Covariant overrides for fluent API
+  // ============================================================
+
+  @override
+  Select id(String id) {
+    super.id(id);
+    return this;
+  }
+
+  @override
+  Select label(String label) {
+    super.label(label);
+    return this;
+  }
+
+  @override
+  Select placeholder(String placeholder) {
+    super.placeholder(placeholder);
+    return this;
+  }
+
+  @override
+  Select helperText(String text) {
+    super.helperText(text);
+    return this;
+  }
+
+  @override
+  Select hint(String hint) {
+    super.hint(hint);
+    return this;
+  }
+
+  @override
+  Select defaultValue(dynamic value) {
+    super.defaultValue(value);
+    return this;
+  }
+
+  @override
+  Select required([bool required = true]) {
+    super.required(required);
+    return this;
+  }
+
+  @override
+  Select disabled([bool disabled = true]) {
+    super.disabled(disabled);
+    return this;
+  }
+
+  @override
+  Select readonly([bool readonly = true]) {
+    super.readonly(readonly);
+    return this;
+  }
+
+  @override
+  Select hidden([bool hidden = true]) {
+    super.hidden(hidden);
+    return this;
+  }
+
+  @override
+  Select columnSpan(int span) {
+    super.columnSpan(span);
+    return this;
+  }
+
+  @override
+  Select columnSpanBreakpoint(String breakpoint, int span) {
+    super.columnSpanBreakpoint(breakpoint, span);
+    return this;
+  }
+
+  @override
+  Select columnSpanFull() {
+    super.columnSpanFull();
+    return this;
+  }
+
+  @override
+  Select extraClasses(String classes) {
+    super.extraClasses(classes);
+    return this;
+  }
+
+  @override
+  Select rule(ValidationRule rule) {
+    super.rule(rule);
+    return this;
+  }
+
+  @override
+  Select rules(List<ValidationRule> rules) {
+    super.rules(rules);
+    return this;
+  }
+
+  @override
+  Select validationMessage(String rule, String message) {
+    super.validationMessage(rule, message);
+    return this;
+  }
+
+  @override
+  Select autofocus([bool autofocus = true]) {
+    super.autofocus(autofocus);
+    return this;
+  }
+
+  @override
+  Select autocomplete(String value) {
+    super.autocomplete(value);
+    return this;
+  }
+
+  @override
+  Select tabindex(int index) {
+    super.tabindex(index);
+    return this;
+  }
+
+  // ============================================================
+  // Select-specific methods
+  // ============================================================
+
   /// Sets the options from a list.
   Select options(List<SelectOption> options) {
     _options = options;

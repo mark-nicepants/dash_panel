@@ -66,6 +66,134 @@ class TextInput extends FormField {
     return TextInput(name);
   }
 
+  // ============================================================
+  // Covariant overrides for fluent API
+  // ============================================================
+
+  @override
+  TextInput id(String id) {
+    super.id(id);
+    return this;
+  }
+
+  @override
+  TextInput label(String label) {
+    super.label(label);
+    return this;
+  }
+
+  @override
+  TextInput placeholder(String placeholder) {
+    super.placeholder(placeholder);
+    return this;
+  }
+
+  @override
+  TextInput helperText(String text) {
+    super.helperText(text);
+    return this;
+  }
+
+  @override
+  TextInput hint(String hint) {
+    super.hint(hint);
+    return this;
+  }
+
+  @override
+  TextInput defaultValue(dynamic value) {
+    super.defaultValue(value);
+    return this;
+  }
+
+  @override
+  TextInput required([bool required = true]) {
+    super.required(required);
+    return this;
+  }
+
+  @override
+  TextInput disabled([bool disabled = true]) {
+    super.disabled(disabled);
+    return this;
+  }
+
+  @override
+  TextInput readonly([bool readonly = true]) {
+    super.readonly(readonly);
+    return this;
+  }
+
+  @override
+  TextInput hidden([bool hidden = true]) {
+    super.hidden(hidden);
+    return this;
+  }
+
+  @override
+  TextInput columnSpan(int span) {
+    super.columnSpan(span);
+    return this;
+  }
+
+  @override
+  TextInput columnSpanBreakpoint(String breakpoint, int span) {
+    super.columnSpanBreakpoint(breakpoint, span);
+    return this;
+  }
+
+  @override
+  TextInput columnSpanFull() {
+    super.columnSpanFull();
+    return this;
+  }
+
+  @override
+  TextInput extraClasses(String classes) {
+    super.extraClasses(classes);
+    return this;
+  }
+
+  @override
+  TextInput rule(ValidationRule rule) {
+    super.rule(rule);
+    return this;
+  }
+
+  @override
+  TextInput rules(List<ValidationRule> rules) {
+    super.rules(rules);
+    return this;
+  }
+
+  @override
+  TextInput validationMessage(String rule, String message) {
+    super.validationMessage(rule, message);
+    return this;
+  }
+
+  @override
+  TextInput autofocus([bool autofocus = true]) {
+    super.autofocus(autofocus);
+    return this;
+  }
+
+  @override
+  TextInput autocomplete(String value) {
+    super.autocomplete(value);
+    return this;
+  }
+
+  @override
+  TextInput tabindex(int index) {
+    super.tabindex(index);
+    return this;
+  }
+
+  // ============================================================
+  // TextInput-specific methods
+  // ============================================================
+
   /// Sets the input type.
   TextInput type(InputType type) {
     _type = type;

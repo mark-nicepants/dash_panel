@@ -48,6 +48,134 @@ class Toggle extends FormField {
     return Toggle(name);
   }
 
+  // ============================================================
+  // Covariant overrides for fluent API
+  // ============================================================
+
+  @override
+  Toggle id(String id) {
+    super.id(id);
+    return this;
+  }
+
+  @override
+  Toggle label(String label) {
+    super.label(label);
+    return this;
+  }
+
+  @override
+  Toggle placeholder(String placeholder) {
+    super.placeholder(placeholder);
+    return this;
+  }
+
+  @override
+  Toggle helperText(String text) {
+    super.helperText(text);
+    return this;
+  }
+
+  @override
+  Toggle hint(String hint) {
+    super.hint(hint);
+    return this;
+  }
+
+  @override
+  Toggle defaultValue(dynamic value) {
+    super.defaultValue(value);
+    return this;
+  }
+
+  @override
+  Toggle required([bool required = true]) {
+    super.required(required);
+    return this;
+  }
+
+  @override
+  Toggle disabled([bool disabled = true]) {
+    super.disabled(disabled);
+    return this;
+  }
+
+  @override
+  Toggle readonly([bool readonly = true]) {
+    super.readonly(readonly);
+    return this;
+  }
+
+  @override
+  Toggle hidden([bool hidden = true]) {
+    super.hidden(hidden);
+    return this;
+  }
+
+  @override
+  Toggle columnSpan(int span) {
+    super.columnSpan(span);
+    return this;
+  }
+
+  @override
+  Toggle columnSpanBreakpoint(String breakpoint, int span) {
+    super.columnSpanBreakpoint(breakpoint, span);
+    return this;
+  }
+
+  @override
+  Toggle columnSpanFull() {
+    super.columnSpanFull();
+    return this;
+  }
+
+  @override
+  Toggle extraClasses(String classes) {
+    super.extraClasses(classes);
+    return this;
+  }
+
+  @override
+  Toggle rule(ValidationRule rule) {
+    super.rule(rule);
+    return this;
+  }
+
+  @override
+  Toggle rules(List<ValidationRule> rules) {
+    super.rules(rules);
+    return this;
+  }
+
+  @override
+  Toggle validationMessage(String rule, String message) {
+    super.validationMessage(rule, message);
+    return this;
+  }
+
+  @override
+  Toggle autofocus([bool autofocus = true]) {
+    super.autofocus(autofocus);
+    return this;
+  }
+
+  @override
+  Toggle autocomplete(String value) {
+    super.autocomplete(value);
+    return this;
+  }
+
+  @override
+  Toggle tabindex(int index) {
+    super.tabindex(index);
+    return this;
+  }
+
+  // ============================================================
+  // Toggle-specific methods
+  // ============================================================
+
   /// Sets the label shown when on.
   Toggle onLabel(String label) {
     _onLabel = label;

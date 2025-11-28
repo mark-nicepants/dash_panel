@@ -74,24 +74,24 @@ class UserResource extends Resource<User> {
   FormSchema<User> form(FormSchema<User> form) {
     return form.columns(2).fields([
       TextInput.make('name') //
-          .label<TextInput>('Full Name')
-          .placeholder<TextInput>('Enter full name')
+          .label('Full Name')
+          .placeholder('Enter full name')
           .minLength(2)
-          .required<TextInput>()
-          .columnSpanFull<TextInput>(),
+          .required()
+          .columnSpanFull(),
       TextInput.make('email') //
           .email()
-          .placeholder<TextInput>('user@example.com')
-          .required<TextInput>(),
+          .placeholder('user@example.com')
+          .required(),
 
       Select.make('role') //
-          .label<Select>('User Role')
+          .label('User Role')
           .options([
             const SelectOption('user', 'User'),
             const SelectOption('admin', 'Administrator'),
             const SelectOption('moderator', 'Moderator'),
           ])
-          .required<Select>(),
+          .required(),
     ]);
   }
 }

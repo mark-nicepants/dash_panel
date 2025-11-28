@@ -1,5 +1,4 @@
 import 'package:dash/src/model/model.dart';
-
 import 'package:dash/src/table/columns/column.dart';
 
 /// A column that displays an icon.
@@ -53,6 +52,98 @@ class IconColumn extends TableColumn {
   static IconColumn make(String name) {
     return IconColumn(name);
   }
+
+  // ============================================================
+  // Covariant overrides for fluent API
+  // ============================================================
+
+  @override
+  IconColumn label(String label) {
+    super.label(label);
+    return this;
+  }
+
+  @override
+  IconColumn sortable([bool sortable = true]) {
+    super.sortable(sortable);
+    return this;
+  }
+
+  @override
+  IconColumn searchable([bool searchable = true]) {
+    super.searchable(searchable);
+    return this;
+  }
+
+  @override
+  IconColumn toggleable({bool toggleable = true, bool isToggledHiddenByDefault = false}) {
+    super.toggleable(toggleable: toggleable, isToggledHiddenByDefault: isToggledHiddenByDefault);
+    return this;
+  }
+
+  @override
+  IconColumn hidden([bool hidden = true]) {
+    super.hidden(hidden);
+    return this;
+  }
+
+  @override
+  IconColumn alignment(ColumnAlignment alignment) {
+    super.alignment(alignment);
+    return this;
+  }
+
+  @override
+  IconColumn alignStart() {
+    super.alignStart();
+    return this;
+  }
+
+  @override
+  IconColumn alignCenter() {
+    super.alignCenter();
+    return this;
+  }
+
+  @override
+  IconColumn alignEnd() {
+    super.alignEnd();
+    return this;
+  }
+
+  @override
+  IconColumn width(String width) {
+    super.width(width);
+    return this;
+  }
+
+  @override
+  IconColumn grow([bool grow = true]) {
+    super.grow(grow);
+    return this;
+  }
+
+  @override
+  IconColumn placeholder(String text) {
+    super.placeholder(text);
+    return this;
+  }
+
+  @override
+  IconColumn defaultValue(dynamic value) {
+    super.defaultValue(value);
+    return this;
+  }
+
+  @override
+  IconColumn state(dynamic Function(Model) resolver) {
+    super.state(resolver);
+    return this;
+  }
+
+  // ============================================================
+  // IconColumn-specific methods
+  // ============================================================
 
   /// Sets the icon to display.
   /// Can be a string or a function that returns a string based on the record.

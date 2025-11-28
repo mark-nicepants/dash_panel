@@ -58,6 +58,134 @@ class DatePicker extends FormField {
     return DatePicker(name);
   }
 
+  // ============================================================
+  // Covariant overrides for fluent API
+  // ============================================================
+
+  @override
+  DatePicker id(String id) {
+    super.id(id);
+    return this;
+  }
+
+  @override
+  DatePicker label(String label) {
+    super.label(label);
+    return this;
+  }
+
+  @override
+  DatePicker placeholder(String placeholder) {
+    super.placeholder(placeholder);
+    return this;
+  }
+
+  @override
+  DatePicker helperText(String text) {
+    super.helperText(text);
+    return this;
+  }
+
+  @override
+  DatePicker hint(String hint) {
+    super.hint(hint);
+    return this;
+  }
+
+  @override
+  DatePicker defaultValue(dynamic value) {
+    super.defaultValue(value);
+    return this;
+  }
+
+  @override
+  DatePicker required([bool required = true]) {
+    super.required(required);
+    return this;
+  }
+
+  @override
+  DatePicker disabled([bool disabled = true]) {
+    super.disabled(disabled);
+    return this;
+  }
+
+  @override
+  DatePicker readonly([bool readonly = true]) {
+    super.readonly(readonly);
+    return this;
+  }
+
+  @override
+  DatePicker hidden([bool hidden = true]) {
+    super.hidden(hidden);
+    return this;
+  }
+
+  @override
+  DatePicker columnSpan(int span) {
+    super.columnSpan(span);
+    return this;
+  }
+
+  @override
+  DatePicker columnSpanBreakpoint(String breakpoint, int span) {
+    super.columnSpanBreakpoint(breakpoint, span);
+    return this;
+  }
+
+  @override
+  DatePicker columnSpanFull() {
+    super.columnSpanFull();
+    return this;
+  }
+
+  @override
+  DatePicker extraClasses(String classes) {
+    super.extraClasses(classes);
+    return this;
+  }
+
+  @override
+  DatePicker rule(ValidationRule rule) {
+    super.rule(rule);
+    return this;
+  }
+
+  @override
+  DatePicker rules(List<ValidationRule> rules) {
+    super.rules(rules);
+    return this;
+  }
+
+  @override
+  DatePicker validationMessage(String rule, String message) {
+    super.validationMessage(rule, message);
+    return this;
+  }
+
+  @override
+  DatePicker autofocus([bool autofocus = true]) {
+    super.autofocus(autofocus);
+    return this;
+  }
+
+  @override
+  DatePicker autocomplete(String value) {
+    super.autocomplete(value);
+    return this;
+  }
+
+  @override
+  DatePicker tabindex(int index) {
+    super.tabindex(index);
+    return this;
+  }
+
+  // ============================================================
+  // DatePicker-specific methods
+  // ============================================================
+
   /// Includes time selection.
   DatePicker withTime([bool withTime = true]) {
     _withTime = withTime;
@@ -77,8 +205,10 @@ class DatePicker extends FormField {
   bool isTimeOnly() => _timeOnly;
 
   /// Sets the minimum allowed date.
+  /// Also adds a [DateAfter] validation rule.
   DatePicker minDate(DateTime date) {
     _minDate = date;
+    rule(DateAfter(date));
     return this;
   }
 
@@ -86,8 +216,10 @@ class DatePicker extends FormField {
   DateTime? getMinDate() => _minDate;
 
   /// Sets the maximum allowed date.
+  /// Also adds a [DateBefore] validation rule.
   DatePicker maxDate(DateTime date) {
     _maxDate = date;
+    rule(DateBefore(date));
     return this;
   }
 

@@ -289,3 +289,94 @@ class Unique extends ValidationRule {
     return null;
   }
 }
+
+/// Rule that validates a date is after a minimum date.
+///
+/// Example:
+/// ```dart
+/// DatePicker.make('start_date')
+///   .minDate(DateTime.now())  // Automatically adds DateAfter rule
+/// ```
+class DateAfter extends ValidationRule {
+  final DateTime minDate;
+
+  DateAfter(this.minDate);
+
+  @override
+  String get name => 'date_after:${minDate.toIso8601String().split('T')[0]}';
+
+  @override
+  String? validate(String field, dynamic value) {
+    if (value == null || value == '') return null;
+    final date = value is DateTime ? value : DateTime.tryParse(value.toString());
+    if (date == null) return 'The $field must be a valid date.';
+    if (date.isBefore(minDate)) {
+      return 'The $field must be after ${_formatDate(minDate)}.';
+    }
+    return null;
+  }
+
+  String _formatDate(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+}
+
+/// Rule that validates a date is before a maximum date.
+///
+/// Example:
+/// ```dart
+/// DatePicker.make('end_date')
+///   .maxDate(DateTime(2030, 12, 31))  // Automatically adds DateBefore rule
+/// ```
+class DateBefore extends ValidationRule {
+  final DateTime maxDate;
+
+  DateBefore(this.maxDate);
+
+  @override
+  String get name => 'date_before:${maxDate.toIso8601String().split('T')[0]}';
+
+  @override
+  String? validate(String field, dynamic value) {
+    if (value == null || value == '') return null;
+    final date = value is DateTime ? value : DateTime.tryParse(value.toString());
+    if (date == null) return 'The $field must be a valid date.';
+    if (date.isAfter(maxDate)) {
+      return 'The $field must be before ${_formatDate(maxDate)}.';
+    }
+    return null;
+  }
+
+  String _formatDate(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+}
+
+/// Rule that validates a date is between two dates.
+///
+/// Example:
+/// ```dart
+/// DatePicker.make('event_date')
+///   .rule(DateBetween(DateTime(2024, 1, 1), DateTime(2024, 12, 31)))
+/// ```
+class DateBetween extends ValidationRule {
+  final DateTime minDate;
+  final DateTime maxDate;
+
+  DateBetween(this.minDate, this.maxDate);
+
+  @override
+  String get name => 'date_between';
+
+  @override
+  String? validate(String field, dynamic value) {
+    if (value == null || value == '') return null;
+    final date = value is DateTime ? value : DateTime.tryParse(value.toString());
+    if (date == null) return 'The $field must be a valid date.';
+    if (date.isBefore(minDate) || date.isAfter(maxDate)) {
+      return 'The $field must be between ${_formatDate(minDate)} and ${_formatDate(maxDate)}.';
+    }
+    return null;
+  }
+
+  String _formatDate(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+}

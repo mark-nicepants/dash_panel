@@ -117,6 +117,98 @@ class TextColumn extends TableColumn {
     return TextColumn(name);
   }
 
+  // ============================================================
+  // Covariant overrides for fluent API
+  // ============================================================
+
+  @override
+  TextColumn label(String label) {
+    super.label(label);
+    return this;
+  }
+
+  @override
+  TextColumn sortable([bool sortable = true]) {
+    super.sortable(sortable);
+    return this;
+  }
+
+  @override
+  TextColumn searchable([bool searchable = true]) {
+    super.searchable(searchable);
+    return this;
+  }
+
+  @override
+  TextColumn toggleable({bool toggleable = true, bool isToggledHiddenByDefault = false}) {
+    super.toggleable(toggleable: toggleable, isToggledHiddenByDefault: isToggledHiddenByDefault);
+    return this;
+  }
+
+  @override
+  TextColumn hidden([bool hidden = true]) {
+    super.hidden(hidden);
+    return this;
+  }
+
+  @override
+  TextColumn alignment(ColumnAlignment alignment) {
+    super.alignment(alignment);
+    return this;
+  }
+
+  @override
+  TextColumn alignStart() {
+    super.alignStart();
+    return this;
+  }
+
+  @override
+  TextColumn alignCenter() {
+    super.alignCenter();
+    return this;
+  }
+
+  @override
+  TextColumn alignEnd() {
+    super.alignEnd();
+    return this;
+  }
+
+  @override
+  TextColumn width(String width) {
+    super.width(width);
+    return this;
+  }
+
+  @override
+  TextColumn grow([bool grow = true]) {
+    super.grow(grow);
+    return this;
+  }
+
+  @override
+  TextColumn placeholder(String text) {
+    super.placeholder(text);
+    return this;
+  }
+
+  @override
+  TextColumn defaultValue(dynamic value) {
+    super.defaultValue(value);
+    return this;
+  }
+
+  @override
+  TextColumn state(dynamic Function(Model) resolver) {
+    super.state(resolver);
+    return this;
+  }
+
+  // ============================================================
+  // TextColumn-specific methods
+  // ============================================================
+
   /// Displays the column as a badge.
   TextColumn badge([bool badge = true]) {
     _badge = badge;

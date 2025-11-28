@@ -17,7 +17,10 @@ export 'package:dash/src/validation/validation.dart'
         InList,
         Pattern,
         Accepted,
-        Confirmed;
+        Confirmed,
+        DateAfter,
+        DateBefore,
+        DateBetween;
 
 /// Base class for all form fields.
 ///
@@ -67,6 +70,9 @@ abstract class FormField {
   /// Whether the field is hidden.
   bool _hidden = false;
 
+  /// Whether the field allows null/empty values.
+  bool _nullable = false;
+
   /// The number of columns this field spans.
   int _columnSpan = 1;
 
@@ -97,18 +103,18 @@ abstract class FormField {
   String getName() => _name;
 
   /// Sets the field ID.
-  T id<T extends FormField>(String id) {
+  FormField id(String id) {
     _id = id;
-    return this as T;
+    return this;
   }
 
   /// Gets the field ID.
   String getId() => _id ?? _name;
 
   /// Sets the label for the field.
-  T label<T extends FormField>(String label) {
+  FormField label(String label) {
     _label = label;
-    return this as T;
+    return this;
   }
 
   /// Gets the label.
@@ -127,156 +133,167 @@ abstract class FormField {
   }
 
   /// Sets the placeholder text.
-  T placeholder<T extends FormField>(String placeholder) {
+  FormField placeholder(String placeholder) {
     _placeholder = placeholder;
-    return this as T;
+    return this;
   }
 
   /// Gets the placeholder.
   String? getPlaceholder() => _placeholder;
 
   /// Sets the helper text.
-  T helperText<T extends FormField>(String text) {
+  FormField helperText(String text) {
     _helperText = text;
-    return this as T;
+    return this;
   }
 
   /// Gets the helper text.
   String? getHelperText() => _helperText;
 
   /// Sets the hint.
-  T hint<T extends FormField>(String hint) {
+  FormField hint(String hint) {
     _hint = hint;
-    return this as T;
+    return this;
   }
 
   /// Gets the hint.
   String? getHint() => _hint;
 
   /// Sets the default value.
-  T defaultValue<T extends FormField>(dynamic value) {
+  FormField defaultValue(dynamic value) {
     _default = value;
-    return this as T;
+    return this;
   }
 
   /// Gets the default value.
   dynamic getDefaultValue() => _default;
 
   /// Marks the field as required.
-  T required<T extends FormField>([bool required = true]) {
+  FormField required([bool required = true]) {
     _required = required;
     if (required && !_rules.any((r) => r is Required)) {
       _rules.add(Required());
     }
-    return this as T;
+    return this;
   }
 
   /// Checks if the field is required.
   bool isRequired() => _required;
 
   /// Disables the field.
-  T disabled<T extends FormField>([bool disabled = true]) {
+  FormField disabled([bool disabled = true]) {
     _disabled = disabled;
-    return this as T;
+    return this;
   }
 
   /// Checks if the field is disabled.
   bool isDisabled() => _disabled;
 
   /// Makes the field readonly.
-  T readonly<T extends FormField>([bool readonly = true]) {
+  FormField readonly([bool readonly = true]) {
     _readonly = readonly;
-    return this as T;
+    return this;
   }
 
   /// Checks if the field is readonly.
   bool isReadonly() => _readonly;
 
   /// Hides the field.
-  T hidden<T extends FormField>([bool hidden = true]) {
+  FormField hidden([bool hidden = true]) {
     _hidden = hidden;
-    return this as T;
+    return this;
   }
 
   /// Checks if the field is hidden.
   bool isHidden() => _hidden;
 
+  /// Marks the field as nullable (allows empty values).
+  /// Nullable fields will not show validation errors for empty values
+  /// unless they are also marked as required.
+  FormField nullable([bool nullable = true]) {
+    _nullable = nullable;
+    return this;
+  }
+
+  /// Checks if the field is nullable.
+  bool isNullable() => _nullable;
+
   /// Sets the column span.
-  T columnSpan<T extends FormField>(int span) {
+  FormField columnSpan(int span) {
     _columnSpan = span;
-    return this as T;
+    return this;
   }
 
   /// Gets the column span.
   int getColumnSpan() => _columnSpan;
 
   /// Sets column span for a specific breakpoint.
-  T columnSpanBreakpoint<T extends FormField>(String breakpoint, int span) {
+  FormField columnSpanBreakpoint(String breakpoint, int span) {
     _columnSpanBreakpoints[breakpoint] = span;
-    return this as T;
+    return this;
   }
 
   /// Gets the column span breakpoints.
   Map<String, int> getColumnSpanBreakpoints() => _columnSpanBreakpoints;
 
   /// Makes this field span all columns.
-  T columnSpanFull<T extends FormField>() {
+  FormField columnSpanFull() {
     _columnSpan = -1; // -1 indicates full width
-    return this as T;
+    return this;
   }
 
   /// Checks if the field spans full width.
   bool isColumnSpanFull() => _columnSpan == -1;
 
   /// Sets extra CSS classes.
-  T extraClasses<T extends FormField>(String classes) {
+  FormField extraClasses(String classes) {
     _extraClasses = classes;
-    return this as T;
+    return this;
   }
 
   /// Gets extra CSS classes.
   String? getExtraClasses() => _extraClasses;
 
   /// Adds a validation rule.
-  T rule<T extends FormField>(ValidationRule rule) {
+  FormField rule(ValidationRule rule) {
     _rules.add(rule);
-    return this as T;
+    return this;
   }
 
   /// Adds multiple validation rules.
-  T rules<T extends FormField>(List<ValidationRule> rules) {
+  FormField rules(List<ValidationRule> rules) {
     _rules.addAll(rules);
-    return this as T;
+    return this;
   }
 
   /// Sets a custom validation message.
-  T validationMessage<T extends FormField>(String rule, String message) {
+  FormField validationMessage(String rule, String message) {
     _validationMessages[rule] = message;
-    return this as T;
+    return this;
   }
 
   /// Sets the autofocus.
-  T autofocus<T extends FormField>([bool autofocus = true]) {
+  FormField autofocus([bool autofocus = true]) {
     _autofocus = autofocus;
-    return this as T;
+    return this;
   }
 
   /// Checks if the field should autofocus.
   bool shouldAutofocus() => _autofocus;
 
   /// Sets the autocomplete attribute.
-  T autocomplete<T extends FormField>(String value) {
+  FormField autocomplete(String value) {
     _autocomplete = value;
-    return this as T;
+    return this;
   }
 
   /// Gets the autocomplete attribute.
   String? getAutocomplete() => _autocomplete;
 
   /// Sets the tabindex.
-  T tabindex<T extends FormField>(int index) {
+  FormField tabindex(int index) {
     _tabindex = index;
-    return this as T;
+    return this;
   }
 
   /// Gets the tabindex.

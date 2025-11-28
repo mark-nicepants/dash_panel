@@ -48,6 +48,9 @@ class Section {
   /// The fields within this section.
   List<FormField> _fields = [];
 
+  /// Whether the section is hidden.
+  bool _hidden = false;
+
   /// Creates a section with an optional heading.
   Section([this._heading]);
 
@@ -147,4 +150,15 @@ class Section {
 
   /// Gets the fields in this section.
   List<FormField> getFields() => _fields;
+
+  /// Hides the section.
+  ///
+  /// Hidden sections will not be rendered in the form.
+  Section hidden([bool hidden = true]) {
+    _hidden = hidden;
+    return this;
+  }
+
+  /// Checks if the section is hidden.
+  bool isHidden() => _hidden;
 }

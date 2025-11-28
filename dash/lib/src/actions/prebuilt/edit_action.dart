@@ -23,16 +23,9 @@ class EditAction<T extends Model> extends Action<T> {
     label('Edit');
     icon(HeroIcons.pencilSquare);
     color(ActionColor.secondary);
-    url((record, basePath) => '$basePath/${_getRecordId(record)}/edit');
+    url((record, basePath) => '$basePath/${getRecordId(record)}/edit');
   }
 
   /// Factory method to create a new EditAction.
   static EditAction<T> make<T extends Model>() => EditAction<T>();
-
-  /// Gets the record's primary key value.
-  dynamic _getRecordId(T record) {
-    final fields = record.toMap();
-    final primaryKey = record.primaryKey;
-    return fields[primaryKey];
-  }
 }

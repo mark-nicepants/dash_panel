@@ -53,6 +53,134 @@ class Textarea extends FormField {
     return Textarea(name);
   }
 
+  // ============================================================
+  // Covariant overrides for fluent API
+  // ============================================================
+
+  @override
+  Textarea id(String id) {
+    super.id(id);
+    return this;
+  }
+
+  @override
+  Textarea label(String label) {
+    super.label(label);
+    return this;
+  }
+
+  @override
+  Textarea placeholder(String placeholder) {
+    super.placeholder(placeholder);
+    return this;
+  }
+
+  @override
+  Textarea helperText(String text) {
+    super.helperText(text);
+    return this;
+  }
+
+  @override
+  Textarea hint(String hint) {
+    super.hint(hint);
+    return this;
+  }
+
+  @override
+  Textarea defaultValue(dynamic value) {
+    super.defaultValue(value);
+    return this;
+  }
+
+  @override
+  Textarea required([bool required = true]) {
+    super.required(required);
+    return this;
+  }
+
+  @override
+  Textarea disabled([bool disabled = true]) {
+    super.disabled(disabled);
+    return this;
+  }
+
+  @override
+  Textarea readonly([bool readonly = true]) {
+    super.readonly(readonly);
+    return this;
+  }
+
+  @override
+  Textarea hidden([bool hidden = true]) {
+    super.hidden(hidden);
+    return this;
+  }
+
+  @override
+  Textarea columnSpan(int span) {
+    super.columnSpan(span);
+    return this;
+  }
+
+  @override
+  Textarea columnSpanBreakpoint(String breakpoint, int span) {
+    super.columnSpanBreakpoint(breakpoint, span);
+    return this;
+  }
+
+  @override
+  Textarea columnSpanFull() {
+    super.columnSpanFull();
+    return this;
+  }
+
+  @override
+  Textarea extraClasses(String classes) {
+    super.extraClasses(classes);
+    return this;
+  }
+
+  @override
+  Textarea rule(ValidationRule rule) {
+    super.rule(rule);
+    return this;
+  }
+
+  @override
+  Textarea rules(List<ValidationRule> rules) {
+    super.rules(rules);
+    return this;
+  }
+
+  @override
+  Textarea validationMessage(String rule, String message) {
+    super.validationMessage(rule, message);
+    return this;
+  }
+
+  @override
+  Textarea autofocus([bool autofocus = true]) {
+    super.autofocus(autofocus);
+    return this;
+  }
+
+  @override
+  Textarea autocomplete(String value) {
+    super.autocomplete(value);
+    return this;
+  }
+
+  @override
+  Textarea tabindex(int index) {
+    super.tabindex(index);
+    return this;
+  }
+
+  // ============================================================
+  // Textarea-specific methods
+  // ============================================================
+
   /// Sets the number of visible rows.
   Textarea rows(int rows) {
     _rows = rows;

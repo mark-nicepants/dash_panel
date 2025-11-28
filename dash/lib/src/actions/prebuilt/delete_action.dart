@@ -33,7 +33,7 @@ class DeleteAction<T extends Model> extends Action<T> {
       confirmationHeading('Are you sure you want to delete this record?');
     }
     confirmationDescription('This action cannot be undone.');
-    actionUrl((record, basePath) => '$basePath/${_getRecordId(record)}/delete');
+    actionUrl((record, basePath) => '$basePath/${getRecordId(record)}/delete');
   }
 
   /// Factory method to create a new DeleteAction.
@@ -44,11 +44,4 @@ class DeleteAction<T extends Model> extends Action<T> {
   /// DeleteAction.make('user')  // "Are you sure you want to delete this user?"
   /// ```
   static DeleteAction<T> make<T extends Model>([String? recordLabel]) => DeleteAction<T>(recordLabel);
-
-  /// Gets the record's primary key value.
-  dynamic _getRecordId(T record) {
-    final fields = record.toMap();
-    final primaryKey = record.primaryKey;
-    return fields[primaryKey];
-  }
 }
