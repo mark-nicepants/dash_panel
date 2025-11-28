@@ -1,3 +1,5 @@
+import 'package:dash/src/actions/action.dart';
+import 'package:dash/src/actions/prebuilt/create_action.dart';
 import 'package:dash/src/components/pages/resource_form.dart';
 import 'package:dash/src/components/pages/resource_index.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
@@ -114,6 +116,26 @@ abstract class Resource<T extends Model> {
   /// ```
   FormSchema<T> form(FormSchema<T> form) {
     return form;
+  }
+
+  /// Defines the header actions for the index page.
+  ///
+  /// Override this method to customize the actions shown in the page header.
+  /// By default, shows a "New {singularLabel}" create button.
+  ///
+  /// Example:
+  /// ```dart
+  /// @override
+  /// List<Action<User>> indexHeaderActions() => [
+  ///   CreateAction.make(singularLabel),
+  ///   Action.make<User>('export')
+  ///     .label('Export')
+  ///     .icon(HeroIcons.arrowDownTray)
+  ///     .color(ActionColor.secondary),
+  /// ];
+  /// ```
+  List<Action<T>> indexHeaderActions() {
+    return [CreateAction.make<T>(singularLabel)];
   }
 
   /// Creates a new instance of the model.

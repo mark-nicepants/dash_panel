@@ -4,6 +4,14 @@
 /// interfaces for your Dart applications and websites, inspired by FilamentPHP.
 library;
 
+// Actions
+export 'src/actions/action.dart';
+export 'src/actions/action_color.dart';
+export 'src/actions/action_size.dart';
+export 'src/actions/prebuilt/create_action.dart';
+export 'src/actions/prebuilt/delete_action.dart';
+export 'src/actions/prebuilt/edit_action.dart';
+export 'src/actions/prebuilt/view_action.dart';
 // Auth
 export 'src/auth/auth_service.dart' show AuthService, DashUser, Session;
 export 'src/components/layout.dart';

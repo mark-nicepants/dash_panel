@@ -1,5 +1,7 @@
+import 'package:dash/src/actions/action.dart';
+import 'package:dash/src/actions/prebuilt/delete_action.dart';
+import 'package:dash/src/actions/prebuilt/edit_action.dart';
 import 'package:dash/src/components/partials/breadcrumbs.dart';
-import 'package:dash/src/components/partials/button.dart';
 import 'package:dash/src/components/partials/column_toggle.dart';
 import 'package:dash/src/components/partials/page_header.dart';
 import 'package:dash/src/components/partials/table/table_components.dart';
@@ -55,11 +57,10 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   }
 
   Component _buildHeader() {
+    final headerActions = resource.indexHeaderActions();
     return PageHeader(
       title: resource.label,
-      actions: [
-        Button(label: 'New ${resource.singularLabel}', variant: ButtonVariant.primary, href: '$basePath/create'),
-      ],
+      actions: headerActions.map((action) => action.renderAsHeaderAction(basePath: basePath)).toList(),
     );
   }
 
@@ -123,36 +124,15 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   }
 
   List<Component> _buildRowActions(T record) {
-    final recordId = _getRecordId(record);
-    return [
-      // Edit button
-      a(
-        href: '$basePath/$recordId/edit',
-        classes:
-            'inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-md transition-colors',
-        [text('Edit')],
-      ),
-      // Delete button (with confirmation)
-      form(action: '$basePath/$recordId/delete', method: FormMethod.post, classes: 'inline', [
-        button(
-          type: ButtonType.submit,
-          classes:
-              'inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-400 hover:text-white bg-gray-700 hover:bg-red-600 rounded-md transition-colors',
-          attributes: {
-            'onclick':
-                "return confirm('Are you sure you want to delete this ${resource.singularLabel.toLowerCase()}?')",
-          },
-          [text('Delete')],
-        ),
-      ]),
-    ];
-  }
+    // Use actions from table config, or default to Edit + Delete
+    final actions = tableConfig.hasActions()
+        ? tableConfig.getActions()
+        : <Action<T>>[EditAction.make<T>(), DeleteAction.make<T>(resource.singularLabel.toLowerCase())];
 
-  /// Gets the record's primary key value.
-  dynamic _getRecordId(T record) {
-    final fields = record.toMap();
-    final primaryKey = record.primaryKey;
-    return fields[primaryKey];
+    return actions
+        .where((action) => action.isVisible(record))
+        .map((action) => action.render(record, basePath: basePath))
+        .toList();
   }
 
   Component _buildPagination() {

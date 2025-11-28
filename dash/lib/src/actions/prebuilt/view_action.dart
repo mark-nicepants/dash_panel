@@ -1,0 +1,38 @@
+import 'package:dash/src/actions/action.dart';
+import 'package:dash/src/actions/action_color.dart';
+import 'package:dash/src/components/partials/heroicon.dart';
+import 'package:dash/src/model/model.dart';
+
+/// Pre-configured action for viewing records.
+///
+/// This action navigates to the view page for a record:
+///
+/// ```dart
+/// table.actions([
+///   ViewAction.make(),
+/// ])
+/// ```
+///
+/// The action is pre-configured with:
+/// - Label: "View"
+/// - Icon: [HeroIcons.eye]
+/// - Color: [ActionColor.secondary]
+/// - URL: `{basePath}/{recordId}`
+class ViewAction<T extends Model> extends Action<T> {
+  ViewAction() : super('view') {
+    label('View');
+    icon(HeroIcons.eye);
+    color(ActionColor.secondary);
+    url((record, basePath) => '$basePath/${_getRecordId(record)}');
+  }
+
+  /// Factory method to create a new ViewAction.
+  static ViewAction<T> make<T extends Model>() => ViewAction<T>();
+
+  /// Gets the record's primary key value.
+  dynamic _getRecordId(T record) {
+    final fields = record.toMap();
+    final primaryKey = record.primaryKey;
+    return fields[primaryKey];
+  }
+}

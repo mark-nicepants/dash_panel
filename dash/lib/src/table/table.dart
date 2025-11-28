@@ -1,3 +1,4 @@
+import 'package:dash/src/actions/action.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/table/columns/column.dart';
 
@@ -58,6 +59,15 @@ class Table<T extends Model> {
 
   /// Placeholder text for the search input.
   String _searchPlaceholder = 'Search...';
+
+  /// Row actions displayed for each record.
+  List<Action<T>> _actions = [];
+
+  /// Bulk actions for selected records.
+  List<Action<T>> _bulkActions = [];
+
+  /// Header actions displayed above the table.
+  List<Action<T>> _headerActions = [];
 
   Table();
 
@@ -164,6 +174,67 @@ class Table<T extends Model> {
 
   /// Gets the search placeholder.
   String getSearchPlaceholder() => _searchPlaceholder;
+
+  /// Sets the row actions for the table.
+  ///
+  /// Row actions are displayed for each record in the table.
+  ///
+  /// ```dart
+  /// table.actions([
+  ///   EditAction.make(),
+  ///   DeleteAction.make(),
+  /// ])
+  /// ```
+  Table<T> actions(List<Action<T>> actions) {
+    _actions = actions;
+    return this;
+  }
+
+  /// Gets the row actions.
+  List<Action<T>> getActions() => _actions;
+
+  /// Checks if the table has row actions.
+  bool hasActions() => _actions.isNotEmpty;
+
+  /// Sets the bulk actions for the table.
+  ///
+  /// Bulk actions are displayed when records are selected.
+  ///
+  /// ```dart
+  /// table.bulkActions([
+  ///   DeleteBulkAction.make(),
+  /// ])
+  /// ```
+  Table<T> bulkActions(List<Action<T>> actions) {
+    _bulkActions = actions;
+    return this;
+  }
+
+  /// Gets the bulk actions.
+  List<Action<T>> getBulkActions() => _bulkActions;
+
+  /// Checks if the table has bulk actions.
+  bool hasBulkActions() => _bulkActions.isNotEmpty;
+
+  /// Sets the header actions for the table.
+  ///
+  /// Header actions are displayed above the table.
+  ///
+  /// ```dart
+  /// table.headerActions([
+  ///   Action.make('export').label('Export').icon(HeroIcons.arrowDownTray),
+  /// ])
+  /// ```
+  Table<T> headerActions(List<Action<T>> actions) {
+    _headerActions = actions;
+    return this;
+  }
+
+  /// Gets the header actions.
+  List<Action<T>> getHeaderActions() => _headerActions;
+
+  /// Checks if the table has header actions.
+  bool hasHeaderActions() => _headerActions.isNotEmpty;
 
   /// Gets the list of relationship names required by columns.
   /// For columns with dot notation (e.g., 'author.name'), returns the relationship name ('author').

@@ -42,8 +42,21 @@ class UserResource extends Resource<User> {
               .toggleable(isToggledHiddenByDefault: true),
         ])
         .defaultSort('name')
-        .searchPlaceholder('Search users...');
+        .searchPlaceholder('Search users...')
+        // Row actions - defaults shown for demonstration
+        .actions([ViewAction.make(), EditAction.make(), DeleteAction.make('user')]);
   }
+
+  // Header actions for the index page - override to customize
+  @override
+  List<Action<User>> indexHeaderActions() => [
+    CreateAction.make(singularLabel),
+    // You can add more header actions here, e.g.:
+    // Action.make<User>('export')
+    //   .label('Export')
+    //   .icon(HeroIcons.arrowDownTray)
+    //   .color(ActionColor.secondary),
+  ];
 
   @override
   FormSchema<User> form(FormSchema<User> form) {
