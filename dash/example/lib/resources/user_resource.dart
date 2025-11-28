@@ -35,6 +35,11 @@ class UserResource extends Resource<User> {
               .sortable()
               .toggleable(),
 
+          BooleanColumn.make('is_active') //
+              .label('Active')
+              .sortable()
+              .toggleable(),
+
           TextColumn.make('created_at') //
               .dateTime()
               .label('Joined')
@@ -77,6 +82,7 @@ class UserResource extends Resource<User> {
           .label('Full Name')
           .placeholder('Enter full name')
           .minLength(2)
+          .maxLength(255)
           .required()
           .columnSpanFull(),
       TextInput.make('email') //
@@ -84,14 +90,26 @@ class UserResource extends Resource<User> {
           .placeholder('user@example.com')
           .required(),
 
+      TextInput.make('password') //
+          .password()
+          .label('Password')
+          .placeholder('Enter password')
+          .minLength(8)
+          .required(),
+
       Select.make('role') //
           .label('User Role')
           .options([
+            const SelectOption('admin', 'Admin'),
             const SelectOption('user', 'User'),
-            const SelectOption('admin', 'Administrator'),
-            const SelectOption('moderator', 'Moderator'),
+            const SelectOption('guest', 'Guest'),
           ])
           .required(),
+
+      Toggle.make('is_active') //
+          .label('Active')
+          .helperText('Whether this user can access the system')
+          .defaultValue(true),
     ]);
   }
 }

@@ -20,10 +20,26 @@ class PostResource extends Resource<Post> {
               .sortable()
               .grow(),
 
+          TextColumn.make('slug') //
+              .label('Slug')
+              .searchable()
+              .toggleable(isToggledHiddenByDefault: true),
+
           TextColumn.make('author.name') //
               .label('Author')
               .sortable()
               .width('100px'),
+
+          BooleanColumn.make('is_published') //
+              .label('Published')
+              .sortable()
+              .toggleable(),
+
+          TextColumn.make('published_at') //
+              .dateTime()
+              .label('Published At')
+              .sortable()
+              .toggleable(isToggledHiddenByDefault: true),
 
           TextColumn.make('created_at') //
               .dateTime()
@@ -45,10 +61,17 @@ class PostResource extends Resource<Post> {
           .columns(2)
           .schema([
             TextInput.make('title') //
-                .minLength(3)
-                .maxLength(200)
+                .minLength(1)
+                .maxLength(255)
                 .label('Post Title')
                 .placeholder('Enter post title')
+                .required()
+                .columnSpanFull(),
+
+            TextInput.make('slug') //
+                .label('Slug')
+                .placeholder('post-url-slug')
+                .helperText('URL-friendly identifier (lowercase letters, numbers, and hyphens only)')
                 .required()
                 .columnSpanFull(),
 
@@ -56,21 +79,16 @@ class PostResource extends Resource<Post> {
                 .rows(8)
                 .label('Content')
                 .placeholder('Write your post content here...')
-                .required()
                 .columnSpanFull(),
           ]),
 
       Section.make(
         'Publishing Options',
       ).description('Control when and how your post is published').icon('calendar').collapsible().columns(2).schema([
-        Select.make('status') //
-            .options([
-              const SelectOption('draft', 'Draft'),
-              const SelectOption('published', 'Published'),
-              const SelectOption('archived', 'Archived'),
-            ])
-            .label('Status')
-            .required(),
+        Toggle.make('is_published') //
+            .label('Published')
+            .helperText('When enabled, this post will be visible to the public')
+            .defaultValue(false),
 
         DatePicker.make('published_at') //
             .withTime()
