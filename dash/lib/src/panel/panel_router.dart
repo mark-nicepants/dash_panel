@@ -2,8 +2,17 @@ import 'package:dash/src/components/layout.dart';
 import 'package:dash/src/components/pages/dashboard_page.dart';
 import 'package:dash/src/components/pages/login_page.dart';
 import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash/src/plugin/asset.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
+
+/// Combines a page component with optional page-specific assets.
+class _PageWithAssets {
+  final Component page;
+  final PageAssetCollector? assets;
+
+  _PageWithAssets(this.page, [this.assets]);
+}
 
 /// Handles routing and page rendering for the Dash panel.
 ///
@@ -16,14 +25,18 @@ class PanelRouter {
   PanelRouter(this._config, this._resourceLoader);
 
   /// Creates a DashLayout with all required properties from config.
-  DashLayout _wrapInLayout({required String title, required Component child}) {
-    return DashLayout(
-      basePath: _config.path,
-      resources: _config.resources,
-      navigationItems: _config.navigationItems,
-      renderHooks: _config.renderHooks,
-      title: title,
-      child: child,
+  /// Optionally wraps with page assets.
+  _PageWithAssets _wrapInLayout({required String title, required Component child, PageAssetCollector? pageAssets}) {
+    return _PageWithAssets(
+      DashLayout(
+        basePath: _config.path,
+        resources: _config.resources,
+        navigationItems: _config.navigationItems,
+        renderHooks: _config.renderHooks,
+        title: title,
+        child: child,
+      ),
+      pageAssets,
     );
   }
 
@@ -37,8 +50,8 @@ class PanelRouter {
       return await _handleFormSubmission(request, path);
     }
 
-    final page = await _getPageForPath(path, request);
-    return await _renderPage(page);
+    final result = await _getPageForPath(path, request);
+    return await _renderPage(result.page, pageAssets: result.assets);
   }
 
   /// Handles form submissions for create, update, delete operations.
@@ -91,7 +104,7 @@ class PanelRouter {
         // Re-render create page with errors
         final page = resource.buildCreatePage(errors: errors, oldInput: formData);
         final wrapped = _wrapInLayout(title: 'Create ${resource.singularLabel}', child: page);
-        return await _renderPage(wrapped);
+        return await _renderPage(wrapped.page, pageAssets: wrapped.assets);
       }
 
       // Create the record
@@ -109,7 +122,7 @@ class PanelRouter {
         oldInput: formData,
       );
       final wrapped = _wrapInLayout(title: 'Create ${resource.singularLabel}', child: page);
-      return await _renderPage(wrapped);
+      return await _renderPage(wrapped.page, pageAssets: wrapped.assets);
     }
   }
 
@@ -134,7 +147,7 @@ class PanelRouter {
         // Re-render edit page with errors
         final page = resource.buildEditPage(record: record, errors: errors, oldInput: formData);
         final wrapped = _wrapInLayout(title: 'Edit ${resource.singularLabel}', child: page);
-        return await _renderPage(wrapped);
+        return await _renderPage(wrapped.page, pageAssets: wrapped.assets);
       }
 
       // Update the record
@@ -197,9 +210,9 @@ class PanelRouter {
   }
 
   /// Determines which page component to render based on the path.
-  Future<Component> _getPageForPath(String path, Request request) async {
+  Future<_PageWithAssets> _getPageForPath(String path, Request request) async {
     if (path.contains('login')) {
-      return LoginPage(basePath: _config.path);
+      return _PageWithAssets(LoginPage(basePath: _config.path));
     }
 
     if (path.contains('resources/')) {
@@ -282,16 +295,30 @@ class PanelRouter {
       return _wrapInLayout(title: resource.label, child: indexPage);
     }
 
-    // Default dashboard page
-    return _wrapInLayout(title: 'Dashboard', child: const DashboardPage());
+    // Default dashboard page with widgets
+    final widgets = _config.widgets;
+    return _wrapInLayout(
+      title: 'Dashboard',
+      child: DashboardPage(widgets: widgets, renderHooks: _config.renderHooks),
+      pageAssets: PageAssetCollector()..collectFromAll(widgets),
+    );
   }
 
   /// Renders a Jaspr component into a complete HTML response.
-  Future<Response> _renderPage(Component page) async {
+  ///
+  /// [pageAssets] optionally provides page-specific CSS/JS assets
+  /// that will be injected into the template head/body sections.
+  Future<Response> _renderPage(Component page, {PageAssetCollector? pageAssets}) async {
     final rendered = await renderComponent(page);
 
     // Render the template with pre-loaded resources
-    final html = _resourceLoader.renderTemplate(title: 'DASH Admin', body: rendered.body, basePath: _config.path);
+    final html = _resourceLoader.renderTemplate(
+      title: 'DASH Admin',
+      body: rendered.body,
+      basePath: _config.path,
+      pageHeadAssets: pageAssets?.renderHeadAssets() ?? '',
+      pageBodyAssets: pageAssets?.renderBodyAssets() ?? '',
+    );
 
     return Response.ok(html, headers: {'content-type': 'text/html; charset=utf-8'});
   }

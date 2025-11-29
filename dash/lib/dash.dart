@@ -91,3 +91,9 @@ export 'src/table/table.dart';
 export 'src/utils/sanitization.dart';
 // Validation
 export 'src/validation/validation.dart';
+// Widgets
+export 'src/widgets/chart_widget.dart';
+export 'src/widgets/stat.dart';
+export 'src/widgets/stats_overview_widget.dart';
+export 'src/widgets/widget.dart';
+export 'src/widgets/widget_configuration.dart';

@@ -6,6 +6,7 @@ import 'package:dash/src/plugin/navigation_item.dart';
 import 'package:dash/src/plugin/plugin.dart';
 import 'package:dash/src/plugin/render_hook.dart';
 import 'package:dash/src/resource.dart';
+import 'package:dash/src/widgets/widget.dart';
 
 /// Configuration for a Dash panel.
 ///
@@ -15,6 +16,7 @@ class PanelConfig {
   String _id = 'admin';
   String _path = '/admin';
   final List<Resource> _resources = [];
+  final List<Widget> _widgets = [];
   final List<DevCommand> _devCommands = [];
   DatabaseConfig? _databaseConfig;
   PanelColors _colors = PanelColors.defaults;
@@ -33,6 +35,9 @@ class PanelConfig {
 
   /// The registered resources in this panel.
   List<Resource> get resources => List.unmodifiable(_resources);
+
+  /// The registered widgets in this panel.
+  List<Widget> get widgets => List.unmodifiable(_widgets);
 
   /// The database configuration for this panel.
   DatabaseConfig? get databaseConfig => _databaseConfig;
@@ -83,6 +88,11 @@ class PanelConfig {
         _resources.add(resource);
       }
     }
+  }
+
+  /// Registers widgets with this panel.
+  void registerWidgets(List<Widget> widgets) {
+    _widgets.addAll(widgets);
   }
 
   /// Registers custom dev commands with this panel.

@@ -32,26 +32,22 @@ class ResourceView<T extends Model> extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'flex flex-col gap-6', [_buildBreadcrumbs(), _buildHeader(), _buildViewCard()]);
-  }
-
-  Component _buildBreadcrumbs() {
-    final recordId = _getRecordId();
-    final recordLabel = _getRecordLabel();
-
-    return BreadCrumbs(
-      items: [
-        BreadCrumbItem(label: resource.label, url: basePath),
-        BreadCrumbItem(label: recordLabel, url: '$basePath/$recordId'),
-      ],
-    );
+    return div(classes: 'flex flex-col gap-6', [_buildHeader(), _buildViewCard()]);
   }
 
   Component _buildHeader() {
     final actions = resource.viewHeaderActions();
+    final recordId = _getRecordId();
+    final recordLabel = _getRecordLabel();
 
     return PageHeader(
       title: 'View ${resource.singularLabel}',
+      breadcrumbs: BreadCrumbs(
+        items: [
+          BreadCrumbItem(label: resource.label, url: basePath),
+          BreadCrumbItem(label: recordLabel, url: '$basePath/$recordId'),
+        ],
+      ),
       actions: actions
           .map((action) => action.renderAsHeaderActionWithRecord(record: record, basePath: basePath))
           .toList(),

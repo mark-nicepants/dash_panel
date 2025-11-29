@@ -39,7 +39,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'flex flex-col gap-6', [_buildBreadcrumbs(), _buildHeader(), _buildTableWithPagination()]);
+    return div(classes: 'flex flex-col gap-6', [_buildHeader(), _buildTableWithPagination()]);
   }
 
   /// Builds the table and pagination wrapped in a single container for HTMX updates.
@@ -47,19 +47,16 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
     return div(id: 'resource-table-wrapper', classes: 'flex flex-col gap-6', [_buildTableCard(), _buildPagination()]);
   }
 
-  Component _buildBreadcrumbs() {
-    return BreadCrumbs(
-      items: [
-        BreadCrumbItem(label: resource.label, url: basePath),
-        const BreadCrumbItem(label: 'List'),
-      ],
-    );
-  }
-
   Component _buildHeader() {
     final headerActions = resource.indexHeaderActions();
     return PageHeader(
       title: resource.label,
+      breadcrumbs: BreadCrumbs(
+        items: [
+          BreadCrumbItem(label: resource.label, url: basePath),
+          const BreadCrumbItem(label: 'List'),
+        ],
+      ),
       actions: headerActions.map((action) => action.renderAsHeaderAction(basePath: basePath)).toList(),
     );
   }

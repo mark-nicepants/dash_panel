@@ -18,6 +18,7 @@ import 'package:dash/src/resource.dart';
 import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
+import 'package:dash/src/widgets/widget.dart' as dash;
 import 'package:jaspr/jaspr.dart';
 
 /// The main entry point for a Dash admin panel.
@@ -270,6 +271,23 @@ class Panel {
   /// ```
   Panel renderHook(RenderHook hook, Component Function() builder) {
     _config.registerRenderHook(hook, builder);
+    return this;
+  }
+
+  /// Registers widgets to be displayed on the dashboard.
+  ///
+  /// Widgets are self-contained UI components that can display
+  /// statistics, charts, tables, or custom content.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.widgets([
+  ///   UserStatsWidget.make(),
+  ///   RecentOrdersWidget.make(),
+  /// ]);
+  /// ```
+  Panel widgets(List<dash.Widget> widgets) {
+    _config.registerWidgets(widgets);
     return this;
   }
 

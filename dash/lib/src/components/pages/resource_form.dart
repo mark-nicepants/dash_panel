@@ -34,10 +34,11 @@ class ResourceForm<T extends Model> extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'flex flex-col gap-6', [_buildBreadcrumbs(), _buildHeader(), _buildFormCard()]);
+    return div(classes: 'flex flex-col gap-6', [_buildHeader(), _buildFormCard()]);
   }
 
-  Component _buildBreadcrumbs() {
+  Component _buildHeader() {
+    final action = isEditMode ? 'Edit' : 'Create';
     final items = <BreadCrumbItem>[BreadCrumbItem(label: resource.label, url: basePath)];
 
     if (isEditMode) {
@@ -49,12 +50,10 @@ class ResourceForm<T extends Model> extends StatelessComponent {
       items.add(const BreadCrumbItem(label: 'Create'));
     }
 
-    return BreadCrumbs(items: items);
-  }
-
-  Component _buildHeader() {
-    final action = isEditMode ? 'Edit' : 'Create';
-    return PageHeader(title: '$action ${resource.singularLabel}');
+    return PageHeader(
+      title: '$action ${resource.singularLabel}',
+      breadcrumbs: BreadCrumbs(items: items),
+    );
   }
 
   /// Gets the record's primary key value.

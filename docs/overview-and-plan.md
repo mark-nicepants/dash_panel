@@ -218,6 +218,29 @@ class UserResource extends Resource<User> {
 
 See [Model Schema & Generator Documentation](./model-schema-generator.md) for full details.
 
+### 🧩 Widget System (Phase 1 + 2)
+- ✅ **Widget Base Class**: Abstract base with `sort`, `columnSpan`, `heading`, `description`, `canView()`, `build()`, `render()`
+- ✅ **WidgetConfiguration**: Wrapper class for widget + additional properties
+- ✅ **Stat Component**: Fluent API for stat cards with icon, description, trend indicators, sparkline charts
+- ✅ **StatsOverviewWidget**: Multi-stat grid widget extending Widget base
+- ✅ **Panel.widgets()**: Fluent method to register widgets with panel
+- ✅ **DashboardPage Integration**: Renders widgets in 12-column responsive grid
+- ✅ **Plugin Widget Support**: Plugins can register widgets via `panel.widgets([])`
+- ✅ **Render Hooks**: Dashboard start/end hooks for additional content injection
+- ✅ **SVG Sparklines**: Pure SVG sparkline charts in Stat component
+- ✅ **ChartWidget**: Chart.js integration for line, bar, pie, doughnut, polar, radar charts
+- ✅ **Convenience Chart Widgets**: `LineChartWidget`, `BarChartWidget`, `PieChartWidget`, `DoughnutChartWidget`
+- ✅ **ChartData & ChartDataset**: Type-safe chart configuration classes
+- ✅ **Dynamic Asset Loading**: `PageAssetCollector` and `AssetProvider` mixin for per-page JS/CSS
+- ✅ **Chart.js CDN**: Automatic loading of Chart.js library when charts are used
+
+### 🔌 Plugin System
+- ✅ **Plugin Interface**: `getId()`, `register()`, `boot()` lifecycle
+- ✅ **NavigationItem**: Custom sidebar navigation with icons, groups, sorting, external links
+- ✅ **RenderHook System**: 15+ hook locations for content injection
+- ✅ **Asset Registration**: CSS/JS asset loading via plugins
+- ✅ **Example Plugin**: AnalyticsPlugin demonstrating widgets, navigation, render hooks
+
 ### Example Model with Annotations:
 ```dart
 @DashModel(table: 'users')
@@ -364,18 +387,19 @@ class User extends Model with _$UserModelMixin {
 
 #### 5.1 Dashboard System
 - [x] Create Dashboard page (basic)
-- [ ] Implement widget system
-- [ ] Build grid layout system
-- [ ] Add widget positioning
-- [ ] Create dashboard registration
+- [x] Implement widget system (Widget base class, WidgetConfiguration)
+- [x] Build grid layout system (12-column responsive grid)
+- [x] Add widget positioning (sort property, columnSpan)
+- [x] Create dashboard registration (Panel.widgets())
 
 #### 5.2 Core Widgets
-- [ ] Stats widget (with trends)
-- [ ] Chart widget (line, bar, pie)
-- [ ] Table widget
+- [x] Stats widget (Stat with trends, sparklines)
+- [x] StatsOverviewWidget (multi-stat grid)
+- [ ] Chart widget (line, bar, pie) - Chart.js integration
+- [ ] Table widget (embedded resource table)
 - [ ] List widget
 - [ ] Text/HTML widget
-- [ ] Custom widget support
+- [x] Custom widget support (extend Widget base class)
 
 #### 5.3 Advanced Features
 - [ ] Widget refresh intervals
@@ -488,9 +512,9 @@ class User extends Model with _$UserModelMixin {
 ### Phase 10: Advanced Features & Extensions (Weeks 37-40)
 
 #### 10.1 Plugin System
-- [ ] Finalize plugin architecture
+- [x] Finalize plugin architecture (Plugin interface with register/boot lifecycle)
 - [ ] Create plugin marketplace concept
-- [ ] Build example plugins
+- [x] Build example plugins (AnalyticsPlugin)
 - [ ] Plugin documentation
 
 #### 10.2 Advanced Features
@@ -598,6 +622,388 @@ void main() {
 4. Define the base interfaces (Panel, Resource, Form, Table)
 5. Create a proof-of-concept with a single resource
 6. Iterate and build out Phase 1
+
+---
+
+## Architecture Guidelines
+
+### Do's ✅
+
+#### Fluent Builder Pattern
+All configurable classes MUST use method chaining for a consistent, readable API:
+
+```dart
+// ✅ DO: Use fluent methods
+TextColumn.make('name')
+    .label('Full Name')
+    .searchable()
+    .sortable()
+    .grow();
+
+Stat.make('Users', '1,234')
+    .icon(HeroIcons.users)
+    .description('+12%')
+    .chart([10, 15, 20, 25]);
+```
+
+#### Factory Methods
+Always provide a `make()` static factory method for configurable classes:
+
+```dart
+// ✅ DO: Provide make() factory
+class TextColumn extends TableColumn {
+  static TextColumn make(String name) => TextColumn._(name);
+  TextColumn._(this._name);
+}
+
+class MyWidget extends Widget {
+  static MyWidget make() => MyWidget();
+}
+```
+
+#### Generic Typing for Fluent Methods
+Use generic type parameters in base classes to preserve concrete type through method chains:
+
+```dart
+// ✅ DO: Use generics to preserve type
+abstract class TableColumn<T extends TableColumn<T>> {
+  T label(String label) {
+    _label = label;
+    return this as T;
+  }
+}
+
+class TextColumn extends TableColumn<TextColumn> {
+  // label() returns TextColumn, not TableColumn
+}
+```
+
+#### Jaspr Component Conventions
+Follow Jaspr patterns for UI components:
+
+```dart
+// ✅ DO: Use const constructors, children as list
+class MyComponent extends StatelessComponent {
+  final String title;
+  const MyComponent({required this.title, super.key});
+
+  @override
+  Component build(BuildContext context) {
+    return div(classes: 'container', [
+      h1(classes: 'title', [text(title)]),
+    ]);
+  }
+}
+```
+
+#### Separation of Concerns
+- **Configuration classes** (Table, FormSchema, Widget) hold settings, not rendering logic
+- **Component classes** (ResourceIndex, DashboardPage) handle rendering
+- **Service classes** (AuthService, PanelRouter) handle business logic
+
+#### Server-Side Rendering with HTMX
+Use HTMX for partial page updates, not SPA patterns:
+
+```dart
+// ✅ DO: Use HTMX attributes for interactivity
+input(
+  attributes: {
+    'hx-get': '/search',
+    'hx-trigger': 'keyup changed delay:300ms',
+    'hx-target': '#results',
+    'hx-swap': 'outerHTML',
+  },
+)
+```
+
+#### Alpine.js for Client-Only State
+Use Alpine.js for UI state that doesn't need server interaction:
+
+```dart
+// ✅ DO: Use Alpine for toggles, dropdowns, modals
+div(
+  attributes: {'x-data': '{ open: false }'},
+  [
+    button(attributes: {'@click': 'open = !open'}, [text('Toggle')]),
+    div(attributes: {'x-show': 'open'}, [text('Content')]),
+  ],
+)
+```
+
+#### Dependency Injection
+Use the service locator for cross-cutting concerns:
+
+```dart
+// ✅ DO: Register and inject services
+await setupServiceLocator(config: config, connector: connector);
+final config = inject<PanelConfig>();
+```
+
+### Don'ts ❌
+
+#### Don't Use Constructor Configuration
+Avoid configuring through constructors - use fluent methods:
+
+```dart
+// ❌ DON'T: Configure via constructor
+TextColumn('name', label: 'Full Name', searchable: true, sortable: true);
+
+// ✅ DO: Use fluent API
+TextColumn.make('name').label('Full Name').searchable().sortable();
+```
+
+#### Don't Hardcode Strings
+Use configuration methods or constants:
+
+```dart
+// ❌ DON'T: Hardcode
+div(classes: 'bg-blue-500 text-white', [...]);
+
+// ✅ DO: Use theme colors
+div(classes: 'bg-${panelColors.primary}-500 text-white', [...]);
+```
+
+#### Don't Create One-Off Inline Styles
+Always use Tailwind CSS classes:
+
+```dart
+// ❌ DON'T: Inline styles
+div(styles: Styles.raw({'background': 'blue'}), [...]);
+
+// ✅ DO: Use Tailwind classes
+div(classes: 'bg-blue-500', [...]);
+```
+
+#### Don't Skip the make() Pattern
+Even simple configurable classes need factory methods:
+
+```dart
+// ❌ DON'T: Only constructor
+class MyAction extends Action {
+  MyAction(String label) : super(label);
+}
+
+// ✅ DO: Provide make() factory
+class MyAction extends Action {
+  static MyAction make(String label) => MyAction._(label);
+  MyAction._(String label) : super(label);
+}
+```
+
+#### Don't Mix Concerns
+Keep rendering, configuration, and logic separate:
+
+```dart
+// ❌ DON'T: Mix rendering into configuration class
+class Table {
+  Component render() { ... } // Configuration shouldn't render
+}
+
+// ✅ DO: Separate concerns
+class Table { /* configuration only */ }
+class DataTable extends StatelessComponent {
+  final Table tableConfig;
+  Component build() { /* rendering logic */ }
+}
+```
+
+#### Don't Use SPA Patterns
+Avoid client-side routing and state management:
+
+```dart
+// ❌ DON'T: Client-side navigation
+button(attributes: {'onclick': 'navigate("/users")'}, [...]);
+
+// ✅ DO: Server-side with HTMX
+a(href: '/users', attributes: {'hx-boost': 'true'}, [...]);
+```
+
+#### Don't Bypass the Panel Registration
+Always register components through Panel methods:
+
+```dart
+// ❌ DON'T: Direct manipulation
+panel._config._widgets.add(myWidget);
+
+// ✅ DO: Use public API
+panel.widgets([MyWidget.make()]);
+```
+
+### Widget System Guidelines
+
+#### Creating Custom Widgets
+
+```dart
+// ✅ Correct widget implementation
+class MyStatsWidget extends StatsOverviewWidget {
+  static MyStatsWidget make() => MyStatsWidget();
+
+  @override
+  int get sort => 1;  // Display order
+
+  @override
+  int get columnSpan => 12;  // Full width
+
+  @override
+  String? get heading => 'My Statistics';
+
+  @override
+  bool canView() => true;  // Authorization check
+
+  @override
+  List<Stat> getStats() => [
+    Stat.make('Metric', '123')
+        .icon(HeroIcons.chartBar)
+        .chart([1, 2, 3, 4, 5]),
+  ];
+}
+```
+
+#### Creating Chart Widgets
+
+```dart
+// ✅ Line chart widget
+class RevenueChartWidget extends LineChartWidget {
+  static RevenueChartWidget make() => RevenueChartWidget();
+
+  @override
+  int get sort => 10;
+
+  @override
+  int get columnSpan => 8;  // Takes 8 of 12 columns
+
+  @override
+  String? get heading => 'Monthly Revenue';
+
+  @override
+  ChartData getData() => const ChartData(
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      ChartDataset(
+        label: 'Revenue',
+        data: [1200, 1900, 3000, 5000, 4000, 6000],
+        borderColor: 'rgb(6, 182, 212)',
+        tension: 0.3,
+      ),
+    ],
+  );
+}
+
+// ✅ Doughnut chart widget
+class TrafficChartWidget extends DoughnutChartWidget {
+  static TrafficChartWidget make() => TrafficChartWidget();
+
+  @override
+  int get columnSpan => 4;
+
+  @override
+  String? get heading => 'Traffic Sources';
+
+  @override
+  ChartData getData() => const ChartData(
+    labels: ['Direct', 'Organic', 'Referral'],
+    datasets: [
+      ChartDataset(
+        label: 'Sources',
+        data: [35, 40, 25],
+        backgroundColor: [
+          'rgb(6, 182, 212)',
+          'rgb(139, 92, 246)',
+          'rgb(245, 158, 11)',
+        ],
+      ),
+    ],
+  );
+}
+```
+
+#### Dynamic Asset Loading
+
+Widgets can declare required assets via the `AssetProvider` mixin:
+
+```dart
+// ✅ Widget with custom assets
+class MyMapWidget extends Widget {
+  @override
+  List<Asset> get requiredAssets => [
+    JsAsset.url('mapbox', 'https://cdn.mapbox.com/v2/mapbox-gl.js'),
+    CssAsset.url('mapbox', 'https://cdn.mapbox.com/v2/mapbox-gl.css'),
+  ];
+
+  @override
+  Component build() {
+    // Widget can use Mapbox because assets are auto-loaded
+    return div(classes: 'h-96', [raw('<div id="map"></div>')]);
+  }
+}
+```
+
+Assets are automatically:
+- Collected from all widgets on the page
+- Deduplicated by ID
+- CSS injected into `<head>`
+- JS injected at end of `<body>`
+
+#### Registering Widgets
+
+```dart
+// Via Panel directly
+panel.widgets([
+  MyStatsWidget.make(),
+  AnotherWidget.make(),
+]);
+
+// Via Plugin
+class MyPlugin implements Plugin {
+  @override
+  void register(Panel panel) {
+    panel.widgets([MyStatsWidget.make()]);
+  }
+}
+```
+
+### Plugin System Guidelines
+
+#### Plugin Lifecycle
+
+```dart
+class MyPlugin implements Plugin {
+  static MyPlugin make() => MyPlugin();
+
+  @override
+  String getId() => 'my-plugin';  // Unique identifier
+
+  @override
+  void register(Panel panel) {
+    // Called immediately during panel.plugin()
+    // Register resources, navigation, hooks, widgets
+    panel.registerResources([...]);
+    panel.navigationItems([...]);
+    panel.widgets([...]);
+    panel.renderHook(RenderHook.sidebarFooter, () => ...);
+  }
+
+  @override
+  void boot(Panel panel) {
+    // Called during Panel.boot()
+    // Runtime initialization, service setup
+  }
+}
+```
+
+#### Render Hook Locations
+
+| Hook | Location |
+|------|----------|
+| `headStart` / `headEnd` | Document `<head>` |
+| `bodyStart` / `bodyEnd` | Document `<body>` |
+| `sidebarNavStart` / `sidebarNavEnd` | Sidebar navigation |
+| `sidebarFooter` | Above logout button |
+| `contentBefore` / `contentAfter` | Main content area |
+| `dashboardStart` / `dashboardEnd` | Dashboard page |
+| `resourceIndexBefore` / `resourceIndexAfter` | Resource list page |
+| `resourceFormBefore` / `resourceFormAfter` | Resource form pages |
+| `loginFormBefore` / `loginFormAfter` | Login page |
 
 ---
 

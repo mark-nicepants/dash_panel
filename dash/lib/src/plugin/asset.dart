@@ -149,3 +149,113 @@ class AssetRegistry {
     _jsAssets.clear();
   }
 }
+
+/// Collects assets required for a specific page render.
+///
+/// This allows widgets and components to declare their asset dependencies,
+/// which are then collected and rendered only on pages that need them.
+///
+/// Example:
+/// ```dart
+/// final collector = PageAssetCollector();
+/// for (final widget in widgets) {
+///   collector.collectFrom(widget);
+/// }
+/// final headAssets = collector.renderHeadAssets();
+/// final bodyAssets = collector.renderBodyAssets();
+/// ```
+class PageAssetCollector {
+  final Set<String> _registeredIds = {};
+  final List<CssAsset> _headCss = [];
+  final List<JsAsset> _headJs = [];
+  final List<JsAsset> _bodyJs = [];
+
+  /// Registers a CSS asset to be loaded in the head.
+  void requireCss(CssAsset asset) {
+    if (_registeredIds.contains(asset.id)) return;
+    _registeredIds.add(asset.id);
+    _headCss.add(asset);
+  }
+
+  /// Registers a JavaScript asset to be loaded in the head.
+  void requireHeadJs(JsAsset asset) {
+    if (_registeredIds.contains(asset.id)) return;
+    _registeredIds.add(asset.id);
+    _headJs.add(asset);
+  }
+
+  /// Registers a JavaScript asset to be loaded at end of body.
+  void requireBodyJs(JsAsset asset) {
+    if (_registeredIds.contains(asset.id)) return;
+    _registeredIds.add(asset.id);
+    _bodyJs.add(asset);
+  }
+
+  /// Collects assets from an [AssetProvider].
+  void collectFrom(AssetProvider provider) {
+    for (final asset in provider.requiredAssets) {
+      if (asset is CssAsset) {
+        requireCss(asset);
+      } else if (asset is JsAsset) {
+        // JS assets go to body by default for better performance
+        requireBodyJs(asset);
+      }
+    }
+  }
+
+  /// Collects assets from multiple providers.
+  void collectFromAll(Iterable<AssetProvider> providers) {
+    for (final provider in providers) {
+      collectFrom(provider);
+    }
+  }
+
+  /// Renders CSS and head JS assets for the `<head>` section.
+  String renderHeadAssets() {
+    final buffer = StringBuffer();
+    for (final css in _headCss) {
+      buffer.writeln(css.render());
+    }
+    for (final js in _headJs) {
+      buffer.writeln(js.render());
+    }
+    return buffer.toString();
+  }
+
+  /// Renders JS assets for the end of `<body>`.
+  String renderBodyAssets() {
+    final buffer = StringBuffer();
+    for (final js in _bodyJs) {
+      buffer.writeln(js.render());
+    }
+    return buffer.toString();
+  }
+
+  /// Whether any assets have been collected.
+  bool get hasAssets => _headCss.isNotEmpty || _headJs.isNotEmpty || _bodyJs.isNotEmpty;
+
+  /// Gets all collected CSS assets.
+  List<CssAsset> get cssAssets => List.unmodifiable(_headCss);
+
+  /// Gets all collected JS assets (head + body).
+  List<JsAsset> get jsAssets => List.unmodifiable([..._headJs, ..._bodyJs]);
+}
+
+/// Mixin for classes that require specific assets to be loaded.
+///
+/// Implement this mixin on widgets, components, or other classes
+/// that need CSS or JavaScript assets.
+///
+/// Example:
+/// ```dart
+/// class MyChartWidget extends Widget with AssetProvider {
+///   @override
+///   List<Asset> get requiredAssets => [
+///     JsAsset.url('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js'),
+///   ];
+/// }
+/// ```
+mixin AssetProvider {
+  /// Returns the list of assets required by this provider.
+  List<Asset> get requiredAssets => [];
+}

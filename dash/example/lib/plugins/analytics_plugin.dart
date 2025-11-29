@@ -6,7 +6,7 @@ import 'package:jaspr/jaspr.dart';
 /// This plugin shows how to:
 /// - Register a plugin with a panel
 /// - Add custom navigation items
-/// - Inject content via render hooks
+/// - Register dashboard widgets
 /// - Use fluent configuration
 ///
 /// Usage:
@@ -88,9 +88,9 @@ class AnalyticsPlugin implements Plugin {
       );
     }
 
-    // Add dashboard hook if enabled
+    // Register dashboard widgets if enabled
     if (_dashboardWidgetEnabled) {
-      panel.renderHook(RenderHook.dashboardStart, _buildAnalyticsWidget);
+      panel.widgets([AnalyticsStatsWidget.make(), PageViewsChartWidget.make(), TrafficSourcesChartWidget.make()]);
     }
   }
 
@@ -102,26 +102,132 @@ class AnalyticsPlugin implements Plugin {
       print('📊 Analytics plugin initialized with tracking ID: $_trackingId');
     }
   }
+}
 
-  /// Builds a simple analytics widget for the dashboard.
-  Component _buildAnalyticsWidget() {
-    return div(classes: 'bg-gray-800 rounded-lg p-6 mb-6', [
-      h3(classes: 'text-lg font-semibold text-white mb-4', [text('Quick Stats')]),
-      div(classes: 'grid grid-cols-3 gap-4', [
-        _buildStatCard('Page Views', '12,345', HeroIcons.eye),
-        _buildStatCard('Visitors', '1,234', HeroIcons.users),
-        _buildStatCard('Bounce Rate', '32%', HeroIcons.arrowTrendingDown),
-      ]),
-    ]);
-  }
+/// Analytics stats widget showing page views, visitors, and bounce rate.
+///
+/// This widget extends [StatsOverviewWidget] to display multiple stat cards
+/// with sparkline charts.
+class AnalyticsStatsWidget extends StatsOverviewWidget {
+  /// Factory method to create a new AnalyticsStatsWidget instance.
+  static AnalyticsStatsWidget make() => AnalyticsStatsWidget();
 
-  Component _buildStatCard(String label, String value, HeroIcons icon) {
-    return div(classes: 'bg-gray-700 rounded-lg p-4', [
-      div(classes: 'flex items-center gap-2 text-gray-400 mb-2', [
-        Heroicon(icon, size: 16),
-        span(classes: 'text-sm', [text(label)]),
-      ]),
-      div(classes: 'text-2xl font-bold text-white', [text(value)]),
-    ]);
-  }
+  @override
+  int get sort => -1; // Show at top
+
+  @override
+  String? get heading => 'Analytics Overview';
+
+  @override
+  String? get description => 'Real-time visitor statistics';
+
+  @override
+  List<Stat> getStats() => [
+    Stat.make('Page Views', '12,345')
+        .icon(HeroIcons.eye)
+        .description('+23% from last week')
+        .descriptionIcon(HeroIcons.arrowTrendingUp)
+        .descriptionColor('green')
+        .chart([45, 52, 38, 65, 72, 58, 90, 85, 95, 102])
+        .chartColor('cyan'),
+    Stat.make('Unique Visitors', '1,234')
+        .icon(HeroIcons.users)
+        .description('+12% from last week')
+        .descriptionIcon(HeroIcons.arrowTrendingUp)
+        .descriptionColor('green')
+        .chart([120, 150, 180, 165, 200, 220, 195, 240, 280, 310])
+        .chartColor('violet'),
+    Stat.make('Bounce Rate', '32%')
+        .icon(HeroIcons.arrowTrendingDown)
+        .description('-5% from last week')
+        .descriptionIcon(HeroIcons.arrowTrendingDown)
+        .descriptionColor('green')
+        .chart([42, 38, 45, 35, 38, 32, 35, 30, 32, 28])
+        .chartColor('amber'),
+  ];
+}
+
+/// Page views line chart widget showing weekly traffic trends.
+class PageViewsChartWidget extends LineChartWidget {
+  /// Factory method to create a new PageViewsChartWidget instance.
+  static PageViewsChartWidget make() => PageViewsChartWidget();
+
+  @override
+  int get sort => 10;
+
+  @override
+  int get columnSpan => 8;
+
+  @override
+  String? get heading => 'Page Views';
+
+  @override
+  String? get description => 'Weekly page view trends';
+
+  @override
+  ChartData getData() => const ChartData(
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      ChartDataset(
+        label: 'This Week',
+        data: [1200, 1900, 3000, 5000, 4200, 3500, 2100],
+        borderColor: 'rgb(6, 182, 212)',
+        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+        tension: 0.3,
+        fill: true,
+      ),
+      ChartDataset(
+        label: 'Last Week',
+        data: [800, 1200, 2200, 3800, 3200, 2800, 1800],
+        borderColor: 'rgb(156, 163, 175)',
+        backgroundColor: 'rgba(156, 163, 175, 0.05)',
+        tension: 0.3,
+        fill: true,
+      ),
+    ],
+  );
+}
+
+/// Traffic sources doughnut chart widget.
+class TrafficSourcesChartWidget extends DoughnutChartWidget {
+  /// Factory method to create a new TrafficSourcesChartWidget instance.
+  static TrafficSourcesChartWidget make() => TrafficSourcesChartWidget();
+
+  @override
+  int get sort => 20;
+
+  @override
+  int get columnSpan => 4;
+
+  @override
+  String? get heading => 'Traffic Sources';
+
+  @override
+  String? get description => 'Where visitors come from';
+
+  @override
+  ChartData getData() => const ChartData(
+    labels: ['Direct', 'Organic', 'Referral', 'Social', 'Email'],
+    datasets: [
+      ChartDataset(
+        label: 'Traffic Sources',
+        data: [35, 30, 18, 12, 5],
+        backgroundColor: [
+          'rgb(6, 182, 212)', // Cyan
+          'rgb(139, 92, 246)', // Violet
+          'rgb(245, 158, 11)', // Amber
+          'rgb(34, 197, 94)', // Green
+          'rgb(239, 68, 68)', // Red
+        ],
+        borderColor: [
+          'rgb(6, 182, 212)',
+          'rgb(139, 92, 246)',
+          'rgb(245, 158, 11)',
+          'rgb(34, 197, 94)',
+          'rgb(239, 68, 68)',
+        ],
+        borderWidth: 2,
+      ),
+    ],
+  );
 }

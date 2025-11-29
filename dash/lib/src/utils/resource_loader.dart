@@ -111,7 +111,16 @@ class ResourceLoader {
   ///
   /// [basePath] is the panel's base path (e.g., '/admin') used to construct
   /// static asset URLs.
-  String renderTemplate({required String title, required String body, String basePath = '/admin'}) {
+  ///
+  /// [pageHeadAssets] and [pageBodyAssets] are optional page-specific assets
+  /// that get injected into the head and body sections respectively.
+  String renderTemplate({
+    required String title,
+    required String body,
+    String basePath = '/admin',
+    String pageHeadAssets = '',
+    String pageBodyAssets = '',
+  }) {
     // Use static file serving for CSS and JS
     final cssFile = _useMinified ? 'dash.min.css' : 'dash.css';
     final jsFile = _useMinified ? 'app.min.js' : 'app.js';
@@ -128,6 +137,8 @@ class ResourceLoader {
         .replaceAll('@title', title)
         .replaceAll('@styles', styles)
         .replaceAll('@scripts', scripts)
+        .replaceAll('@pageHeadAssets', pageHeadAssets)
+        .replaceAll('@pageBodyAssets', pageBodyAssets)
         .replaceAll('@body', body);
   }
 
