@@ -147,7 +147,14 @@ class AnalyticsPlugin implements Plugin {
         // Only track GET requests to HTML pages
         final path = request.requestedUri.path;
         if (request.method == 'GET' && !_isAssetPath(path)) {
-          await _metricsService!.pageView(path, extras: {'method': request.method});
+          final userAgent = request.headers['user-agent'] ?? '';
+          final deviceType = _parseDeviceType(userAgent);
+          final browser = _parseBrowser(userAgent);
+
+          await _metricsService!.pageView(
+            path,
+            extras: {'method': request.method, 'device_type': deviceType, 'browser': browser},
+          );
         }
       });
     }
@@ -181,5 +188,33 @@ class AnalyticsPlugin implements Plugin {
         path.endsWith('.woff') ||
         path.endsWith('.woff2') ||
         path.contains('/storage/');
+  }
+
+  /// Parses the device type from a user agent string.
+  String _parseDeviceType(String userAgent) {
+    final ua = userAgent.toLowerCase();
+    if (ua.contains('mobile') || ua.contains('android') && !ua.contains('tablet')) {
+      return 'mobile';
+    } else if (ua.contains('tablet') || ua.contains('ipad')) {
+      return 'tablet';
+    }
+    return 'desktop';
+  }
+
+  /// Parses the browser name from a user agent string.
+  String _parseBrowser(String userAgent) {
+    final ua = userAgent.toLowerCase();
+    if (ua.contains('edg/') || ua.contains('edge/')) {
+      return 'Edge';
+    } else if (ua.contains('chrome/') && !ua.contains('chromium/')) {
+      return 'Chrome';
+    } else if (ua.contains('safari/') && !ua.contains('chrome/')) {
+      return 'Safari';
+    } else if (ua.contains('firefox/')) {
+      return 'Firefox';
+    } else if (ua.contains('opera/') || ua.contains('opr/')) {
+      return 'Opera';
+    }
+    return 'Other';
   }
 }

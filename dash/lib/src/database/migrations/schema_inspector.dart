@@ -20,4 +20,10 @@ abstract class SchemaInspector {
   ///
   /// Returns an empty list if the table doesn't exist.
   Future<List<String>> getTableColumns(String tableName);
+
+  /// Checks if an index exists in the database.
+  Future<bool> indexExists(String indexName);
+
+  /// Gets the list of indexes for a table.
+  Future<List<String>> getTableIndexes(String tableName);
 }

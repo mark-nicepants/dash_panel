@@ -269,6 +269,35 @@ class MetricQuery {
     return (result.first['count'] as num?)?.toInt() ?? 0;
   }
 
+  /// Returns the count of records matching a specific tag value.
+  ///
+  /// This is useful for counting metrics by category, e.g., device type or browser.
+  Future<int> countByTag(String tagKey, String tagValue) async {
+    _ensureDateRange();
+
+    var sql =
+        '''
+      SELECT COUNT(*) as count
+      FROM dash_metrics
+      WHERE name = ? AND recorded_at BETWEEN ? AND ?
+      AND json_extract(tags, '\$.$tagKey') = ?
+    ''';
+    final params = <dynamic>[_name, _startDate!.toIso8601String(), _endDate!.toIso8601String(), tagValue];
+
+    if (_type != null) {
+      sql += ' AND type = ?';
+      params.add(_type!.name);
+    }
+
+    for (final entry in _tagFilters.entries) {
+      sql += " AND json_extract(tags, '\$.${entry.key}') = ?";
+      params.add(entry.value.toString());
+    }
+
+    final result = await _connector.query(sql, params);
+    return (result.first['count'] as num?)?.toInt() ?? 0;
+  }
+
   /// Returns metric data grouped by period.
   Future<List<MetricDataPoint>> getData() async {
     _ensureDateRange();

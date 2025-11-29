@@ -67,12 +67,14 @@ class MigrationRunner {
       }
 
       // Create any missing indexes
-      // Note: We always try to create indexes with IF NOT EXISTS, so this is safe
       if (schema.indexes.isNotEmpty) {
-        final indexStatements = builder.buildCreateIndexes(schema.name, schema.indexes);
-        for (final indexSql in indexStatements) {
-          await connector.execute(indexSql);
-          statements.add(indexSql);
+        for (final index in schema.indexes) {
+          // Only create and report indexes that don't exist
+          if (!await inspector.indexExists(index.name)) {
+            final indexSql = builder.buildCreateIndex(schema.name, index);
+            await connector.execute(indexSql);
+            statements.add(indexSql);
+          }
         }
       }
     }

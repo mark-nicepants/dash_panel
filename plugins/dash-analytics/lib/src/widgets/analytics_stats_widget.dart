@@ -44,13 +44,13 @@ class AnalyticsStatsWidget extends StatsOverviewWidget {
         '-',
       ).icon(HeroIcons.eye).description('No data available').descriptionColor('gray').chartColor('cyan'),
       Stat.make(
-        'Unique Visitors',
+        'Desktop Views',
         '-',
-      ).icon(HeroIcons.users).description('No data available').descriptionColor('gray').chartColor('violet'),
+      ).icon(HeroIcons.computerDesktop).description('No data available').descriptionColor('gray').chartColor('violet'),
       Stat.make(
-        'Bounce Rate',
+        'Mobile Views',
         '-',
-      ).icon(HeroIcons.arrowTrendingDown).description('No data available').descriptionColor('gray').chartColor('amber'),
+      ).icon(HeroIcons.devicePhoneMobile).description('No data available').descriptionColor('gray').chartColor('amber'),
     ];
   }
 
@@ -77,6 +77,18 @@ class AnalyticsStatsWidget extends StatsOverviewWidget {
           ? '+${pageViewsChange.toStringAsFixed(0)}% from last week'
           : '${pageViewsChange.toStringAsFixed(0)}% from last week';
 
+      // Fetch device type breakdown
+      final desktopViews = await metrics.query('page_views').last(7).countByTag('device_type', 'desktop');
+      final mobileViews = await metrics.query('page_views').last(7).countByTag('device_type', 'mobile');
+      final tabletViews = await metrics.query('page_views').last(7).countByTag('device_type', 'tablet');
+
+      // Calculate percentages
+      final totalViews = pageViewsTotal.toInt();
+      final desktopPercent = totalViews > 0 ? ((desktopViews / totalViews) * 100).toStringAsFixed(0) : '0';
+      final mobilePercent = totalViews > 0
+          ? (((mobileViews + tabletViews) / totalViews) * 100).toStringAsFixed(0)
+          : '0';
+
       _cachedStats = [
         Stat.make('Page Views', _formatNumber(pageViewsTotal.toInt()))
             .icon(HeroIcons.eye)
@@ -85,15 +97,16 @@ class AnalyticsStatsWidget extends StatsOverviewWidget {
             .descriptionColor(isIncrease ? 'green' : 'red')
             .chart(pageViewsChartData.isEmpty ? [0.0] : pageViewsChartData)
             .chartColor('cyan'),
-        // Add more stats as we track them
-        Stat.make(
-          'Unique Visitors',
-          '-',
-        ).icon(HeroIcons.users).description('Coming soon').descriptionColor('gray').chartColor('violet'),
-        Stat.make(
-          'Bounce Rate',
-          '-',
-        ).icon(HeroIcons.arrowTrendingDown).description('Coming soon').descriptionColor('gray').chartColor('amber'),
+        Stat.make('Desktop Views', _formatNumber(desktopViews))
+            .icon(HeroIcons.computerDesktop)
+            .description('$desktopPercent% of traffic')
+            .descriptionColor('gray')
+            .chartColor('violet'),
+        Stat.make('Mobile Views', _formatNumber(mobileViews + tabletViews))
+            .icon(HeroIcons.devicePhoneMobile)
+            .description('$mobilePercent% of traffic')
+            .descriptionColor('gray')
+            .chartColor('amber'),
       ];
     } catch (e) {
       // On error, leave cached stats null so placeholder is shown

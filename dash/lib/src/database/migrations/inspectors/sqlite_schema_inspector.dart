@@ -79,4 +79,19 @@ class SqliteSchemaInspector implements SchemaInspector {
       return ColumnType.text;
     }
   }
+
+  @override
+  Future<bool> indexExists(String indexName) async {
+    final result = database.select("SELECT name FROM sqlite_master WHERE type='index' AND name=?", [indexName]);
+    return result.isNotEmpty;
+  }
+
+  @override
+  Future<List<String>> getTableIndexes(String tableName) async {
+    final result = database.select(
+      "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name=? AND name NOT LIKE 'sqlite_%'",
+      [tableName],
+    );
+    return result.map((row) => row['name'] as String).toList();
+  }
 }
