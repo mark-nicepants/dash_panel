@@ -10,6 +10,9 @@ class UserResource extends Resource<User> {
   String? get navigationGroup => 'Administration';
 
   @override
+  int get navigationSort => 1;
+
+  @override
   Table<User> table(Table<User> table) {
     return table
         .columns([

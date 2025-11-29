@@ -57,6 +57,8 @@ export 'src/form/fields/toggle.dart';
 // Forms
 export 'src/form/form_schema.dart';
 // Generators (Schema-based code generation)
+export 'src/generators/models_barrel_generator.dart';
+export 'src/generators/resource_generator.dart';
 export 'src/generators/schema_model_generator.dart';
 export 'src/generators/schema_parser.dart';
 // Models
@@ -70,6 +72,7 @@ export 'src/panel/dev_console.dart';
 export 'src/panel/panel.dart' show Panel, RequestCallback, ModelCallback;
 export 'src/panel/panel_colors.dart';
 export 'src/panel/panel_config.dart';
+export 'src/panel/panel_config_loader.dart';
 export 'src/panel/panel_router.dart';
 export 'src/panel/panel_server.dart';
 export 'src/panel/request_handler.dart';

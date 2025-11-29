@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../schemas/dash-model.schema.json
+# yaml-language-server: $schema=../../../schemas/dash-model.schema.json
 
 model: Post
 table: posts

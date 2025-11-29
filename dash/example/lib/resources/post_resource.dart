@@ -7,6 +7,9 @@ class PostResource extends Resource<Post> {
   String? get navigationGroup => 'Content';
 
   @override
+  int get navigationSort => 2;
+
+  @override
   Table<Post> table(Table<Post> table) {
     return table
         .columns([

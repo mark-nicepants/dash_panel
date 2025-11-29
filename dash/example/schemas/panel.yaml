@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=../../schemas/dash-panel.schema.json
+
+panel:
+  id: admin
+  path: /admin
+
+storage:
+  basePath: storage
+  defaultDisk: public
+  disks:
+    public:
+      driver: local
+      path: public
+      urlPrefix: /admin/storage/public
+    local:
+      driver: local
+      path: app
+      urlPrefix: /admin/storage/local
+
+session:
+  driver: file
+  path: sessions
+
+database:
+  driver: sqlite
+  path: app.db
+  migrations:
+    auto: true
+    verbose: true
