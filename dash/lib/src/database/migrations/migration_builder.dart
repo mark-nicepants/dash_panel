@@ -13,4 +13,10 @@ abstract class MigrationBuilder {
 
   /// Generates statements to add multiple columns to a table.
   List<String> buildAddColumns(String tableName, List<ColumnDefinition> columns);
+
+  /// Generates a CREATE INDEX statement.
+  String buildCreateIndex(String tableName, IndexDefinition index);
+
+  /// Generates statements to create all indexes for a table.
+  List<String> buildCreateIndexes(String tableName, List<IndexDefinition> indexes);
 }

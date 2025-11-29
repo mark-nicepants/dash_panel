@@ -96,4 +96,16 @@ class SqliteMigrationBuilder implements MigrationBuilder {
       return value.toString();
     }
   }
+
+  @override
+  String buildCreateIndex(String tableName, IndexDefinition index) {
+    final uniqueKeyword = index.unique ? 'UNIQUE ' : '';
+    final columns = index.columns.join(', ');
+    return 'CREATE ${uniqueKeyword}INDEX IF NOT EXISTS ${index.name} ON $tableName($columns)';
+  }
+
+  @override
+  List<String> buildCreateIndexes(String tableName, List<IndexDefinition> indexes) {
+    return indexes.map((idx) => buildCreateIndex(tableName, idx)).toList();
+  }
 }

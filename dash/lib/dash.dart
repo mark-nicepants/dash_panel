@@ -64,7 +64,7 @@ export 'src/model/model_query_builder.dart';
 export 'src/model/soft_deletes.dart';
 // Panel
 export 'src/panel/dev_console.dart';
-export 'src/panel/panel.dart';
+export 'src/panel/panel.dart' show Panel, RequestCallback, ModelCallback;
 export 'src/panel/panel_colors.dart';
 export 'src/panel/panel_config.dart';
 export 'src/panel/panel_router.dart';
@@ -77,7 +77,7 @@ export 'src/plugin/plugin.dart';
 export 'src/plugin/render_hook.dart';
 export 'src/resource.dart';
 // Service Locator
-export 'src/service_locator.dart' show inject, registerResourceFactory;
+export 'src/service_locator.dart' show inject, registerResourceFactory, registerAdditionalSchemas, getAdditionalSchemas;
 // Storage
 export 'src/storage/storage.dart';
 // Table

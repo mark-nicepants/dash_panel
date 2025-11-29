@@ -30,6 +30,9 @@ class MigrationConfig {
   /// Creates a migration config from a list of resources.
   ///
   /// Automatically extracts table schemas from each resource's model.
+  /// Also includes additional schemas registered via [registerAdditionalSchemas],
+  /// which is useful for plugins that need their own tables.
+  ///
   /// This is the easiest way to set up migrations - just pass your resources!
   ///
   /// Example:
@@ -49,6 +52,7 @@ class MigrationConfig {
   factory MigrationConfig.fromResources({bool verbose = false}) {
     final schemas = <TableSchema>[];
 
+    // Gather schemas from registered resources
     for (final resource in buildRegisteredResources()) {
       final schema = resource.schema();
       if (schema != null) {
@@ -58,11 +62,19 @@ class MigrationConfig {
       }
     }
 
+    // Include additional schemas registered by plugins
+    final additionalSchemas = getAdditionalSchemas();
+    schemas.addAll(additionalSchemas);
+
     if (verbose) {
       if (schemas.isEmpty) {
         print('⚠️  No schemas discovered from registered resources');
       } else {
-        print('📋 Loaded ${schemas.length} schema(s) from resources');
+        final resourceCount = schemas.length - additionalSchemas.length;
+        print('📋 Loaded $resourceCount schema(s) from resources');
+        if (additionalSchemas.isNotEmpty) {
+          print('📋 Loaded ${additionalSchemas.length} additional schema(s) from plugins');
+        }
       }
     }
 

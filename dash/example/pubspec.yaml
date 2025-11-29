@@ -9,6 +9,8 @@ environment:
 dependencies:
   dash:
     path: ../
+  dash_analytics:
+    path: ../../plugins/dash-analytics
   faker: ^2.2.0
   jaspr: ^0.21.7
   shelf: ^1.4.0

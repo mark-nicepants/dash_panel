@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dash/src/panel/panel.dart';
 
 /// Base contract for all Dash plugins.
@@ -61,5 +63,7 @@ abstract class Plugin {
   /// - External service connections
   ///
   /// The panel's database connection is available at this point.
-  void boot(Panel panel);
+  ///
+  /// This method can return a [Future] for async initialization.
+  FutureOr<void> boot(Panel panel);
 }

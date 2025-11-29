@@ -43,6 +43,15 @@ class MigrationRunner {
       final sql = builder.buildCreateTable(schema);
       await connector.execute(sql);
       statements.add(sql);
+
+      // Create indexes for the new table
+      if (schema.indexes.isNotEmpty) {
+        final indexStatements = builder.buildCreateIndexes(schema.name, schema.indexes);
+        for (final indexSql in indexStatements) {
+          await connector.execute(indexSql);
+          statements.add(indexSql);
+        }
+      }
     } else {
       // Add missing columns
       final existingColumns = await inspector.getTableColumns(schema.name);
@@ -54,6 +63,16 @@ class MigrationRunner {
         for (final sql in alterStatements) {
           await connector.execute(sql);
           statements.add(sql);
+        }
+      }
+
+      // Create any missing indexes
+      // Note: We always try to create indexes with IF NOT EXISTS, so this is safe
+      if (schema.indexes.isNotEmpty) {
+        final indexStatements = builder.buildCreateIndexes(schema.name, schema.indexes);
+        for (final indexSql in indexStatements) {
+          await connector.execute(indexSql);
+          statements.add(indexSql);
         }
       }
     }

@@ -1,4 +1,5 @@
 import 'package:dash/src/database/database_connector.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -84,6 +85,38 @@ List<Resource> buildRegisteredResources() {
 /// Clears all registered resource factories.
 void clearResourceFactories() {
   _resourceFactoryMap().clear();
+}
+
+// ============================================================
+// Additional Schema Registry (for plugins)
+// ============================================================
+
+const _additionalSchemasKey = '__dash_additional_schemas__';
+
+List<TableSchema> _additionalSchemasList() {
+  if (!inject.isRegistered<List<TableSchema>>(instanceName: _additionalSchemasKey)) {
+    inject.registerSingleton<List<TableSchema>>(<TableSchema>[], instanceName: _additionalSchemasKey);
+  }
+  return inject<List<TableSchema>>(instanceName: _additionalSchemasKey);
+}
+
+/// Registers additional table schemas for migrations.
+///
+/// Use this to register schemas for models that aren't tied to resources,
+/// such as internal plugin tables. These schemas will be included when
+/// using [MigrationConfig.fromResources()].
+void registerAdditionalSchemas(List<TableSchema> schemas) {
+  _additionalSchemasList().addAll(schemas);
+}
+
+/// Returns all additional schemas registered via [registerAdditionalSchemas].
+List<TableSchema> getAdditionalSchemas() {
+  return List.unmodifiable(_additionalSchemasList());
+}
+
+/// Clears all registered additional schemas.
+void clearAdditionalSchemas() {
+  _additionalSchemasList().clear();
 }
 
 /// Sets up dependency injection for the Dash framework.

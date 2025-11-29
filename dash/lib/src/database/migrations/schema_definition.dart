@@ -92,6 +92,45 @@ class ColumnDefinition {
   }
 }
 
+/// Represents a database index definition.
+class IndexDefinition {
+  /// The name of the index.
+  final String name;
+
+  /// The columns included in the index.
+  final List<String> columns;
+
+  /// Whether this is a unique index.
+  final bool unique;
+
+  const IndexDefinition({required this.name, required this.columns, this.unique = false});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is IndexDefinition &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          _listEquals(columns, other.columns) &&
+          unique == other.unique;
+
+  @override
+  int get hashCode => name.hashCode ^ columns.hashCode ^ unique.hashCode;
+
+  @override
+  String toString() {
+    return 'IndexDefinition(name: $name, columns: $columns, unique: $unique)';
+  }
+
+  bool _listEquals(List a, List b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+}
+
 /// Represents a database table schema.
 class TableSchema {
   /// The name of the table.
@@ -100,7 +139,10 @@ class TableSchema {
   /// The columns in the table.
   final List<ColumnDefinition> columns;
 
-  const TableSchema({required this.name, required this.columns});
+  /// The indexes on the table.
+  final List<IndexDefinition> indexes;
+
+  const TableSchema({required this.name, required this.columns, this.indexes = const []});
 
   /// Gets a column by name.
   ColumnDefinition? getColumn(String name) {
@@ -131,10 +173,11 @@ class TableSchema {
       other is TableSchema &&
           runtimeType == other.runtimeType &&
           name == other.name &&
-          _listEquals(columns, other.columns);
+          _listEquals(columns, other.columns) &&
+          _listEquals(indexes, other.indexes);
 
   @override
-  int get hashCode => name.hashCode ^ columns.hashCode;
+  int get hashCode => name.hashCode ^ columns.hashCode ^ indexes.hashCode;
 
   @override
   String toString() {

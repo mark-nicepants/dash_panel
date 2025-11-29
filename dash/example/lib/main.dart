@@ -1,8 +1,8 @@
 import 'package:dash/dash.dart';
+import 'package:dash_analytics/dash_analytics.dart';
 import 'package:dash_example/commands/seed_commands.dart';
 import 'package:dash_example/models/post.dart';
 import 'package:dash_example/models/user.dart';
-import 'package:dash_example/plugins/analytics_plugin.dart';
 import 'package:dash_example/resources/post_resource.dart';
 import 'package:dash_example/resources/user_resource.dart';
 
@@ -27,9 +27,10 @@ Future<void> main() async {
     ])
     ..plugin(
       AnalyticsPlugin.make() //
-          .trackingId('UA-12345678-9')
           .enableDashboardWidget(true)
-          .showSidebarBadge(true),
+          .trackPageViews(true)
+          .trackModelEvents(true)
+          .retentionDays(90),
     )
     ..database(
       DatabaseConfig.using(SqliteConnector('storage/app.db'), migrations: MigrationConfig.fromResources(verbose: true)),

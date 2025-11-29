@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/auth/authenticatable.dart';
 import 'package:dash/src/database/database_config.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/model/model_metadata.dart';
@@ -20,6 +21,13 @@ import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:dash/src/widgets/widget.dart' as dash;
 import 'package:jaspr/jaspr.dart';
+import 'package:shelf/shelf.dart';
+
+/// Callback type for request event hooks.
+typedef RequestCallback = FutureOr<void> Function(Request request);
+
+/// Callback type for model event hooks.
+typedef ModelCallback = FutureOr<void> Function(Model model);
 
 /// The main entry point for a Dash admin panel.
 ///
@@ -58,6 +66,12 @@ class Panel {
 
   // Storage configuration
   StorageConfig? _storageConfig;
+
+  // Event hooks
+  final List<RequestCallback> _requestCallbacks = [];
+  final List<ModelCallback> _modelCreatedCallbacks = [];
+  final List<ModelCallback> _modelUpdatedCallbacks = [];
+  final List<ModelCallback> _modelDeletedCallbacks = [];
 
   Panel() {
     _config = PanelConfig();
@@ -184,6 +198,22 @@ class Panel {
   /// Registers resources with this panel.
   Panel registerResources(List<Resource> resources) {
     _config.registerResources(resources);
+    return this;
+  }
+
+  /// Registers additional table schemas for migrations.
+  ///
+  /// Use this to register schemas for models that aren't tied to resources,
+  /// such as internal plugin tables. These schemas will be included when
+  /// using [MigrationConfig.fromResources()].
+  ///
+  /// Example:
+  /// ```dart
+  /// // In a plugin's register() method:
+  /// panel.registerSchemas([Metric.schema]);
+  /// ```
+  Panel registerSchemas(List<TableSchema> schemas) {
+    registerAdditionalSchemas(schemas);
     return this;
   }
 
@@ -327,6 +357,78 @@ class Panel {
     return this;
   }
 
+  // ============================================================
+  // Event Hooks
+  // ============================================================
+
+  /// Registers a callback to be called on each request.
+  ///
+  /// This is useful for tracking page views or other request-based metrics.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.onRequest((request) async {
+  ///   await metrics.pageView(request.requestedUri.path);
+  /// });
+  /// ```
+  Panel onRequest(RequestCallback callback) {
+    _requestCallbacks.add(callback);
+    return this;
+  }
+
+  /// Registers a callback to be called when a model is created.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.onModelCreated((model) async {
+  ///   await metrics.modelCreated(model.runtimeType.toString());
+  /// });
+  /// ```
+  Panel onModelCreated(ModelCallback callback) {
+    _modelCreatedCallbacks.add(callback);
+    return this;
+  }
+
+  /// Registers a callback to be called when a model is updated.
+  Panel onModelUpdated(ModelCallback callback) {
+    _modelUpdatedCallbacks.add(callback);
+    return this;
+  }
+
+  /// Registers a callback to be called when a model is deleted.
+  Panel onModelDeleted(ModelCallback callback) {
+    _modelDeletedCallbacks.add(callback);
+    return this;
+  }
+
+  /// Fires request callbacks. Called internally by PanelServer.
+  Future<void> fireRequestCallbacks(Request request) async {
+    for (final callback in _requestCallbacks) {
+      await callback(request);
+    }
+  }
+
+  /// Fires model created callbacks.
+  Future<void> fireModelCreated(Model model) async {
+    for (final callback in _modelCreatedCallbacks) {
+      await callback(model);
+    }
+  }
+
+  /// Fires model updated callbacks.
+  Future<void> fireModelUpdated(Model model) async {
+    for (final callback in _modelUpdatedCallbacks) {
+      await callback(model);
+    }
+  }
+
+  /// Fires model deleted callbacks.
+  Future<void> fireModelDeleted(Model model) async {
+    for (final callback in _modelDeletedCallbacks) {
+      await callback(model);
+    }
+  }
+
   /// Creates a new query builder for database operations.
   /// Throws [StateError] if no database is configured.
   QueryBuilder query() {
@@ -380,16 +482,16 @@ class Panel {
       }
 
       // Boot all registered plugins
-      _bootPlugins();
+      await _bootPlugins();
     }
 
     return this;
   }
 
   /// Boots all registered plugins.
-  void _bootPlugins() {
+  Future<void> _bootPlugins() async {
     for (final plugin in _config.plugins.values) {
-      plugin.boot(this);
+      await plugin.boot(this);
     }
   }
 
