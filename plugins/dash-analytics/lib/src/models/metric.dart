@@ -61,7 +61,12 @@ class Metric extends Model {
 
   /// Creates a new query builder for Metric.
   static ModelQueryBuilder<Metric> query() {
-    return ModelQueryBuilder<Metric>(Model.connector);
+    return ModelQueryBuilder<Metric>(
+      Model.connector,
+      modelFactory: Metric.empty,
+      modelTable: 'dash_metrics',
+      modelPrimaryKey: 'id',
+    );
   }
 
   /// Finds a metric by its primary key.

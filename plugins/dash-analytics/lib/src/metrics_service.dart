@@ -174,6 +174,10 @@ class MetricsService {
 }
 
 /// A fluent query builder for metrics.
+///
+/// Uses [Metric.query()] internally for database-agnostic queries.
+/// This ensures compatibility with future database connectors
+/// (MySQL, PostgreSQL, MSSQL, etc.).
 class MetricQuery {
   MetricQuery(this._connector, this._name);
   final DatabaseConnector _connector;
@@ -218,84 +222,44 @@ class MetricQuery {
     return this;
   }
 
-  /// Returns the sum of metric values.
-  Future<double> sum() async {
+  /// Builds the base query with common filters applied.
+  ModelQueryBuilder<Metric> _buildBaseQuery() {
     _ensureDateRange();
 
-    var sql = '''
-      SELECT SUM(value) as total
-      FROM dash_metrics
-      WHERE name = ? AND recorded_at BETWEEN ? AND ?
-    ''';
-    final params = <dynamic>[_name, _startDate!.toIso8601String(), _endDate!.toIso8601String()];
+    var query = Metric.query()
+        .where('name', _name)
+        .whereBetween('recorded_at', _startDate!.toIso8601String(), _endDate!.toIso8601String());
 
     if (_type != null) {
-      sql += ' AND type = ?';
-      params.add(_type!.name);
+      query = query.where('type', _type!.name);
     }
 
-    // Add tag filters using JSON extraction
+    // Apply tag filters using JSON path extraction
     for (final entry in _tagFilters.entries) {
-      sql += " AND json_extract(tags, '\$.${entry.key}') = ?";
-      params.add(entry.value.toString());
+      query = query.whereJsonPath('tags', entry.key, entry.value);
     }
 
-    final result = await _connector.query(sql, params);
-    return (result.first['total'] as num?)?.toDouble() ?? 0;
+    return query;
+  }
+
+  /// Returns the sum of metric values.
+  Future<double> sum() async {
+    final query = _buildBaseQuery();
+    return (await query.sum('value')).toDouble();
   }
 
   /// Returns the count of metric records.
   Future<int> count() async {
-    _ensureDateRange();
-
-    var sql = '''
-      SELECT COUNT(*) as count
-      FROM dash_metrics
-      WHERE name = ? AND recorded_at BETWEEN ? AND ?
-    ''';
-    final params = <dynamic>[_name, _startDate!.toIso8601String(), _endDate!.toIso8601String()];
-
-    if (_type != null) {
-      sql += ' AND type = ?';
-      params.add(_type!.name);
-    }
-
-    for (final entry in _tagFilters.entries) {
-      sql += " AND json_extract(tags, '\$.${entry.key}') = ?";
-      params.add(entry.value.toString());
-    }
-
-    final result = await _connector.query(sql, params);
-    return (result.first['count'] as num?)?.toInt() ?? 0;
+    final query = _buildBaseQuery();
+    return await query.count();
   }
 
   /// Returns the count of records matching a specific tag value.
   ///
   /// This is useful for counting metrics by category, e.g., device type or browser.
   Future<int> countByTag(String tagKey, String tagValue) async {
-    _ensureDateRange();
-
-    var sql =
-        '''
-      SELECT COUNT(*) as count
-      FROM dash_metrics
-      WHERE name = ? AND recorded_at BETWEEN ? AND ?
-      AND json_extract(tags, '\$.$tagKey') = ?
-    ''';
-    final params = <dynamic>[_name, _startDate!.toIso8601String(), _endDate!.toIso8601String(), tagValue];
-
-    if (_type != null) {
-      sql += ' AND type = ?';
-      params.add(_type!.name);
-    }
-
-    for (final entry in _tagFilters.entries) {
-      sql += " AND json_extract(tags, '\$.${entry.key}') = ?";
-      params.add(entry.value.toString());
-    }
-
-    final result = await _connector.query(sql, params);
-    return (result.first['count'] as num?)?.toInt() ?? 0;
+    final query = _buildBaseQuery().whereJsonPath('tags', tagKey, tagValue);
+    return await query.count();
   }
 
   /// Returns metric data grouped by period.
@@ -304,30 +268,13 @@ class MetricQuery {
 
     final dateFormat = _period.sqliteDateFormat.replaceAll('{column}', 'recorded_at');
 
-    var sql =
-        '''
-      SELECT $dateFormat as period, SUM(value) as total
-      FROM dash_metrics
-      WHERE name = ? AND recorded_at BETWEEN ? AND ?
-    ''';
-    final params = <dynamic>[_name, _startDate!.toIso8601String(), _endDate!.toIso8601String()];
+    final query = _buildBaseQuery()
+        .selectRaw('$dateFormat as period')
+        .selectRaw('SUM(value) as total')
+        .groupByRaw('period')
+        .orderBy('period', 'ASC');
 
-    if (_type != null) {
-      sql += ' AND type = ?';
-      params.add(_type!.name);
-    }
-
-    for (final entry in _tagFilters.entries) {
-      sql += " AND json_extract(tags, '\$.${entry.key}') = ?";
-      params.add(entry.value.toString());
-    }
-
-    sql += '''
-      GROUP BY period
-      ORDER BY period ASC
-    ''';
-
-    final results = await _connector.query(sql, params);
+    final results = await query.getMap();
 
     final dataPoints = <String, double>{};
     for (final row in results) {

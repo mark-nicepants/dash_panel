@@ -114,6 +114,12 @@ class ModelQueryBuilder<T extends Model> {
     return this;
   }
 
+  /// Adds a raw SQL expression to the select clause.
+  ModelQueryBuilder<T> selectRaw(String expression) {
+    _query.selectRaw(expression);
+    return this;
+  }
+
   ModelQueryBuilder<T> where(String column, dynamic value, [String operator = '=']) {
     _query.where(column, value, operator);
     return this;
@@ -154,6 +160,18 @@ class ModelQueryBuilder<T extends Model> {
     return this;
   }
 
+  /// Adds a raw WHERE clause with bindings.
+  ModelQueryBuilder<T> whereRaw(String expression, [List<dynamic>? bindings]) {
+    _query.whereRaw(expression, bindings);
+    return this;
+  }
+
+  /// Adds a WHERE clause that filters by a JSON path value.
+  ModelQueryBuilder<T> whereJsonPath(String column, String path, dynamic value) {
+    _query.whereJsonPath(column, path, value);
+    return this;
+  }
+
   ModelQueryBuilder<T> orderBy(String column, [String direction = 'ASC']) {
     _query.orderBy(column, direction);
     return this;
@@ -161,6 +179,12 @@ class ModelQueryBuilder<T extends Model> {
 
   ModelQueryBuilder<T> groupBy(String column) {
     _query.groupBy(column);
+    return this;
+  }
+
+  /// Adds a raw GROUP BY expression.
+  ModelQueryBuilder<T> groupByRaw(String expression) {
+    _query.groupByRaw(expression);
     return this;
   }
 

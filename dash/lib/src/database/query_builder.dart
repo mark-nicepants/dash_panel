@@ -36,6 +36,25 @@ class QueryBuilder {
     return this;
   }
 
+  /// Adds a raw SQL expression to the select clause.
+  ///
+  /// Use this for aggregate functions, JSON extraction, or other
+  /// expressions not covered by the standard select method.
+  ///
+  /// Example:
+  /// ```dart
+  /// query.selectRaw('COUNT(*) as total');
+  /// query.selectRaw("date(created_at) as period");
+  /// ```
+  QueryBuilder selectRaw(String expression) {
+    if (_columns.length == 1 && _columns.first == '*') {
+      _columns = [expression];
+    } else {
+      _columns.add(expression);
+    }
+    return this;
+  }
+
   /// Adds a WHERE clause.
   QueryBuilder where(String column, dynamic value, [String operator = '=']) {
     _wheres.add('$column $operator ?');
@@ -98,6 +117,40 @@ class QueryBuilder {
     return this;
   }
 
+  /// Adds a raw WHERE clause with bindings.
+  ///
+  /// Use this for complex conditions not covered by the standard where methods.
+  ///
+  /// Example:
+  /// ```dart
+  /// query.whereRaw('LOWER(name) = ?', ['john']);
+  /// ```
+  QueryBuilder whereRaw(String expression, [List<dynamic>? bindings]) {
+    _wheres.add(expression);
+    if (bindings != null) {
+      _bindings.addAll(bindings);
+    }
+    return this;
+  }
+
+  /// Adds a WHERE clause that filters by a JSON path value.
+  ///
+  /// This method provides database-agnostic JSON querying.
+  /// Currently uses SQLite's json_extract function. When MySQL/PostgreSQL
+  /// connectors are added, this will be overridden to use their native
+  /// JSON operators (e.g., MySQL's ->> or PostgreSQL's @>).
+  ///
+  /// Example:
+  /// ```dart
+  /// query.whereJsonPath('tags', 'path', '/dashboard');
+  /// // Generates: json_extract(tags, '$.path') = ?
+  /// ```
+  QueryBuilder whereJsonPath(String column, String path, dynamic value) {
+    _wheres.add("json_extract($column, '\$.$path') = ?");
+    _bindings.add(value.toString());
+    return this;
+  }
+
   /// Adds an ORDER BY clause.
   QueryBuilder orderBy(String column, [String direction = 'ASC']) {
     _orderBy.add('$column $direction');
@@ -107,6 +160,19 @@ class QueryBuilder {
   /// Adds a GROUP BY clause.
   QueryBuilder groupBy(String column) {
     _groupBy.add(column);
+    return this;
+  }
+
+  /// Adds a raw GROUP BY expression.
+  ///
+  /// Use this for complex grouping expressions like date functions.
+  ///
+  /// Example:
+  /// ```dart
+  /// query.groupByRaw("date(created_at)");
+  /// ```
+  QueryBuilder groupByRaw(String expression) {
+    _groupBy.add(expression);
     return this;
   }
 
