@@ -128,52 +128,60 @@ void main() {
     group('Factory', () {
       test('make() creates stat with label and value', () {
         final stat = Stat.make('Users', '1,234');
-        // Stat doesn't expose getters, so we just verify it creates
-        expect(stat, isNotNull);
+        expect(stat.label, equals('Users'));
+        expect(stat.value, equals('1,234'));
       });
     });
 
-    group('Fluent API', () {
-      test('icon() can be chained', () {
+    group('Configuration', () {
+      test('icon() sets icon', () {
         final stat = Stat.make('Users', '1,234').icon(HeroIcons.users);
-        expect(stat, isNotNull);
+        expect(stat.getIcon, equals(HeroIcons.users));
       });
 
-      test('description() can be chained', () {
+      test('description() sets description', () {
         final stat = Stat.make('Users', '1,234').description('+12% from last month');
-        expect(stat, isNotNull);
+        expect(stat.getDescription, equals('+12% from last month'));
       });
 
-      test('descriptionIcon() can be chained', () {
+      test('descriptionIcon() sets description icon', () {
         final stat = Stat.make('Users', '1,234').descriptionIcon(HeroIcons.arrowUp);
-        expect(stat, isNotNull);
+        expect(stat.getDescriptionIcon, equals(HeroIcons.arrowUp));
       });
 
-      test('color() can be chained', () {
+      test('color() sets color', () {
         final stat = Stat.make('Users', '1,234').color('green');
-        expect(stat, isNotNull);
+        expect(stat.getColor, equals('green'));
       });
 
-      test('descriptionColor() can be chained', () {
+      test('color defaults to cyan', () {
+        final stat = Stat.make('Users', '1,234');
+        expect(stat.getColor, equals('cyan'));
+      });
+
+      test('descriptionColor() sets description color', () {
         final stat = Stat.make('Users', '1,234').descriptionColor('green');
-        expect(stat, isNotNull);
+        expect(stat.getDescriptionColor, equals('green'));
       });
 
-      test('chart() can be chained', () {
-        final stat = Stat.make('Users', '1,234').chart([10, 15, 8, 22, 18]);
-        expect(stat, isNotNull);
+      test('chart() sets chart data', () {
+        final data = [10.0, 15.0, 8.0, 22.0, 18.0];
+        final stat = Stat.make('Users', '1,234').chart(data);
+        expect(stat.getChartData, equals(data));
       });
 
-      test('chartColor() can be chained', () {
-        final stat = Stat.make('Users', '1,234').chartColor('cyan');
-        expect(stat, isNotNull);
+      test('chartColor() sets chart color', () {
+        final stat = Stat.make('Users', '1,234').chartColor('amber');
+        expect(stat.getChartColor, equals('amber'));
       });
 
-      test('url() can be chained', () {
+      test('url() sets URL', () {
         final stat = Stat.make('Users', '1,234').url('/users');
-        expect(stat, isNotNull);
+        expect(stat.getUrl, equals('/users'));
       });
+    });
 
+    group('Fluent API Chaining', () {
       test('all methods can be chained together', () {
         final stat = Stat.make('Total Revenue', '\$12,345')
             .icon(HeroIcons.currencyDollar)
@@ -185,7 +193,16 @@ void main() {
             .chartColor('cyan')
             .url('/dashboard/revenue');
 
-        expect(stat, isNotNull);
+        expect(stat.label, equals('Total Revenue'));
+        expect(stat.value, equals('\$12,345'));
+        expect(stat.getIcon, equals(HeroIcons.currencyDollar));
+        expect(stat.getDescription, equals('+15% from last month'));
+        expect(stat.getDescriptionIcon, equals(HeroIcons.arrowUp));
+        expect(stat.getDescriptionColor, equals('green'));
+        expect(stat.getColor, equals('cyan'));
+        expect(stat.getChartData, hasLength(6));
+        expect(stat.getChartColor, equals('cyan'));
+        expect(stat.getUrl, equals('/dashboard/revenue'));
       });
     });
 
