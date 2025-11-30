@@ -1,7 +1,7 @@
 /**
  * File Upload Alpine.js Component
  *
- * Provides drag-and-drop file uploads with HTMX integration,
+ * Provides drag-and-drop file uploads with async upload support,
  * progress tracking, and image previews.
  */
 
@@ -204,10 +204,6 @@ export function initFileUpload() {
           });
 
           xhr.open('POST', url);
-
-          // Include HTMX headers for compatibility
-          xhr.setRequestHeader('HX-Request', 'true');
-
           xhr.send(formData);
         });
       },

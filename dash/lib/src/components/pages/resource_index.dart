@@ -12,8 +12,8 @@ import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/table/table.dart';
 import 'package:jaspr/jaspr.dart';
 
-/// Resource index page with HTMX-powered interactivity.
-/// Server-side renders the full page, HTMX handles partial updates for search, sort, pagination.
+/// Resource index page for listing records.
+/// Server-side renders the full page with search, sort, and pagination support.
 class ResourceIndex<T extends Model> extends StatelessComponent {
   final Resource<T> resource;
   final List<T> records;
@@ -42,7 +42,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
     return div(classes: 'flex flex-col gap-6', [_buildHeader(), _buildTableWithPagination()]);
   }
 
-  /// Builds the table and pagination wrapped in a single container for HTMX updates.
+  /// Builds the table and pagination wrapped in a single container.
   Component _buildTableWithPagination() {
     return div(id: 'resource-table-wrapper', classes: 'flex flex-col gap-6', [_buildTableCard(), _buildPagination()]);
   }
@@ -97,17 +97,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
             'w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-$primary-500 focus:border-transparent transition-all',
         value: searchQuery ?? '',
         name: 'search',
-        attributes: {
-          'placeholder': tableConfig.getSearchPlaceholder(),
-          'hx-get': basePath,
-          'hx-trigger': 'keyup changed delay:300ms',
-          'hx-target': '#resource-table-wrapper',
-          'hx-select': '#resource-table-wrapper',
-          'hx-swap': 'outerHTML',
-          'hx-on::after-swap':
-              'document.getElementById("resource-search-input")?.focus(); '
-              'document.getElementById("resource-search-input")?.setSelectionRange(-1, -1)',
-        },
+        attributes: {'placeholder': tableConfig.getSearchPlaceholder()},
       ),
     ]);
   }
@@ -147,13 +137,6 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
             href: _buildPageUrl(currentPage - 1),
             classes:
                 'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
-            attributes: {
-              'hx-get': _buildPageUrl(currentPage - 1),
-              'hx-target': '#resource-table-wrapper',
-              'hx-select': '#resource-table-wrapper',
-              'hx-swap': 'outerHTML',
-              'hx-push-url': 'true',
-            },
             [text('← Previous')],
           )
         else
@@ -169,13 +152,6 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
                     href: _buildPageUrl(i),
                     classes:
                         'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
-                    attributes: {
-                      'hx-get': _buildPageUrl(i),
-                      'hx-target': '#resource-table-wrapper',
-                      'hx-select': '#resource-table-wrapper',
-                      'hx-swap': 'outerHTML',
-                      'hx-push-url': 'true',
-                    },
                     [text('$i')],
                   )
                 : span(
@@ -190,13 +166,6 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
             href: _buildPageUrl(currentPage + 1),
             classes:
                 'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
-            attributes: {
-              'hx-get': _buildPageUrl(currentPage + 1),
-              'hx-target': '#resource-table-wrapper',
-              'hx-select': '#resource-table-wrapper',
-              'hx-swap': 'outerHTML',
-              'hx-push-url': 'true',
-            },
             [text('Next →')],
           )
         else

@@ -112,7 +112,7 @@ class PanelRouter {
 
       // Redirect to index with success message
       final basePath = '${_config.path}/resources/${resource.slug}';
-      return Response.found(basePath, headers: {'HX-Redirect': basePath});
+      return Response.found(basePath);
     } catch (e) {
       // Handle error - re-render create page
       final page = resource.buildCreatePage(
@@ -155,7 +155,7 @@ class PanelRouter {
 
       // Redirect to index with success message
       final basePath = '${_config.path}/resources/${resource.slug}';
-      return Response.found(basePath, headers: {'HX-Redirect': basePath});
+      return Response.found(basePath);
     } catch (e) {
       // Handle error
       final basePath = '${_config.path}/resources/${resource.slug}';
@@ -174,7 +174,7 @@ class PanelRouter {
 
       // Redirect to index
       final basePath = '${_config.path}/resources/${resource.slug}';
-      return Response.found(basePath, headers: {'HX-Redirect': basePath});
+      return Response.found(basePath);
     } catch (e) {
       final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath);

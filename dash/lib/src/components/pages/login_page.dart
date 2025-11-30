@@ -44,7 +44,7 @@ class LoginPage extends StatelessComponent {
           div(classes: 'mt-12 space-y-4', [
             _buildFeatureItem('Type-safe models with automatic migrations'),
             _buildFeatureItem('Fluent builder APIs for tables and forms'),
-            _buildFeatureItem('HTMX-powered server-side rendering'),
+            _buildFeatureItem('Real-time server-side rendering'),
           ]),
         ]),
       ],

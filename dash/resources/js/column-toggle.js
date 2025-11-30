@@ -97,18 +97,5 @@ export function initColumnToggle() {
     }));
   });
 
-  // HTMX integration - reapply state after partial updates
-  document.addEventListener('htmx:afterSwap', (event) => {
-    const target = event.target;
-    if (window.Alpine && target instanceof Element) {
-      window.Alpine.initTree(target);
-    }
-    if (!(target instanceof Element)) {
-      return;
-    }
-    const slug = target.getAttribute('data-resource-slug');
-    if (slug && stateRegistry[slug]) {
-      window.DashColumnToggle.apply(slug, stateRegistry[slug]);
-    }
-  });
+
 }

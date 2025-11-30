@@ -32,7 +32,7 @@ const _closeIconSvg = '''
 ///
 /// This field provides an interactive file upload experience with:
 /// - Drag and drop file uploads
-/// - Instant HTMX-based async uploads
+/// - Instant async uploads
 /// - Image preview for uploaded images
 /// - Progress indicator during upload
 /// - Multiple file support

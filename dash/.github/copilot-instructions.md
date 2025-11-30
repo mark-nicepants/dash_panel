@@ -6,7 +6,6 @@
 
 - **Dart** - Primary language
 - **Jaspr** - HTML/SSR component rendering framework
-- **HTMX** - Frontend interactivity (search, sorting, pagination, partial page updates)
 - **Alpine.js** - Client-side state management (toggles, collapsibles, modals)
 - **Tailwind CSS** - Utility-first styling
 - **Shelf** - HTTP server
@@ -16,7 +15,7 @@
 1. **SOLID Principles** - Follow single responsibility, open/closed, Liskov substitution, interface segregation, and dependency inversion
 2. **Fluent Builder APIs** - All configuration uses method chaining for readability
 3. **Convention over Configuration** - Smart defaults, minimal required setup
-4. **Server-Side Rendering** - HTMX for partial updates, not SPA patterns
+4. **Server-Side Rendering** - Full page renders with traditional navigation
 5. **Type Safety** - Leverage Dart's type system with generics
 6. **Reusable Components** - Create and use Jaspr components for UI elements
 
@@ -162,7 +161,7 @@ Extend `StatelessComponent` and implement `build()`. Use `const` constructors, p
 - Use `const` constructors where possible
 - Children go in a list as the last positional argument
 - Use `classes` for Tailwind CSS classes
-- Use `attributes` map for custom HTML attributes (`hx-*`, `x-*`, `data-*`)
+- Use `attributes` map for custom HTML attributes (`x-*`, `data-*`)
 
 ### 5. Resource Pattern
 
@@ -238,7 +237,7 @@ class MyPlugin implements Plugin {
 - Use fluent builder APIs for all configuration
 - Provide `make()` factory methods
 - Follow the established naming conventions
-- Use HTMX for server interactions, Alpine for client-only state
+- Use Alpine.js for client-side interactivity
 - Create reusable Jaspr components for UI elements
 - Write tests for new functionality
 - Use generics to preserve types through method chains

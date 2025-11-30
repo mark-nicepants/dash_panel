@@ -41,7 +41,7 @@ class DataTable<T extends Model> extends StatelessComponent {
   /// Function to generate sort URL for a column.
   final String Function(String column, String direction)? onSortUrl;
 
-  /// Optional ID for the table container (useful for HTMX targeting).
+  /// Optional ID for the table container.
   final String? containerId;
 
   /// The resource slug for column toggle functionality.

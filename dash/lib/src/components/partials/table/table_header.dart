@@ -83,13 +83,6 @@ class TableHeader<T> extends StatelessComponent {
     return a(
       href: url,
       classes: 'block text-gray-400 no-underline',
-      attributes: {
-        'hx-get': url,
-        'hx-target': '#resource-table-wrapper',
-        'hx-select': '#resource-table-wrapper',
-        'hx-swap': 'outerHTML',
-        'hx-push-url': 'true',
-      },
       [
         div(classes: 'flex items-center gap-2', [
           span(classes: 'font-medium', [text(column.getLabel())]),
