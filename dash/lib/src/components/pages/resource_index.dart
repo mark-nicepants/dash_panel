@@ -3,6 +3,7 @@ import 'package:dash/src/actions/prebuilt/delete_action.dart';
 import 'package:dash/src/actions/prebuilt/edit_action.dart';
 import 'package:dash/src/components/partials/breadcrumbs.dart';
 import 'package:dash/src/components/partials/page_header.dart';
+import 'package:dash/src/components/partials/pagination.dart';
 import 'package:dash/src/components/partials/table/column_toggle.dart';
 import 'package:dash/src/components/partials/table/table_components.dart';
 import 'package:dash/src/model/model.dart';
@@ -125,57 +126,14 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   }
 
   Component _buildPagination() {
-    if (!tableConfig.isPaginated() || totalRecords == 0) return div([]);
-    final perPage = tableConfig.getRecordsPerPage();
-    final totalPages = (totalRecords / perPage).ceil();
-    if (totalPages <= 1) return div([]);
-    return div(classes: 'flex justify-between items-center px-6 py-4 border-t border-gray-700', [
-      div(classes: 'text-sm text-gray-400', [text('Page $currentPage of $totalPages ($totalRecords total)')]),
-      div(classes: 'flex gap-2', [
-        if (currentPage > 1)
-          a(
-            href: _buildPageUrl(currentPage - 1),
-            classes:
-                'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
-            [text('← Previous')],
-          )
-        else
-          span(
-            classes:
-                'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 opacity-50 cursor-not-allowed rounded-lg',
-            [text('← Previous')],
-          ),
-        for (var i = 1; i <= totalPages; i++)
-          if (_shouldShowPage(i, currentPage, totalPages))
-            i != currentPage
-                ? a(
-                    href: _buildPageUrl(i),
-                    classes:
-                        'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
-                    [text('$i')],
-                  )
-                : span(
-                    classes:
-                        'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-semibold bg-gray-900 text-gray-100 rounded-lg border border-gray-700',
-                    [text('$i')],
-                  )
-          else if (i == currentPage - 2 || i == currentPage + 2)
-            span(classes: 'flex items-center px-2 text-gray-600', [text('...')]),
-        if (currentPage < totalPages)
-          a(
-            href: _buildPageUrl(currentPage + 1),
-            classes:
-                'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
-            [text('Next →')],
-          )
-        else
-          span(
-            classes:
-                'inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 opacity-50 cursor-not-allowed rounded-lg',
-            [text('Next →')],
-          ),
-      ]),
-    ]);
+    if (!tableConfig.isPaginated()) return div([]);
+
+    return Pagination(
+      currentPage: currentPage,
+      totalRecords: totalRecords,
+      perPage: tableConfig.getRecordsPerPage(),
+      buildPageUrl: _buildPageUrl,
+    );
   }
 
   String _buildPageUrl(int newPage) {
@@ -186,11 +144,5 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
       if (newPage != 1) 'page=$newPage',
     ];
     return params.isEmpty ? basePath : '$basePath?${params.join('&')}';
-  }
-
-  bool _shouldShowPage(int p, int current, int total) {
-    if (p == 1 || p == total) return true;
-    if (p >= current - 1 && p <= current + 1) return true;
-    return false;
   }
 }
