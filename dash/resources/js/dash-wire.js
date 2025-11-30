@@ -68,6 +68,47 @@ export function initDashWire() {
   }
 
   /**
+   * Find a wire:model attribute on an element and return its property name and modifier info.
+   * Supports: wire:model, wire:model.lazy, wire:model.blur, wire:model.debounce, wire:model.debounce.Xms
+   * @returns {{ property: string, modifier: string, debounceMs: number } | null}
+   */
+  function getWireModelInfo(element) {
+    // Check all attributes for wire:model patterns
+    for (const attr of element.attributes) {
+      if (attr.name.startsWith('wire:model')) {
+        const property = attr.value;
+        const parts = attr.name.split('.');
+        
+        let modifier = 'live';
+        let debounceMs = config.modelDebounce;
+        
+        if (parts.includes('lazy')) {
+          modifier = 'lazy';
+        } else if (parts.includes('blur')) {
+          modifier = 'blur';
+        } else if (parts.includes('debounce')) {
+          modifier = 'debounce';
+          // Check for custom debounce time (e.g., wire:model.debounce.300ms)
+          const timeIndex = parts.findIndex(p => p.match(/^\d+ms$/));
+          if (timeIndex !== -1) {
+            debounceMs = parseInt(parts[timeIndex].replace('ms', ''), 10);
+          }
+        }
+        
+        return { property, modifier, debounceMs };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Check if an element has any wire:model attribute
+   */
+  function hasWireModel(element) {
+    return Array.from(element.attributes).some(attr => attr.name.startsWith('wire:model'));
+  }
+
+  /**
    * Parse wire:click directive value
    * Supports: "method" or "method(arg1, arg2)"
    */
@@ -94,24 +135,16 @@ export function initDashWire() {
 
   /**
    * Collect all wire:model values from the component
-   * Supports both wire:model and wire:model.blur
+   * Supports wire:model, wire:model.blur, wire:model.lazy, wire:model.debounce.*
    */
   function collectModelValues(wrapper) {
     const models = {};
     
-    // Collect wire:model values
-    wrapper.querySelectorAll('[wire\\:model]').forEach(el => {
-      const property = el.getAttribute('wire:model');
-      if (property) {
-        models[property] = getInputValue(el);
-      }
-    });
-    
-    // Also collect wire:model.blur values
-    wrapper.querySelectorAll('[wire\\:model\\.blur]').forEach(el => {
-      const property = el.getAttribute('wire:model.blur');
-      if (property) {
-        models[property] = getInputValue(el);
+    // Find all elements and check for any wire:model attribute
+    wrapper.querySelectorAll('input, select, textarea').forEach(el => {
+      const modelInfo = getWireModelInfo(el);
+      if (modelInfo) {
+        models[modelInfo.property] = getInputValue(el);
       }
     });
     
@@ -242,41 +275,54 @@ export function initDashWire() {
     }
 
     const wireId = wrapper.getAttribute('wire:id');
+    
+    // Capture focus state before morphing
+    const activeElement = document.activeElement;
+    const hadFocus = wrapper.contains(activeElement);
+    let focusSelector = null;
+    let selectionStart = null;
+    let selectionEnd = null;
+    
+    if (hadFocus && activeElement) {
+      // Build a selector to find the element after morphing
+      // Try to use wire:model attribute first, then name, then generate a path
+      const modelInfo = getWireModelInfo(activeElement);
+      
+      if (modelInfo) {
+        // Find by any wire:model attribute with this property value
+        for (const attr of activeElement.attributes) {
+          if (attr.name.startsWith('wire:model') && attr.value === modelInfo.property) {
+            // Escape special characters in attribute name for CSS selector (: and .)
+            const escapedAttrName = attr.name.replace(/:/g, '\\:').replace(/\./g, '\\.');
+            focusSelector = `[${escapedAttrName}="${modelInfo.property}"]`;
+            break;
+          }
+        }
+      } else if (activeElement.name) {
+        focusSelector = `[name="${activeElement.name}"]`;
+      } else if (activeElement.id) {
+        focusSelector = `#${activeElement.id}`;
+      }
+      
+      // Preserve cursor position for text inputs
+      if (activeElement.setSelectionRange) {
+        selectionStart = activeElement.selectionStart;
+        selectionEnd = activeElement.selectionEnd;
+      }
+      
+      log('Captured focus state:', { focusSelector, selectionStart, selectionEnd });
+    }
 
     // Use Idiomorph if available (recommended)
     if (window.Idiomorph) {
       log('Morphing with Idiomorph');
       window.Idiomorph.morph(wrapper, newWrapper, {
         morphStyle: 'outerHTML',
-        callbacks: {
-          beforeNodeMorphed: (oldNode, newNode) => {
-            // Preserve focus state
-            if (oldNode === document.activeElement) {
-              setTimeout(() => newNode.focus?.(), 0);
-            }
-            return true;
-          },
-        },
       });
     } else if (window.morphdom) {
       // Fallback to morphdom
       log('Morphing with morphdom');
-      window.morphdom(wrapper, newWrapper, {
-        onBeforeElUpdated: (fromEl, toEl) => {
-          // Preserve focus
-          if (fromEl === document.activeElement && fromEl.tagName === 'INPUT') {
-            const selStart = fromEl.selectionStart;
-            const selEnd = fromEl.selectionEnd;
-            requestAnimationFrame(() => {
-              if (toEl.setSelectionRange) {
-                toEl.focus();
-                toEl.setSelectionRange(selStart, selEnd);
-              }
-            });
-          }
-          return true;
-        },
-      });
+      window.morphdom(wrapper, newWrapper);
     } else {
       // Simple fallback - replace inner content and update attributes
       log('Replacing content (no morph library)');
@@ -295,6 +341,27 @@ export function initDashWire() {
       
       // Replace inner HTML
       wrapper.innerHTML = newWrapper.innerHTML;
+    }
+    
+    // Restore focus after morphing
+    if (hadFocus && focusSelector) {
+      // Need to re-query for the wrapper as it may have been replaced
+      const newWrapperEl = document.querySelector(`[wire\\:id="${wireId}"]`) || wrapper;
+      const elementToFocus = newWrapperEl.querySelector(focusSelector);
+      
+      if (elementToFocus) {
+        log('Restoring focus to:', elementToFocus);
+        elementToFocus.focus();
+        
+        // Restore cursor position
+        if (selectionStart !== null && elementToFocus.setSelectionRange) {
+          try {
+            elementToFocus.setSelectionRange(selectionStart, selectionEnd);
+          } catch (e) {
+            // Some input types don't support setSelectionRange
+          }
+        }
+      }
     }
 
     // Re-initialize Alpine if present
@@ -358,10 +425,13 @@ export function initDashWire() {
     const wrapper = findComponent(element);
     if (!wrapper) return;
 
-    const property = element.getAttribute('wire:model');
-    const modifier = element.getAttribute('wire:model.lazy') !== null ? 'lazy' : 
-                     element.getAttribute('wire:model.debounce') !== null ? 'debounce' : 
-                     'live';
+    const modelInfo = getWireModelInfo(element);
+    if (!modelInfo) {
+      log('No wire:model attribute found on element');
+      return;
+    }
+
+    const { property, modifier, debounceMs } = modelInfo;
 
     // For lazy, we don't send on every keystroke
     if (modifier === 'lazy') {
@@ -376,7 +446,7 @@ export function initDashWire() {
       clearTimeout(modelDebounceTimers.get(timerId));
     }
 
-    // Debounce the request
+    // Debounce the request (use custom debounce time if specified)
     modelDebounceTimers.set(timerId, setTimeout(async () => {
       modelDebounceTimers.delete(timerId);
       
@@ -500,22 +570,29 @@ export function initDashWire() {
     });
 
     // Input handler for wire:model (live updates)
+    // Check if the input element has any wire:model attribute
     document.addEventListener('input', (e) => {
-      const target = e.target.closest('[wire\\:model]');
-      if (target && !target.hasAttribute('wire:model.lazy')) {
-        handleModelUpdate(target);
+      const target = e.target;
+      if (target && hasWireModel(target)) {
+        const modelInfo = getWireModelInfo(target);
+        // Don't handle lazy models on input - they update on change
+        if (modelInfo && modelInfo.modifier !== 'lazy') {
+          handleModelUpdate(target);
+        }
       }
     });
 
     // Change handler for wire:model.lazy and select/checkbox/radio
     document.addEventListener('change', (e) => {
-      const target = e.target.closest('[wire\\:model]');
-      if (target) {
+      const target = e.target;
+      if (target && hasWireModel(target)) {
+        const modelInfo = getWireModelInfo(target);
         // Always update on change for non-text inputs or lazy models
-        if (target.hasAttribute('wire:model.lazy') || 
+        if (modelInfo && (
+            modelInfo.modifier === 'lazy' || 
             target.type === 'checkbox' || 
             target.type === 'radio' ||
-            target.tagName === 'SELECT') {
+            target.tagName === 'SELECT')) {
           handleModelUpdate(target);
         }
       }
