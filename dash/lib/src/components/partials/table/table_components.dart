@@ -3,6 +3,9 @@
 /// This library provides reusable table components for displaying
 /// tabular data with sorting, searching, and pagination support.
 ///
+/// Sorting is handled via DashWire - clicking sortable columns triggers
+/// the `sort('columnName')` action on the parent component.
+///
 /// Example:
 /// ```dart
 /// import 'package:dash/src/components/partials/table/table.dart';
@@ -12,7 +15,7 @@
 ///   records: users,
 ///   sortColumn: 'name',
 ///   sortDirection: 'asc',
-///   onSortUrl: (column, direction) => '/users?sort=$column&direction=$direction',
+///   basePath: '/admin/resources/users',
 /// )
 /// ```
 library;

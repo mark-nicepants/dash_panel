@@ -5,13 +5,15 @@ import 'package:jaspr/jaspr.dart';
 
 /// Table header component that renders column headers with sorting support.
 ///
+/// Sortable columns automatically use wire:click="sort('columnName')" to
+/// trigger sorting via DashWire.
+///
 /// Example:
 /// ```dart
 /// TableHeader<User>(
 ///   columns: columns,
 ///   sortColumn: 'name',
 ///   sortDirection: 'asc',
-///   onSortUrl: (column, direction) => '/users?sort=$column&direction=$direction',
 /// )
 /// ```
 class TableHeader<T> extends StatelessComponent {
@@ -23,9 +25,6 @@ class TableHeader<T> extends StatelessComponent {
 
   /// The current sort direction ('asc' or 'desc').
   final String? sortDirection;
-
-  /// Function to generate sort URL for a column.
-  final String Function(String column, String direction)? onSortUrl;
 
   /// Whether to show the actions column header.
   final bool showActions;
@@ -40,7 +39,6 @@ class TableHeader<T> extends StatelessComponent {
     required this.columns,
     this.sortColumn,
     this.sortDirection,
-    this.onSortUrl,
     this.showActions = false,
     this.actionsLabel = 'Actions',
     this.showCheckbox = false,
@@ -66,7 +64,7 @@ class TableHeader<T> extends StatelessComponent {
     final isActive = sortColumn == column.getName();
 
     return th(classes: _buildCellClasses(column), attributes: _buildCellAttributes(column), [
-      if (column.isSortable() && onSortUrl != null)
+      if (column.isSortable())
         _buildSortableHeader(column, isActive)
       else
         div(classes: 'flex items-center gap-2', [
@@ -77,12 +75,11 @@ class TableHeader<T> extends StatelessComponent {
 
   Component _buildSortableHeader(TableColumn column, bool isActive) {
     final currentDirection = isActive ? (sortDirection ?? 'asc') : 'asc';
-    final newDirection = isActive && currentDirection == 'asc' ? 'desc' : 'asc';
-    final url = onSortUrl!(column.getName(), newDirection);
 
-    return a(
-      href: url,
-      classes: 'block text-gray-400 no-underline',
+    return button(
+      attributes: {'wire:click': "sort('${column.getName()}')"},
+      classes:
+          'block w-full text-left text-gray-400 no-underline bg-transparent border-0 p-0 cursor-pointer focus:outline-none',
       [
         div(classes: 'flex items-center gap-2', [
           span(classes: 'font-medium', [text(column.getLabel())]),

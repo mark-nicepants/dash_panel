@@ -1,16 +1,17 @@
 import 'package:dash/src/components/partials/table/bulk_actions_toolbar.dart';
-import 'package:dash/src/components/partials/table/checkbox_column.dart';
 import 'package:dash/src/components/partials/table/table_empty_state.dart';
 import 'package:dash/src/components/partials/table/table_header.dart';
 import 'package:dash/src/components/partials/table/table_row.dart';
 import 'package:dash/src/model/model.dart';
-import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/table/columns/column.dart';
 import 'package:dash/src/table/table.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A reusable data table component that renders tabular data with sorting,
 /// searching, and pagination support.
+///
+/// Sorting is handled via DashWire - clicking sortable columns triggers
+/// the `sort('columnName')` action on the parent component.
 ///
 /// Example:
 /// ```dart
@@ -19,7 +20,7 @@ import 'package:jaspr/jaspr.dart';
 ///   records: users,
 ///   sortColumn: 'name',
 ///   sortDirection: 'asc',
-///   onSortUrl: (column) => '/admin/users?sort=$column',
+///   basePath: '/admin/resources/users',
 ///   emptyStateIcon: const Heroicon(HeroIcons.users),
 ///   emptyStateHeading: 'No users found',
 ///   emptyStateDescription: 'Create your first user to get started.',
@@ -37,9 +38,6 @@ class DataTable<T extends Model> extends StatelessComponent {
 
   /// The current sort direction ('asc' or 'desc').
   final String? sortDirection;
-
-  /// Function to generate sort URL for a column.
-  final String Function(String column, String direction)? onSortUrl;
 
   /// Optional ID for the table container.
   final String? containerId;
@@ -65,15 +63,11 @@ class DataTable<T extends Model> extends StatelessComponent {
   /// The base path for action URLs.
   final String? basePath;
 
-  /// Function to get the primary key value from a record.
-  final dynamic Function(T record)? getRecordId;
-
   const DataTable({
     required this.tableConfig,
     required this.records,
     this.sortColumn,
     this.sortDirection,
-    this.onSortUrl,
     this.containerId,
     this.resourceSlug,
     this.emptyStateIcon,
@@ -82,7 +76,6 @@ class DataTable<T extends Model> extends StatelessComponent {
     this.rowActions,
     this.showActions = true,
     this.basePath,
-    this.getRecordId,
     super.key,
   });
 
@@ -101,7 +94,7 @@ class DataTable<T extends Model> extends StatelessComponent {
 
   Component _buildWithBulkSelection(List<TableColumn> columns) {
     // Get all record IDs for the "select all" functionality
-    final allIds = records.map((r) => getRecordId?.call(r) ?? r.getKey()).toList();
+    final allIds = records.map((r) => r.getKey()).toList();
     final allIdsJson = allIds.map((id) => "'$id'").join(', ');
 
     return div(
@@ -146,66 +139,44 @@ class DataTable<T extends Model> extends StatelessComponent {
   }
 
   Component _buildTable(List<TableColumn> columns, {required bool showCheckboxes}) {
-    return div(
-      id: showCheckboxes ? null : containerId,
-      classes: 'overflow-x-auto border-t border-gray-700',
-      attributes: {
-        'data-table-container': 'true',
-        if (!showCheckboxes && resourceSlug != null) 'data-resource-slug': resourceSlug!,
-      },
-      [
-        if (records.isEmpty)
+    return div(id: containerId, classes: 'min-w-full divide-y divide-gray-700', [
+      table(classes: 'min-w-full divide-y divide-gray-700', [
+        TableHeader<T>(
+          columns: columns,
+          sortColumn: sortColumn,
+          sortDirection: sortDirection,
+          showActions: showActions,
+          showCheckbox: showCheckboxes,
+        ),
+        tbody(classes: 'bg-gray-800 divide-y divide-gray-700', [
+          if (records.isEmpty)
+            _buildEmptyState(columns.length + (showActions ? 1 : 0) + (showCheckboxes ? 1 : 0))
+          else
+            for (final record in records)
+              TableRow<T>(
+                record: record,
+                columns: columns,
+                actions: rowActions?.call(record) ?? [],
+                showActions: showActions,
+                showCheckbox: showCheckboxes,
+              ),
+        ]),
+      ]),
+    ]);
+  }
+
+  Component _buildEmptyState(int colSpan) {
+    return tr([
+      td(
+        attributes: {'colspan': '$colSpan'},
+        [
           TableEmptyState(
             icon: emptyStateIcon,
-            heading: emptyStateHeading ?? tableConfig.getEmptyStateHeading() ?? 'No records found',
-            description: emptyStateDescription ?? tableConfig.getEmptyStateDescription() ?? 'No data available.',
-          )
-        else
-          table(classes: 'w-full border-collapse ${tableConfig.isStriped() ? 'table-striped' : ''}', [
-            TableHeader<T>(
-              columns: columns,
-              sortColumn: sortColumn,
-              sortDirection: sortDirection,
-              onSortUrl: onSortUrl,
-              showActions: showActions && rowActions != null,
-              showCheckbox: showCheckboxes,
-            ),
-            _buildTableBody(columns, showCheckboxes: showCheckboxes),
-          ]),
-      ],
-    );
-  }
-
-  Component _buildTableBody(List<TableColumn> columns, {required bool showCheckboxes}) {
-    return tbody([for (final record in records) _buildTableRow(record, columns, showCheckboxes: showCheckboxes)]);
-  }
-
-  Component _buildTableRow(T record, List<TableColumn> columns, {required bool showCheckboxes}) {
-    final recordId = getRecordId?.call(record) ?? record.getKey();
-    final primary = panelColors.primary;
-
-    // Base row classes
-    const baseClasses = 'bg-gray-800 border-b border-gray-700 last:border-0 hover:bg-gray-700 transition-colors';
-
-    // Selected state classes: left border indicator + subtle background
-    final selectedClasses = 'border-l-2 border-l-$primary-500 bg-$primary-500/5';
-
-    return tr(
-      classes: '$baseClasses ${showCheckboxes ? 'border-l-2 border-l-transparent' : ''}',
-      attributes: showCheckboxes ? {':class': "{ '$selectedClasses': isSelected('$recordId') }"} : null,
-      [
-        // Checkbox column
-        if (showCheckboxes) CheckboxColumn<T>(record: record, recordId: recordId),
-
-        // Data columns
-        for (final column in columns) TableRow.buildCell(column, record),
-
-        // Actions column
-        if (rowActions != null)
-          td(classes: 'px-6 py-4 text-sm text-right whitespace-nowrap', [
-            div(classes: 'flex items-center justify-end gap-2', rowActions!(record)),
-          ]),
-      ],
-    );
+            heading: emptyStateHeading ?? 'No records found',
+            description: emptyStateDescription ?? 'Try adjusting your search or filters.',
+          ),
+        ],
+      ),
+    ]);
   }
 }

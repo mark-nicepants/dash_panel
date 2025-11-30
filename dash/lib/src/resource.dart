@@ -9,6 +9,7 @@ import 'package:dash/src/components/pages/resource_view.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/form/form_schema.dart';
+import 'package:dash/src/interactive/component_registry.dart';
 import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/model/model_query_builder.dart';
@@ -216,6 +217,10 @@ abstract class Resource<T extends Model> {
   List<Action<T>> viewFormActions(dynamic recordId) {
     return [CancelAction.make<T>().label('Back')];
   }
+
+  /// Creates a factory for the ResourceIndex component.
+  /// Used to register the component with the ComponentRegistry.
+  InteractiveComponentFactory get indexComponentFactory => ResourceIndex<T>.new;
 
   /// Creates a new instance of the model.
   /// Uses the DI-registered model factory.
@@ -499,7 +504,7 @@ abstract class Resource<T extends Model> {
       sortColumn: sortColumn,
       sortDirection: sortDirection,
       currentPage: currentPage,
-    );
+    ).build();
   }
 
   /// Creates a ResourceForm component for creating a new record.

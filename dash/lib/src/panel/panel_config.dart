@@ -106,6 +106,8 @@ class PanelConfig {
       final alreadyExists = _resources.any((existing) => existing.runtimeType == resource.runtimeType);
       if (!alreadyExists) {
         _resources.add(resource);
+
+        ComponentRegistry.registerFactory('resource-index-${resource.slug}', resource.indexComponentFactory);
       }
     }
   }

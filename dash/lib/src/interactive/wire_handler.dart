@@ -92,6 +92,9 @@ class WireHandler {
 
       // Get any events dispatched by this component
       final dispatchedEvents = component.getDispatchedEvents();
+      if (dispatchedEvents.isNotEmpty) {
+        print('[WireHandler] Dispatched events: ${dispatchedEvents.map((e) => e.name).toList()}');
+      }
       component.clearDispatchedEvents();
 
       // Return JSON response with HTML and events

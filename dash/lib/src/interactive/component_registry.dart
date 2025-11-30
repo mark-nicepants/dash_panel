@@ -223,8 +223,8 @@ class ComponentRegistry {
       await component.dispatchAction(action, params);
     }
 
-    // Run before render lifecycle
-    await component.beforeRender();
+    // Note: beforeRender() is called by WireHandler._renderComponent()
+    // to ensure it runs just before rendering
 
     return component;
   }

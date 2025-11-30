@@ -184,6 +184,13 @@ export function initDashWire() {
       
       log(`Broadcasting event "${name}" with payload:`, payload);
 
+      // Handle system events
+      if (name === 'update-url' && payload.url) {
+        log('Updating URL to:', payload.url);
+        window.history.pushState({}, '', payload.url);
+        continue;
+      }
+
       // Find components listening to this event
       for (const wrapper of allComponents) {
         // Don't send event back to the source component
@@ -329,7 +336,10 @@ export function initDashWire() {
       
       // Broadcast any dispatched events to other components
       if (response.events && response.events.length > 0) {
+        log('Response contains events:', response.events);
         await broadcastEvents(response.events, componentData.id);
+      } else {
+        log('Response contains no events');
       }
     } catch (error) {
       console.error('[DashWire] Action failed:', error);
