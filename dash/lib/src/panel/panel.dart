@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/auth/authenticatable.dart';
 import 'package:dash/src/auth/session_store.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
@@ -9,9 +8,11 @@ import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/interactive/component_registry.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/dev_console.dart';
+import 'package:dash/src/panel/panel_auth.dart';
 import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_server.dart';
+import 'package:dash/src/panel/panel_storage.dart';
 import 'package:dash/src/plugin/asset.dart';
 import 'package:dash/src/plugin/navigation_item.dart';
 import 'package:dash/src/plugin/plugin.dart';
@@ -57,16 +58,9 @@ typedef ModelCallback = FutureOr<void> Function(Model model);
 /// ```
 class Panel {
   late final PanelConfig _config;
-  AuthService<Model>? _authService;
   PanelServer? _server;
-
-  // Auth model configuration
-  Type? _authModelType;
-  UserResolver<Model>? _customUserResolver;
-  SessionStore? _sessionStore;
-
-  // Storage configuration
-  StorageConfig? _storageConfig;
+  final PanelAuthManager _authManager = PanelAuthManager();
+  final PanelStorageManager _storageManager = PanelStorageManager();
 
   // Event hooks (model callbacks still stored here, request callbacks moved to PanelConfig)
   final List<ModelCallback> _modelCreatedCallbacks = [];
@@ -93,10 +87,7 @@ class Panel {
   ///
   /// Throws [StateError] if no auth model has been configured.
   AuthService<Model> get authService {
-    if (_authService == null) {
-      throw StateError('No auth model configured. Call authModel<YourUser>() before accessing authService.');
-    }
-    return _authService!;
+    return _authManager.authService;
   }
 
   /// Configures the user model for authentication.
@@ -125,13 +116,7 @@ class Panel {
   /// );
   /// ```
   Panel authModel<T extends Model>({UserResolver<T>? userResolver}) {
-    _authModelType = T;
-    if (userResolver != null) {
-      _customUserResolver = (identifier) async {
-        final user = await userResolver(identifier);
-        return user;
-      };
-    }
+    _authManager.authModel<T>(userResolver: userResolver);
     return this;
   }
 
@@ -191,7 +176,7 @@ class Panel {
   ///     });
   /// ```
   Panel storage(StorageConfig config) {
-    _storageConfig = config;
+    _storageManager.configure(config);
     return this;
   }
 
@@ -206,7 +191,7 @@ class Panel {
   ///   ..sessionStore(FileSessionStore('storage/sessions'));
   /// ```
   Panel sessionStore(SessionStore store) {
-    _sessionStore = store;
+    _authManager.sessionStore(store);
     return this;
   }
 
@@ -520,24 +505,15 @@ class Panel {
       // Setup dependency injection
       await setupServiceLocator(config: _config, connector: _config.databaseConfig!.connector);
 
-      // Initialize auth service if auth model is configured
-      if (_authModelType != null) {
-        _initializeAuthService();
-      }
+      // Initialize auth service if configured
+      _authManager.initialize(config: _config);
 
       // Create server after DI is set up (PanelRouter needs ResourceLoader from DI)
       final resourceLoader = inject<ResourceLoader>();
       _server = PanelServer(_config, authService, resourceLoader);
 
       // Configure storage if set
-      if (_storageConfig != null) {
-        _server!.configureStorage(_storageConfig!);
-
-        // Register StorageManager in service locator for URL generation
-        if (!inject.isRegistered<StorageManager>()) {
-          inject.registerSingleton<StorageManager>(_storageConfig!.createManager());
-        }
-      }
+      _storageManager.applyToServer(_server!);
 
       // Boot all registered plugins
       await _bootPlugins();
@@ -551,67 +527,6 @@ class Panel {
     for (final plugin in _config.plugins.values) {
       await plugin.boot(this);
     }
-  }
-
-  /// Initializes the auth service with the configured user model.
-  void _initializeAuthService() {
-    if (_authModelType == null) {
-      throw StateError('No auth model type configured');
-    }
-
-    // Convert model type to slug (e.g., "User" -> "user")
-    final typeString = _authModelType.toString();
-    final modelSlug = _toSnakeCase(typeString);
-
-    // Try to get the model instance from DI to verify it's registered
-    Model instance;
-    try {
-      instance = modelInstanceFromSlug<Model>(modelSlug);
-    } catch (_) {
-      throw StateError(
-        'Model $_authModelType not registered. '
-        'Make sure to call $_authModelType.register() before Panel.boot().',
-      );
-    }
-
-    // Create user resolver using model's query builder
-    final userResolver = _customUserResolver ?? _createDefaultUserResolver(modelSlug, instance);
-
-    _authService = AuthService<Model>(userResolver: userResolver, panelId: _config.id, sessionStore: _sessionStore);
-  }
-
-  /// Converts a string to snake_case.
-  String _toSnakeCase(String input) {
-    return input
-        .replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}')
-        .replaceFirst(RegExp(r'^_'), '');
-  }
-
-  /// Creates a default user resolver that queries by the auth identifier field.
-  UserResolver<Model> _createDefaultUserResolver(String modelSlug, Model templateInstance) {
-    return (String identifier) async {
-      // Use template instance to get auth identifier field name
-      if (templateInstance is! Authenticatable) {
-        throw StateError('Model ${templateInstance.runtimeType} must implement Authenticatable mixin');
-      }
-      final identifierField = templateInstance.getAuthIdentifierName();
-
-      // Query database for user
-      final connector = _config.databaseConfig!.connector;
-      final results = await connector.query(
-        'SELECT * FROM ${templateInstance.table} WHERE $identifierField = ? LIMIT 1',
-        [identifier],
-      );
-
-      if (results.isEmpty) {
-        return null;
-      }
-
-      // Create and populate model instance
-      final user = modelInstanceFromSlug<Model>(modelSlug);
-      user.fromMap(results.first);
-      return user;
-    };
   }
 
   /// Shuts down the panel and cleans up resources.

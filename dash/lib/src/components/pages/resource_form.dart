@@ -1,5 +1,5 @@
 import 'package:dash/src/components/partials/breadcrumbs.dart';
-import 'package:dash/src/components/partials/page_header.dart';
+import 'package:dash/src/components/partials/page_scaffold.dart';
 import 'package:dash/src/form/fields/form_renderer.dart';
 import 'package:dash/src/form/form_schema.dart';
 import 'package:dash/src/model/model.dart';
@@ -34,11 +34,15 @@ class ResourceForm<T extends Model> extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'flex flex-col gap-6', [_buildHeader(), _buildFormCard()]);
+    final titlePrefix = isEditMode ? 'Edit' : 'Create';
+    return ResourcePageScaffold(
+      title: '$titlePrefix ${resource.singularLabel}',
+      breadcrumbs: _buildBreadcrumbs(),
+      children: [_buildFormCard()],
+    );
   }
 
-  Component _buildHeader() {
-    final action = isEditMode ? 'Edit' : 'Create';
+  List<BreadCrumbItem> _buildBreadcrumbs() {
     final items = <BreadCrumbItem>[BreadCrumbItem(label: resource.label, url: basePath)];
 
     if (isEditMode) {
@@ -50,10 +54,7 @@ class ResourceForm<T extends Model> extends StatelessComponent {
       items.add(const BreadCrumbItem(label: 'Create'));
     }
 
-    return PageHeader(
-      title: '$action ${resource.singularLabel}',
-      breadcrumbs: BreadCrumbs(items: items),
-    );
+    return items;
   }
 
   /// Gets the record's primary key value.

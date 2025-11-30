@@ -4,7 +4,7 @@ import 'package:dash/src/actions/action.dart';
 import 'package:dash/src/actions/prebuilt/delete_action.dart';
 import 'package:dash/src/actions/prebuilt/edit_action.dart';
 import 'package:dash/src/components/partials/breadcrumbs.dart';
-import 'package:dash/src/components/partials/page_header.dart';
+import 'package:dash/src/components/partials/page_scaffold.dart';
 import 'package:dash/src/components/partials/pagination.dart';
 import 'package:dash/src/components/partials/table/column_toggle.dart';
 import 'package:dash/src/components/partials/table/table_components.dart';
@@ -125,26 +125,20 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
 
   @override
   Component render() {
-    return div(classes: 'flex flex-col gap-6', [_buildHeader(), _buildTableWithPagination()]);
+    return ResourcePageScaffold(
+      title: resource.label,
+      breadcrumbs: [
+        BreadCrumbItem(label: resource.label, url: basePath),
+        const BreadCrumbItem(label: 'List'),
+      ],
+      actions: resource.indexHeaderActions().map((action) => action.renderAsHeaderAction(basePath: basePath)).toList(),
+      children: [_buildTableWithPagination()],
+    );
   }
 
   /// Builds the table and pagination wrapped in a single container.
   Component _buildTableWithPagination() {
     return div(id: 'resource-table-wrapper', classes: 'flex flex-col gap-6', [_buildTableCard(), _buildPagination()]);
-  }
-
-  Component _buildHeader() {
-    final headerActions = resource.indexHeaderActions();
-    return PageHeader(
-      title: resource.label,
-      breadcrumbs: BreadCrumbs(
-        items: [
-          BreadCrumbItem(label: resource.label, url: basePath),
-          const BreadCrumbItem(label: 'List'),
-        ],
-      ),
-      actions: headerActions.map((action) => action.renderAsHeaderAction(basePath: basePath)).toList(),
-    );
   }
 
   Component _buildTableCard() {
@@ -174,7 +168,11 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
   }
 
   Component _buildSearchBar() {
-    return TableSearchInput(value: searchQuery, placeholder: tableConfig.getSearchPlaceholder());
+    return TableSearchInput(
+      value: searchQuery,
+      placeholder: tableConfig.getSearchPlaceholder(),
+      modelProperty: 'searchQuery',
+    );
   }
 
   List<Component> _buildRowActions(T record) {
