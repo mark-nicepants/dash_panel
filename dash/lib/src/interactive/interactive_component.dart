@@ -89,6 +89,12 @@ abstract class InteractiveComponent with AssetProvider {
   /// This is the Dart equivalent of Livewire's mount() method.
   FutureOr<void> mount() {}
 
+  /// Called early in the request lifecycle, before actions are dispatched.
+  ///
+  /// Use this for setup that must happen before action handling,
+  /// such as registering action handlers.
+  FutureOr<void> prepare() {}
+
   /// Called after a property is updated via wire:model or action.
   ///
   /// [property] is the name of the property that changed.

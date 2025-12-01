@@ -341,13 +341,14 @@ abstract class Resource<T extends Model> {
     }
 
     // Apply sorting
-    final sortCol = sortColumn ?? tableConfig.getDefaultSort();
-    final sortDir = sortDirection ?? tableConfig.getDefaultSortDirection();
+    // Treat empty strings as null to fall back to defaults
+    final sortCol = (sortColumn?.isEmpty ?? true) ? tableConfig.getDefaultSort() : sortColumn;
+    final sortDir = (sortDirection?.isEmpty ?? true) ? tableConfig.getDefaultSortDirection() : sortDirection;
     if (sortCol != null && isValidColumnName(sortCol)) {
       // Verify the column is sortable
       final isSortable = tableConfig.getColumns().any((col) => col.getName() == sortCol && col.isSortable());
       if (isSortable) {
-        q = q.orderBy(sortCol, sortDir.toUpperCase());
+        q = q.orderBy(sortCol, (sortDir ?? 'asc').toUpperCase());
       }
     }
 

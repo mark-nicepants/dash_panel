@@ -209,6 +209,10 @@ class ComponentRegistry {
       }
     }
 
+    // Run prepare() lifecycle hook to set up the component
+    // This must happen before action dispatch so handlers are registered
+    await component.prepare();
+
     // Handle incoming event if any (from another component's dispatch)
     if (incomingEvent != null) {
       final eventName = incomingEvent['name'] as String?;
@@ -222,9 +226,6 @@ class ComponentRegistry {
     if (action != null) {
       await component.dispatchAction(action, params);
     }
-
-    // Note: beforeRender() is called by WireHandler._renderComponent()
-    // to ensure it runs just before rendering
 
     return component;
   }

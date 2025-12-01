@@ -172,10 +172,15 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
   }
 
   @override
-  Future<void> beforeRender() async {
+  Future<void> prepare() async {
     // Register action handlers for this resource
+    // This must happen before action dispatch
     _registerActionHandlers();
+  }
 
+  @override
+  Future<void> beforeRender() async {
+    // Fetch fresh data right before rendering
     records = await resource.getRecords(
       searchQuery: searchQuery,
       sortColumn: sortColumn,

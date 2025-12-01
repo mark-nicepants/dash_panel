@@ -113,7 +113,8 @@ class WireHandler {
 
   /// Renders an interactive component to HTML.
   Future<String> _renderComponent(InteractiveComponent component) async {
-    // Run before render lifecycle
+    // Run beforeRender() lifecycle hook for data fetching
+    // This runs after actions complete so data is fresh
     await component.beforeRender();
 
     // Build the component (this includes the wire wrapper)

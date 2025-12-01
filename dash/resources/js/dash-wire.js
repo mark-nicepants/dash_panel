@@ -44,6 +44,67 @@ export function initDashWire() {
   }
 
   /**
+   * Toast notification system
+   */
+  function getOrCreateToastContainer() {
+    let container = document.getElementById('dash-toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'dash-toast-container';
+      container.className = 'fixed top-4 right-4 z-[100] flex flex-col gap-2';
+      document.body.appendChild(container);
+    }
+    return container;
+  }
+
+  function showToast(message, type = 'success', duration = 4000) {
+    const container = getOrCreateToastContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `
+      flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border
+      transform transition-all duration-300 ease-out
+      translate-x-full opacity-0
+      ${type === 'success' 
+        ? 'bg-green-900/90 border-green-700 text-green-100' 
+        : 'bg-red-900/90 border-red-700 text-red-100'}
+    `;
+    
+    // Icon
+    const icon = type === 'success'
+      ? `<svg class="w-5 h-5 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>`
+      : `<svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>`;
+    
+    toast.innerHTML = `
+      ${icon}
+      <span class="text-sm font-medium">${message}</span>
+      <button class="ml-2 text-gray-400 hover:text-white transition-colors" onclick="this.parentElement.remove()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Trigger animation
+    requestAnimationFrame(() => {
+      toast.classList.remove('translate-x-full', 'opacity-0');
+      toast.classList.add('translate-x-0', 'opacity-100');
+    });
+    
+    // Auto remove
+    setTimeout(() => {
+      toast.classList.add('translate-x-full', 'opacity-0');
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
+  /**
    * Find the wire component wrapper for an element
    */
   function findComponent(element) {
@@ -112,13 +173,24 @@ export function initDashWire() {
 
   /**
    * Parse wire:click directive value
-   * Supports: "method" or "method(arg1, arg2)"
+   * Supports: "method" or "method(arg1, arg2)" or "method(arg1, arg2, $formData)"
    */
-  function parseAction(value) {
-    const match = value.match(/^(\w+)(?:\(([^)]*)\))?$/);
-    if (!match) return null;
+  function parseAction(value, element) {
+    log('parseAction called with:', value);
+    
+    // Check if this action includes $formData marker
+    const hasFormData = value.includes('$formData');
+    // Remove $formData from the string for regex matching
+    const cleanedValue = value.replace(/,\s*\$formData/, '');
+    
+    const match = cleanedValue.match(/^(\w+)(?:\(([^)]*)\))?$/);
+    if (!match) {
+      log('parseAction regex did not match for:', cleanedValue);
+      return null;
+    }
     
     const [, method, argsStr] = match;
+    log('parseAction matched method:', method, 'argsStr:', argsStr, 'hasFormData:', hasFormData);
     const params = argsStr 
       ? argsStr.split(',').map(arg => {
           const trimmed = arg.trim();
@@ -131,8 +203,59 @@ export function initDashWire() {
           }
         })
       : [];
+    
+    // If this action needs form data, collect it from the modal
+    if (hasFormData && element) {
+      const formData = collectModalFormData(element);
+      params.push(formData);
+    }
 
+    log('parseAction final params:', params);
     return { method, params };
+  }
+  
+  /**
+   * Collect form data from a modal's form element
+   * The button might be in the footer which is a sibling of the content area,
+   * so we need to find the modal container first and then search for the form.
+   */
+  function collectModalFormData(element) {
+    // Find the modal container (role="dialog" or has x-show="open")
+    const modal = element.closest('[role="dialog"]') || element.closest('[x-show="open"]');
+    if (!modal) {
+      log('collectModalFormData: No modal container found');
+      return {};
+    }
+    
+    // Find form within the modal
+    const form = modal.querySelector('form');
+    if (!form) {
+      log('collectModalFormData: No form found in modal');
+      return {};
+    }
+    
+    const formData = {};
+    const elements = form.elements;
+    
+    for (let i = 0; i < elements.length; i++) {
+      const el = elements[i];
+      if (!el.name) continue;
+      
+      if (el.type === 'checkbox') {
+        formData[el.name] = el.checked;
+      } else if (el.type === 'radio') {
+        if (el.checked) {
+          formData[el.name] = el.value;
+        }
+      } else if (el.tagName === 'SELECT' && el.multiple) {
+        formData[el.name] = Array.from(el.selectedOptions).map(opt => opt.value);
+      } else {
+        formData[el.name] = el.value;
+      }
+    }
+    
+    log('collectModalFormData: Collected form data:', formData);
+    return formData;
   }
 
   /**
@@ -225,6 +348,17 @@ export function initDashWire() {
         window.history.pushState({}, '', payload.url);
         continue;
       }
+      
+      // Handle toast notifications
+      if (name === 'action-success' && payload.message) {
+        showToast(payload.message, 'success');
+        continue;
+      }
+      
+      if (name === 'action-error' && payload.message) {
+        showToast(payload.message, 'error');
+        continue;
+      }
 
       // Find components listening to this event
       for (const wrapper of allComponents) {
@@ -315,6 +449,17 @@ export function initDashWire() {
       log('Captured focus state:', { focusSelector, selectionStart, selectionEnd });
     }
 
+    // Clean up Alpine components before morphing to prevent transition errors
+    if (window.Alpine) {
+      // Destroy Alpine state on elements that will be removed/replaced
+      // This prevents "Uncaught (in promise)" errors from interrupted transitions
+      try {
+        window.Alpine.destroyTree(wrapper);
+      } catch (e) {
+        log('Alpine destroyTree error (ignored):', e);
+      }
+    }
+
     // Use Idiomorph for DOM morphing
     log('Morphing with Idiomorph');
     Idiomorph.morph(wrapper, newWrapper, {
@@ -332,29 +477,43 @@ export function initDashWire() {
    * Handle a wire:click action
    */
   async function handleAction(element, action) {
+    log('handleAction called with action:', action);
+    log('handleAction element:', element);
+    
     const wrapper = findComponent(element);
-    if (!wrapper) return;
+    if (!wrapper) {
+      log('handleAction: No wire component wrapper found');
+      return;
+    }
+    log('handleAction: Found wrapper with wire:id:', wrapper.getAttribute('wire:id'));
 
     const componentData = getComponentData(wrapper);
-    const parsed = parseAction(action);
+    log('handleAction: Component data:', componentData);
+    
+    const parsed = parseAction(action, element);
     
     if (!parsed) {
       console.error('[DashWire] Invalid action:', action);
       return;
     }
+    
+    log('handleAction: Parsed action - method:', parsed.method, 'params:', parsed.params);
 
     // Show loading state
     wrapper.setAttribute('wire:loading', '');
     element.setAttribute('wire:loading', '');
 
     try {
-      const modelValues = collectModelValues(wrapper);
-      
-      const response = await sendWireRequest(componentData, {
+      // Don't send model values with actions - the serialized state is the source of truth.
+      // Model values should only be sent for explicit wire:model updates.
+      const requestPayload = {
         action: parsed.method,
         params: parsed.params,
-        models: modelValues,
-      });
+      };
+      log('handleAction: Sending wire request with payload:', requestPayload);
+      
+      const response = await sendWireRequest(componentData, requestPayload);
+      log('handleAction: Received response:', response);
 
       morphComponent(wrapper, response.html);
       
@@ -471,7 +630,7 @@ export function initDashWire() {
     if (!wrapper) return;
 
     const componentData = getComponentData(wrapper);
-    const parsed = parseAction(action);
+    const parsed = parseAction(action, form);
     
     if (!parsed) {
       console.error('[DashWire] Invalid submit action:', action);
@@ -517,14 +676,32 @@ export function initDashWire() {
    */
   function initEventListeners() {
     // Click handler for wire:click
+    // Use capture phase to ensure we handle before Alpine
     document.addEventListener('click', (e) => {
+      log('Click event detected (capture phase), target:', e.target);
+      log('Target tag:', e.target.tagName);
+      log('Target classes:', e.target.className);
+      
       const target = e.target.closest('[wire\\:click]');
       if (target) {
+        log('Found wire:click target:', target);
+        log('wire:click attribute value:', target.getAttribute('wire:click'));
+        log('Target also has @click:', target.hasAttribute('@click'));
+        
+        // Get the wire component before any Alpine processing might remove it
+        const wrapper = findComponent(target);
+        log('Wire component wrapper found:', !!wrapper);
+        if (wrapper) {
+          log('Wire component id:', wrapper.getAttribute('wire:id'));
+        }
+        
         e.preventDefault();
         const action = target.getAttribute('wire:click');
         handleAction(target, action);
+      } else {
+        log('No wire:click target found for element:', e.target);
       }
-    });
+    }, true); // Use capture phase
 
     // Input handler for wire:model (live updates)
     // Check if the input element has any wire:model attribute

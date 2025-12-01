@@ -718,7 +718,7 @@ class Action<T extends Model> {
               color: hasForm() ? ActionColor.primary : _modalIconColor,
               attributes: {
                 'wire:click': hasForm()
-                    ? "executeAction('$_name', '$recordId', \$el.closest('.modal-content').querySelector('form').elements)"
+                    ? "executeAction('$_name', '$recordId', \$formData)"
                     : "executeAction('$_name', '$recordId')",
                 '@click': 'open = false',
               },
