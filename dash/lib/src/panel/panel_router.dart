@@ -1,3 +1,5 @@
+import 'package:dash/src/actions/handler/action_context.dart';
+import 'package:dash/src/actions/handler/action_handler_registry.dart';
 import 'package:dash/src/components/layout.dart';
 import 'package:dash/src/components/pages/dashboard_page.dart';
 import 'package:dash/src/components/pages/login_page.dart';
@@ -54,7 +56,7 @@ class PanelRouter {
     return await _renderPage(result.page, pageAssets: result.assets);
   }
 
-  /// Handles form submissions for create, update, delete operations.
+  /// Handles form submissions for create, update, delete, and action operations.
   Future<Response> _handleFormSubmission(Request request, String path) async {
     // Parse form data
     final formData = await _parseFormData(request);
@@ -70,6 +72,23 @@ class PanelRouter {
         (r) => r.slug == resourceSlug,
         orElse: () => throw Exception('Resource not found: $resourceSlug'),
       );
+
+      // Check for action handler routes: /{id}/actions/{actionName}
+      if (path.contains('/actions/')) {
+        final actionsIndex = parts.indexOf('actions');
+        final actionName = actionsIndex + 1 < parts.length ? parts[actionsIndex + 1] : '';
+        final recordId = actionsIndex > 0 ? parts[actionsIndex - 1] : null;
+
+        if (actionName.isNotEmpty) {
+          return await _handleAction(
+            resource: resource,
+            resourceSlug: resourceSlug,
+            actionName: actionName,
+            recordId: recordId,
+            formData: formData,
+          );
+        }
+      }
 
       // Determine action: /store (create) or /{id} (update) or /{id}/delete
       if (path.endsWith('/store')) {
@@ -160,6 +179,72 @@ class PanelRouter {
       // Handle error
       final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found('$basePath/$recordId/edit');
+    }
+  }
+
+  /// Handles executing an action handler for a specific record.
+  ///
+  /// This is a fallback for form-based action submissions. For better UX,
+  /// actions should use DashWire (wire:click) for XHR-based execution.
+  Future<Response> _handleAction({
+    required dynamic resource,
+    required String resourceSlug,
+    required String actionName,
+    required String? recordId,
+    required Map<String, dynamic> formData,
+  }) async {
+    try {
+      // Look up the handler from the registry
+      final handler = ActionHandlerRegistry.getForRoute(resourceSlug, actionName);
+      if (handler == null) {
+        print('[Router] No handler found for action: $actionName');
+        final basePath = '${_config.path}/resources/$resourceSlug';
+        return Response.found(basePath);
+      }
+
+      // Find the record
+      final record = await resource.findRecord(int.tryParse(recordId ?? '') ?? recordId);
+      if (record == null) {
+        print('[Router] Record not found: $recordId');
+        final basePath = '${_config.path}/resources/$resourceSlug';
+        return Response.found(basePath);
+      }
+
+      // Build the action context
+      final context = ActionContext(
+        record: record,
+        data: formData,
+        resourceSlug: resourceSlug,
+        actionName: actionName,
+        basePath: '${_config.path}/resources/$resourceSlug',
+      );
+
+      // Validate if the handler has validation
+      final validationError = await handler.validate(context);
+      if (validationError != null) {
+        print('[Router] Validation error: $validationError');
+        final basePath = '${_config.path}/resources/$resourceSlug';
+        return Response.found(basePath);
+      }
+
+      // Execute hooks and handler
+      await handler.beforeHandle(context);
+      final result = await handler.handle(context);
+      await handler.afterHandle(context, result);
+
+      // Handle redirect
+      if (result.redirectUrl != null) {
+        return Response.found(result.redirectUrl!);
+      }
+
+      // Default redirect to index
+      final basePath = '${_config.path}/resources/$resourceSlug';
+      return Response.found(basePath);
+    } catch (e, stack) {
+      print('[Router] Action error: $e');
+      print(stack);
+      final basePath = '${_config.path}/resources/$resourceSlug';
+      return Response.found(basePath);
     }
   }
 

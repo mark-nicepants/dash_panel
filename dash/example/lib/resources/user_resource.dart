@@ -1,7 +1,16 @@
 import 'package:dash/dash.dart';
+import 'package:dash_example/actions/deactivate_user_handler.dart';
 import 'package:dash_example/models/user.dart';
 
 /// Resource for managing users in the admin panel.
+///
+/// This resource demonstrates various Action capabilities:
+/// - Basic actions (View, Edit, Delete)
+/// - Custom action handlers for server-side logic
+/// - Actions with confirmation modals
+/// - Actions with form fields
+/// - Conditional visibility based on record state
+/// - Custom modal icons and colors
 class UserResource extends Resource<User> {
   @override
   Heroicon get iconComponent => const Heroicon(HeroIcons.userGroup);
@@ -58,11 +67,77 @@ class UserResource extends Resource<User> {
         ])
         .defaultSort('name')
         .searchPlaceholder('Search users...')
-        // Row actions - defaults shown for demonstration
+        // Row actions - showcasing various action capabilities
         .actions([
-          ViewAction.make(), //
-          EditAction.make(),
-          DeleteAction.make('user'),
+          // Standard navigation actions
+          ViewAction.make<User>(),
+          EditAction.make<User>(),
+
+          // Action with custom handler and conditional visibility
+          // Only shown when user is active - demonstrates .visible() and custom handlers
+          Action.make<User>('deactivate')
+              .label('Deactivate')
+              .icon(HeroIcons.noSymbol)
+              .color(ActionColor.warning)
+              .handler(DeactivateUserHandler())
+              .requiresConfirmation()
+              .confirmationHeading('Deactivate User?')
+              .confirmationDescription('This will prevent the user from logging in. You can reactivate them later.')
+              .confirmationButtonLabel('Deactivate')
+              .modalIcon(HeroIcons.noSymbol)
+              .modalIconColor(ActionColor.warning)
+              .visible((user) => user.isActive == true),
+
+          // Activate action - only shown when user is inactive
+          // Demonstrates opposite conditional visibility
+          Action.make<User>('activate')
+              .label('Activate')
+              .icon(HeroIcons.checkCircle)
+              .color(ActionColor.success)
+              .handler(ActivateUserHandler())
+              .visible((user) => user.isActive != true),
+
+          // Action with form fields - opens a modal with form inputs
+          // Demonstrates .schema() for adding form fields to action modals
+          Action.make<User>('changeRole')
+              .label('Role')
+              .icon(HeroIcons.userCircle)
+              .color(ActionColor.info)
+              .handler(ChangeRoleHandler())
+              .schema([
+                Select.make('role')
+                    .label('New Role')
+                    .options([
+                      const SelectOption('admin', 'Admin'),
+                      const SelectOption('user', 'User'),
+                      const SelectOption('guest', 'Guest'),
+                    ])
+                    .required()
+                    .helperText('Select the new role for this user'),
+              ])
+              .fillForm((user) => {'role': user.role})
+              .confirmationHeading('Change User Role')
+              .confirmationButtonLabel('Change Role')
+              .modalSize(ModalSize.sm),
+
+          // Action that sends notification
+          // Demonstrates info-style modal with custom icon
+          Action.make<User>('resetPassword')
+              .label('')
+              .hiddenLabel()
+              .icon(HeroIcons.key)
+              .tooltip('Reset Password')
+              .color(ActionColor.secondary)
+              .handler(ResetPasswordHandler())
+              .requiresConfirmation()
+              .confirmationHeading('Send Password Reset?')
+              .confirmationDescription('A password reset email will be sent to the user.')
+              .confirmationButtonLabel('Send Email')
+              .modalIcon(HeroIcons.envelopeOpen)
+              .modalIconColor(ActionColor.info),
+
+          // Standard delete action with confirmation
+          DeleteAction.make<User>('user'),
         ]);
   }
 

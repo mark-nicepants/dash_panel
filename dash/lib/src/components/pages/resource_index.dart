@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:dash/src/actions/action.dart';
+import 'package:dash/src/actions/handler/action_context.dart';
+import 'package:dash/src/actions/handler/action_handler_registry.dart';
 import 'package:dash/src/actions/prebuilt/delete_action.dart';
 import 'package:dash/src/actions/prebuilt/edit_action.dart';
 import 'package:dash/src/components/partials/breadcrumbs.dart';
@@ -92,7 +94,74 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
       }
       dispatch('update-url', {'url': _buildCurrentUrl()});
     },
+    'executeAction': (args) async {
+      final actionName = args[0] as String;
+      final recordId = args[1];
+      final formData = args.length > 2 ? args[2] as Map<String, dynamic>? : null;
+      await _executeAction(actionName, recordId, formData ?? {});
+    },
   };
+
+  /// Executes an action handler for a specific record.
+  ///
+  /// This is called via DashWire when a user confirms an action.
+  /// It looks up the handler, executes it, and dispatches result events.
+  Future<void> _executeAction(String actionName, dynamic recordId, Map<String, dynamic> formData) async {
+    // Look up the handler
+    final handler = ActionHandlerRegistry.getForRoute(resourceSlug, actionName);
+    if (handler == null) {
+      dispatch('action-error', {'message': 'Action handler not found: $actionName'});
+      return;
+    }
+
+    // Find the record
+    final record = await resource.findRecord(recordId is String ? int.tryParse(recordId) ?? recordId : recordId);
+    if (record == null) {
+      dispatch('action-error', {'message': 'Record not found: $recordId'});
+      return;
+    }
+
+    // Build the action context
+    final context = ActionContext(
+      record: record,
+      data: formData,
+      resourceSlug: resourceSlug,
+      actionName: actionName,
+      basePath: basePath,
+    );
+
+    try {
+      // Validate if the handler has validation
+      final validationError = await handler.validate(context);
+      if (validationError != null) {
+        dispatch('action-error', {'message': validationError});
+        return;
+      }
+
+      // Execute before hook
+      await handler.beforeHandle(context);
+
+      // Execute the handler
+      final result = await handler.handle(context);
+
+      // Execute after hook
+      await handler.afterHandle(context, result);
+
+      // Dispatch result
+      if (result.success) {
+        dispatch('action-success', {'message': result.message ?? 'Action completed successfully'});
+      } else {
+        dispatch('action-error', {'message': result.message ?? 'Action failed'});
+      }
+
+      // Handle redirect if specified
+      if (result.redirectUrl != null) {
+        dispatch('redirect', {'url': result.redirectUrl});
+      }
+    } catch (e) {
+      dispatch('action-error', {'message': 'Action failed: $e'});
+    }
+  }
 
   @override
   Future<void> updated(String property) async {
@@ -104,6 +173,9 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
 
   @override
   Future<void> beforeRender() async {
+    // Register action handlers for this resource
+    _registerActionHandlers();
+
     records = await resource.getRecords(
       searchQuery: searchQuery,
       sortColumn: sortColumn,
@@ -111,6 +183,19 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
       page: currentPage,
     );
     totalRecords = await resource.getRecordsCount(searchQuery: searchQuery);
+  }
+
+  /// Registers all action handlers from the table config.
+  void _registerActionHandlers() {
+    final actions = tableConfig.hasActions()
+        ? tableConfig.getActions()
+        : <Action<T>>[EditAction.make<T>(), DeleteAction.make<T>(resource.singularLabel.toLowerCase())];
+
+    for (final action in actions) {
+      if (action.hasHandler()) {
+        action.registerHandler(resourceSlug);
+      }
+    }
   }
 
   String _buildCurrentUrl() {
@@ -183,7 +268,7 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
 
     return actions
         .where((action) => action.isVisible(record))
-        .map((action) => action.render(record, basePath: basePath))
+        .map((action) => action.render(record, basePath: basePath, resourceSlug: resourceSlug))
         .toList();
   }
 

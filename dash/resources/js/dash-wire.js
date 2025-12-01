@@ -31,7 +31,7 @@ export function initDashWire() {
     /** Debounce delay for wire:model updates (ms) */
     modelDebounce: window.DashWireConfig?.modelDebounce || 150,
     /** Enable debug logging */
-    debug: window.DashWireConfig?.debug || false,
+    debug: window.DashWireConfig?.debug || true,
   };
 
   /**
@@ -598,14 +598,13 @@ export function initDashWire() {
 
   /**
    * Alpine.js integration - expose $wire magic property
+   * 
+   * Since Alpine is loaded from CDN with `defer`, it may not be available
+   * when this script runs. We listen for the `alpine:init` event which fires
+   * before Alpine initializes components, allowing us to register our magic.
    */
   function initAlpineIntegration() {
-    if (!window.Alpine) {
-      log('Alpine.js not found, skipping integration');
-      return;
-    }
-
-    document.addEventListener('alpine:init', () => {
+    function registerWireMagic() {
       // Add $wire magic property
       Alpine.magic('wire', (el) => {
         const wrapper = findComponent(el);
@@ -673,7 +672,18 @@ export function initDashWire() {
       });
 
       log('Alpine.js $wire magic registered');
-    });
+    }
+
+    // Alpine fires `alpine:init` before it initializes the page.
+    // This event works whether Alpine is already loaded or loads later via CDN.
+    document.addEventListener('alpine:init', registerWireMagic);
+
+    // If Alpine is already loaded and initialized (e.g., script order changed),
+    // we can still register the magic directly
+    if (window.Alpine?.version) {
+      log('Alpine.js already initialized, registering $wire magic directly');
+      registerWireMagic();
+    }
   }
 
   // Initialize

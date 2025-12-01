@@ -524,8 +524,8 @@ class Action<T extends Model> {
   /// Checks if this is a URL action (navigation).
   bool isUrlAction() => _url != null;
 
-  /// Checks if this is a POST action.
-  bool isPostAction() => _actionUrl != null;
+  /// Checks if this is a POST action (has actionUrl or handler).
+  bool isPostAction() => _actionUrl != null || _handler != null;
 
   // ============================================================
   // Helper Methods
@@ -571,8 +571,12 @@ class Action<T extends Model> {
   ///
   /// The action is rendered differently based on its configuration:
   /// - URL actions render as `<a>` tags via Button
-  /// - POST actions render as `<form>` with `<button>`
-  Component render(T record, {required String basePath}) {
+  /// - POST actions with handlers use DashWire (wire:click)
+  /// - POST actions without handlers render as `<form>` with `<button>`
+  ///
+  /// The optional [resourceSlug] parameter is required for actions with handlers
+  /// to generate the correct action URL.
+  Component render(T record, {required String basePath, String? resourceSlug}) {
     if (isHidden(record)) {
       return span([]); // Return empty component
     }
@@ -597,9 +601,36 @@ class Action<T extends Model> {
       );
     }
 
-    // POST action - render as form with button
+    // POST action with handler - use DashWire (wire:click)
+    if (isPostAction() && _handler != null && resourceSlug != null) {
+      // If confirmation is required, render with a modal
+      if (_requiresConfirmation) {
+        return _renderWithConfirmationModalWire(record, resourceSlug, isDisabledState);
+      }
+
+      // Direct DashWire action without confirmation
+      final recordId = getRecordId(record);
+      return Button(
+        label: getLabel(),
+        variant: buttonVariant,
+        size: buttonSize,
+        icon: _icon,
+        iconPosition: _iconPosition,
+        hideLabel: _isLabelHidden,
+        disabled: isDisabledState,
+        subtle: true,
+        attributes: {
+          'wire:click': "executeAction('$_name', '$recordId')",
+          if (_tooltip != null) 'title': _tooltip!,
+          ..._extraAttributes ?? {},
+        },
+      );
+    }
+
+    // POST action without handler - render as form with button (legacy)
     if (isPostAction()) {
-      final url = getActionUrl(record, basePath)!;
+      // Get the action URL - use handler route if handler is set, otherwise use custom actionUrl
+      final url = getActionUrlForRecord(record, basePath, resourceSlug: resourceSlug);
 
       // If confirmation is required, render with a modal
       if (_requiresConfirmation) {
@@ -636,6 +667,100 @@ class Action<T extends Model> {
       disabled: true,
       subtle: true,
     );
+  }
+
+  /// Renders a handler-based action with a styled confirmation modal using DashWire.
+  ///
+  /// The modal triggers a wire:click action when confirmed.
+  Component _renderWithConfirmationModalWire(T record, String resourceSlug, bool isDisabledState) {
+    // Generate a unique modal ID based on action name and record
+    final recordId = getRecordId(record);
+    final modalId = 'confirm-$_name-$recordId';
+
+    // Determine the icon to show (use provided or default based on color)
+    // Don't show icon for form actions (they focus on the form content)
+    final displayIcon = hasForm() ? null : (_modalIcon ?? _getDefaultConfirmationIcon());
+
+    // Build form content for wire-based modal
+    final formContent = _buildModalFormContentWire(record, modalId);
+
+    return div(
+      classes: 'inline',
+      attributes: {'x-data': '{ open: false }'},
+      [
+        // Trigger button
+        Button(
+          label: getLabel(),
+          variant: buttonVariant,
+          size: buttonSize,
+          icon: _icon,
+          iconPosition: _iconPosition,
+          hideLabel: _isLabelHidden,
+          disabled: isDisabledState,
+          subtle: true,
+          attributes: {'@click': 'open = true', if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
+        ),
+
+        // Confirmation modal (inline, Alpine-controlled by parent x-data)
+        Modal(
+          id: modalId,
+          heading: getConfirmationHeading(),
+          description: hasForm() ? null : getConfirmationDescription(),
+          icon: displayIcon,
+          iconColor: _modalIconColor,
+          size: _modalSize,
+          body: formContent,
+          manageOwnState: false, // Parent div provides x-data with 'open'
+          footer: [
+            const ModalCancelButton(),
+            ModalConfirmButton(
+              label: getConfirmationButtonLabel(),
+              color: hasForm() ? ActionColor.primary : _modalIconColor,
+              attributes: {
+                'wire:click': hasForm()
+                    ? "executeAction('$_name', '$recordId', \$el.closest('.modal-content').querySelector('form').elements)"
+                    : "executeAction('$_name', '$recordId')",
+                '@click': 'open = false',
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Builds the form content for a wire-based modal (no action URL needed).
+  Component _buildModalFormContentWire(T record, String modalId) {
+    // Get initial data if fillForm callback is provided
+    final initialData = _fillFormCallback?.call(record) ?? {};
+
+    // Build field components if this action has a form
+    final fieldComponents = <Component>[];
+    if (hasForm()) {
+      for (final field in _formFields!) {
+        if (field is FormField) {
+          // Fill with initial data if available
+          final fieldName = field.getName();
+          if (initialData.containsKey(fieldName)) {
+            field.defaultValue(initialData[fieldName]);
+          }
+          fieldComponents.add(_ActionFormFieldWrapper(field: field));
+        }
+      }
+    }
+
+    // Return a form element (without action) that holds the fields
+    return div(classes: 'modal-content', [
+      if (fieldComponents.isNotEmpty)
+        form([
+          div(
+            classes: 'grid grid-cols-1 ${_formColumns > 1 ? 'md:grid-cols-$_formColumns' : ''} gap-4',
+            fieldComponents,
+          ),
+        ])
+      else
+        span([]), // Empty placeholder
+    ]);
   }
 
   /// Renders a POST action with a styled confirmation modal.
