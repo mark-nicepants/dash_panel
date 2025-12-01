@@ -36,6 +36,7 @@ class PostResource extends Resource<Post> {
           BooleanColumn.make('is_published') //
               .label('Published')
               .sortable()
+              .clickable()
               .toggleable(),
 
           TextColumn.make('published_at') //

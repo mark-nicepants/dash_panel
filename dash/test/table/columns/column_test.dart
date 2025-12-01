@@ -415,13 +415,13 @@ void main() {
 
     group('Icons', () {
       test('trueIcon() sets icon for true state', () {
-        final column = BooleanColumn.make('is_active').trueIcon('check-circle');
+        final column = BooleanColumn.make('is_active').trueIcon(HeroIcons.checkCircle);
         // The icon is set via the boolean() method inherited from IconColumn
         expect(column, isNotNull);
       });
 
       test('falseIcon() sets icon for false state', () {
-        final column = BooleanColumn.make('is_active').falseIcon('x-circle');
+        final column = BooleanColumn.make('is_active').falseIcon(HeroIcons.xCircle);
         expect(column, isNotNull);
       });
     });
@@ -443,8 +443,8 @@ void main() {
         final column = BooleanColumn.make('is_active')
             .label('Active')
             .sortable()
-            .trueIcon('check-circle')
-            .falseIcon('x-circle')
+            .trueIcon(HeroIcons.checkCircle)
+            .falseIcon(HeroIcons.xCircle)
             .trueColor('success')
             .falseColor('danger')
             .alignCenter();

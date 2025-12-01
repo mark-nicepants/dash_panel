@@ -867,6 +867,85 @@ export function initDashWire() {
   initEventListeners();
   initAlpineIntegration();
 
+  /**
+   * Snapshot System
+   * Restores component state on back/forward navigation to prevent stale UI
+   */
+  function initSnapshotSystem() {
+    if (window.DashWireConfig?.disableSnapshot) return;
+
+    const SNAPSHOT_KEY = 'dash:snapshot:' + window.location.href;
+
+    // Save snapshot before leaving the page
+    // We use pagehide as it's more reliable on mobile than beforeunload
+    window.addEventListener('pagehide', () => {
+      const components = {};
+      getAllComponents().forEach(wrapper => {
+        const id = wrapper.getAttribute('wire:id');
+        if (id) {
+          components[id] = wrapper.outerHTML;
+        }
+      });
+      
+      try {
+        sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify({
+          timestamp: Date.now(),
+          components
+        }));
+      } catch (e) {
+        // Ignore quota errors
+      }
+    });
+
+    // Restore snapshot if navigating back/forward
+    window.addEventListener('pageshow', (event) => {
+      // Check if this is a back/forward navigation
+      // event.persisted is true if loaded from BFCache
+      // performance.navigation.type === 2 is BACK_FORWARD (deprecated but useful fallback)
+      // performance.getEntriesByType("navigation")[0].type === 'back_forward' is modern way
+      
+      let isBackForward = event.persisted;
+      
+      if (!isBackForward && window.performance) {
+        const nav = window.performance.getEntriesByType 
+          ? window.performance.getEntriesByType("navigation")[0] 
+          : null;
+          
+        if (nav && nav.type === 'back_forward') {
+          isBackForward = true;
+        } else if (window.performance.navigation && window.performance.navigation.type === 2) {
+          isBackForward = true;
+        }
+      }
+
+      if (isBackForward) {
+        try {
+          const raw = sessionStorage.getItem(SNAPSHOT_KEY);
+          if (!raw) return;
+
+          const snapshot = JSON.parse(raw);
+          
+          // Only restore if we have components
+          if (snapshot && snapshot.components) {
+            log('Restoring snapshot from sessionStorage');
+            
+            Object.entries(snapshot.components).forEach(([id, html]) => {
+              const wrapper = document.querySelector(`[wire\\:id="${id}"]`);
+              if (wrapper) {
+                // Use morph to update the DOM to the saved state
+                morphComponent(wrapper, html);
+              }
+            });
+          }
+        } catch (e) {
+          console.error('[DashWire] Failed to restore snapshot:', e);
+        }
+      }
+    });
+  }
+
+  initSnapshotSystem();
+
   // ============================================================
   // LocalStorage Utilities
   // ============================================================
@@ -937,6 +1016,3 @@ export function initDashWire() {
 
   log('DashWire initialized');
 }
-
-// Note: initDashWire is called from app.js, not auto-initialized here
-// to prevent double initialization when bundled.

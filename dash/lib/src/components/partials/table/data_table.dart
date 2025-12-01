@@ -139,30 +139,35 @@ class DataTable<T extends Model> extends StatelessComponent {
   }
 
   Component _buildTable(List<TableColumn> columns, {required bool showCheckboxes}) {
-    return div(id: containerId, classes: 'min-w-full divide-y divide-gray-700', [
-      table(classes: 'min-w-full divide-y divide-gray-700', [
-        TableHeader<T>(
-          columns: columns,
-          sortColumn: sortColumn,
-          sortDirection: sortDirection,
-          showActions: showActions,
-          showCheckbox: showCheckboxes,
-        ),
-        tbody(classes: 'bg-gray-800 divide-y divide-gray-700', [
-          if (records.isEmpty)
-            _buildEmptyState(columns.length + (showActions ? 1 : 0) + (showCheckboxes ? 1 : 0))
-          else
-            for (final record in records)
-              TableRow<T>(
-                record: record,
-                columns: columns,
-                actions: rowActions?.call(record) ?? [],
-                showActions: showActions,
-                showCheckbox: showCheckboxes,
-              ),
+    return div(
+      id: containerId,
+      classes: 'min-w-full divide-y divide-gray-700',
+      attributes: {if (resourceSlug != null) 'data-resource-slug': resourceSlug!},
+      [
+        table(classes: 'min-w-full divide-y divide-gray-700', [
+          TableHeader<T>(
+            columns: columns,
+            sortColumn: sortColumn,
+            sortDirection: sortDirection,
+            showActions: showActions,
+            showCheckbox: showCheckboxes,
+          ),
+          tbody(classes: 'bg-gray-800 divide-y divide-gray-700', [
+            if (records.isEmpty)
+              _buildEmptyState(columns.length + (showActions ? 1 : 0) + (showCheckboxes ? 1 : 0))
+            else
+              for (final record in records)
+                TableRow<T>(
+                  record: record,
+                  columns: columns,
+                  actions: rowActions?.call(record) ?? [],
+                  showActions: showActions,
+                  showCheckbox: showCheckboxes,
+                ),
+          ]),
         ]),
-      ]),
-    ]);
+      ],
+    );
   }
 
   Component _buildEmptyState(int colSpan) {
