@@ -47,13 +47,28 @@ class PanelRouter {
     final path = request.url.path;
     final method = request.method;
 
-    // Handle form submissions (POST/PUT/DELETE)
-    if (method == 'POST') {
-      return await _handleFormSubmission(request, path);
+    // Try Dash internal routes first (admin UI, resources, login, etc.)
+
+    // Handle form submissions (POST/PUT/DELETE) for Dash resources
+    if (path.startsWith(_config.path.replaceFirst('/', ''))) {
+      if (method == 'POST') {
+        return await _handleFormSubmission(request, path);
+      }
+
+      final result = await _getPageForPath(path, request);
+      return await _renderPage(result.page, pageAssets: result.assets);
+    } else {
+      // If Dash routing fails, try custom routes (plugins)
+
+      // Check for exact match custom routes
+      final handler = _config.customRoutes[path];
+      if (handler != null) {
+        return await handler(request);
+      }
     }
 
-    final result = await _getPageForPath(path, request);
-    return await _renderPage(result.page, pageAssets: result.assets);
+    // No matching route found - return 404
+    return Response.notFound('Page not found');
   }
 
   /// Handles form submissions for create, update, delete, and action operations.

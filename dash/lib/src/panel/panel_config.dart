@@ -6,6 +6,9 @@ import 'package:shelf/shelf.dart';
 /// Callback type for request hooks.
 typedef RequestCallback = FutureOr<void> Function(Request request);
 
+/// Callback type for custom route handlers.
+typedef CustomRouteHandler = FutureOr<Response> Function(Request request);
+
 /// Configuration for a Dash panel.
 ///
 /// Holds all the configuration data for a panel including
@@ -61,6 +64,17 @@ class PanelConfig {
 
   /// The asset registry for this panel.
   AssetRegistry get assets => _assetRegistry;
+
+  // Custom routes registered by plugins
+  final Map<String, CustomRouteHandler> _customRoutes = {};
+
+  /// The registered custom routes.
+  Map<String, CustomRouteHandler> get customRoutes => Map.unmodifiable(_customRoutes);
+
+  /// Registers a custom route handler.
+  void registerCustomRoute(String path, CustomRouteHandler handler) {
+    _customRoutes[path] = handler;
+  }
 
   // Event hooks
   final List<RequestCallback> _requestCallbacks = [];

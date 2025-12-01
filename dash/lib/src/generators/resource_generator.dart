@@ -4,8 +4,13 @@ import 'package:dash/src/generators/schema_parser.dart';
 class ResourceGenerator {
   final ParsedSchema schema;
   final String packageName;
+  final String importPathPrefix;
 
-  ResourceGenerator(this.schema, {required this.packageName});
+  ResourceGenerator(
+    this.schema, {
+    required this.packageName,
+    this.importPathPrefix = '',
+  });
 
   /// Generate the resource class code.
   String generate() {
@@ -18,7 +23,7 @@ class ResourceGenerator {
     buffer.writeln('// Resource for $modelName');
     buffer.writeln();
     buffer.writeln("import 'package:dash/dash.dart';");
-    buffer.writeln("import 'package:$packageName/models/$modelFileName.dart';");
+    buffer.writeln("import 'package:$packageName/${importPathPrefix}models/$modelFileName.dart';");
     buffer.writeln();
 
     // Class declaration

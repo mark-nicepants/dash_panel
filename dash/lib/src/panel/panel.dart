@@ -24,8 +24,8 @@ import 'package:dash/src/utils/resource_loader.dart';
 import 'package:dash/src/widgets/widget.dart' as dash;
 import 'package:jaspr/jaspr.dart';
 
-// Re-export RequestCallback from panel_config for external use
-export 'package:dash/src/panel/panel_config.dart' show RequestCallback;
+// Re-export callback types from panel_config for external use
+export 'package:dash/src/panel/panel_config.dart' show RequestCallback, CustomRouteHandler;
 
 /// Callback type for model event hooks.
 typedef ModelCallback = FutureOr<void> Function(Model model);
@@ -337,6 +337,28 @@ class Panel {
   /// ```
   Panel navigationItems(List<NavigationItem> items) {
     _config.registerNavigationItems(items);
+    return this;
+  }
+
+  /// Registers a custom route handler for a specific path.
+  ///
+  /// This allows plugins to register custom GET routes that are handled
+  /// before the standard resource routing. The path should be relative
+  /// to the panel's base path.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.registerCustomRoute('/', (request) async {
+  ///   return Response.ok('Homepage');
+  /// });
+  ///
+  /// panel.registerCustomRoute('/about', (request) async {
+  ///   final page = renderAboutPage();
+  ///   return Response.ok(page);
+  /// });
+  /// ```
+  Panel registerCustomRoute(String path, CustomRouteHandler handler) {
+    _config.registerCustomRoute(path, handler);
     return this;
   }
 

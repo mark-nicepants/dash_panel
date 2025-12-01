@@ -49,6 +49,11 @@ void main(List<String> args) async {
   }
   print('📦 Package: $packageName');
 
+  // Calculate import path prefix based on output directory
+  // If output is 'lib/src', imports should use 'src/'
+  // If output is 'lib', imports should use '' (root)
+  final importPathPrefix = _calculateImportPathPrefix(resolvedOutputDir, packageRootPath);
+
   final parser = SchemaParser();
 
   // Find all schema files
@@ -88,7 +93,11 @@ void main(List<String> args) async {
     try {
       final schema = parser.parseFile(schemaFile.path);
       parsedSchemas.add(schema);
-      final modelGenerator = SchemaModelGenerator(schema, packageName: packageName);
+      final modelGenerator = SchemaModelGenerator(
+        schema,
+        packageName: packageName,
+        importPathPrefix: importPathPrefix,
+      );
 
       // Generate model class file
       final modelContent = modelGenerator.generate();
@@ -101,7 +110,11 @@ void main(List<String> args) async {
       final resourceFileName = '${modelFileName}_resource.dart';
       final resourceFile = File(path.join(resourcesDir.path, resourceFileName));
       if (!resourceFile.existsSync()) {
-        final resourceGenerator = ResourceGenerator(schema, packageName: packageName);
+        final resourceGenerator = ResourceGenerator(
+          schema,
+          packageName: packageName,
+          importPathPrefix: importPathPrefix,
+        );
         final resourceContent = resourceGenerator.generate();
         resourceFile.writeAsStringSync(resourceContent);
         print('   ✓ Generated resource: ${path.relative(resourceFile.path)}');
@@ -120,7 +133,11 @@ void main(List<String> args) async {
   // Generate barrel file (models.dart) with registerAllModels function
   if (parsedSchemas.isNotEmpty) {
     print('📦 Generating barrel file...');
-    final barrelGenerator = ModelsBarrelGenerator(parsedSchemas, packageName: packageName);
+    final barrelGenerator = ModelsBarrelGenerator(
+      parsedSchemas,
+      packageName: packageName,
+      importPathPrefix: importPathPrefix,
+    );
     final barrelContent = barrelGenerator.generate();
     final barrelFile = File(path.join(modelsDir.path, 'models.dart'));
     barrelFile.writeAsStringSync(barrelContent);
@@ -158,6 +175,23 @@ String _determinePackageRoot(String resolvedOutputLibPath) {
 
   // Fallback to the current working directory
   return Directory.current.path;
+}
+
+/// Calculates the import path prefix based on output directory structure.
+/// For 'lib/src' output, returns 'src/', for 'lib' output, returns ''.
+String _calculateImportPathPrefix(String resolvedOutputDir, String packageRoot) {
+  final libPath = path.join(packageRoot, 'lib');
+  
+  // If output dir is exactly 'lib', no prefix needed
+  if (path.normalize(resolvedOutputDir) == path.normalize(libPath)) {
+    return '';
+  }
+  
+  // Calculate relative path from lib/ to the output directory
+  final relativePath = path.relative(resolvedOutputDir, from: libPath);
+  
+  // Add trailing slash if there's a prefix
+  return relativePath.isEmpty ? '' : '$relativePath/';
 }
 
 /// Reads the package name from pubspec.yaml in the detected package root directory.

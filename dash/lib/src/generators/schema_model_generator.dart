@@ -4,8 +4,9 @@ import 'package:dash/src/generators/schema_parser.dart';
 class SchemaModelGenerator {
   final ParsedSchema schema;
   final String packageName;
+  final String importPathPrefix;
 
-  SchemaModelGenerator(this.schema, {required this.packageName});
+  SchemaModelGenerator(this.schema, {required this.packageName, this.importPathPrefix = ''});
 
   /// Generate the complete model code.
   String generate() {
@@ -17,7 +18,7 @@ class SchemaModelGenerator {
     buffer.writeln();
     buffer.writeln("import 'package:dash/dash.dart';");
     final modelFileName = _toSnakeCase(schema.modelName);
-    buffer.writeln("import 'package:$packageName/resources/${modelFileName}_resource.dart';");
+    buffer.writeln("import 'package:$packageName/${importPathPrefix}resources/${modelFileName}_resource.dart';");
     buffer.writeln();
 
     // Class declaration - with Authenticatable mixin if configured

@@ -5,8 +5,9 @@ import 'package:dash/src/generators/schema_parser.dart';
 class ModelsBarrelGenerator {
   final List<ParsedSchema> schemas;
   final String packageName;
+  final String importPathPrefix;
 
-  ModelsBarrelGenerator(this.schemas, {required this.packageName});
+  ModelsBarrelGenerator(this.schemas, {required this.packageName, this.importPathPrefix = ''});
 
   /// Generate the models.dart barrel file content.
   String generate() {
@@ -22,14 +23,14 @@ class ModelsBarrelGenerator {
     // Import models
     for (final schema in sortedSchemas) {
       final fileName = _toSnakeCase(schema.modelName);
-      buffer.writeln("import 'package:$packageName/models/$fileName.dart';");
+      buffer.writeln("import 'package:$packageName/${importPathPrefix}models/$fileName.dart';");
     }
     buffer.writeln();
 
     // Exports - models
     for (final schema in sortedSchemas) {
       final fileName = _toSnakeCase(schema.modelName);
-      buffer.writeln("export 'package:$packageName/models/$fileName.dart';");
+      buffer.writeln("export 'package:$packageName/${importPathPrefix}models/$fileName.dart';");
     }
     buffer.writeln();
 

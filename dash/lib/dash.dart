@@ -79,7 +79,7 @@ export 'src/model/model_query_builder.dart';
 export 'src/model/soft_deletes.dart';
 // Panel
 export 'src/panel/dev_console.dart';
-export 'src/panel/panel.dart' show Panel, RequestCallback, ModelCallback;
+export 'src/panel/panel.dart' show Panel, RequestCallback, CustomRouteHandler, ModelCallback;
 export 'src/panel/panel_colors.dart';
 export 'src/panel/panel_config.dart';
 export 'src/panel/panel_config_loader.dart';
