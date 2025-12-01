@@ -1,57 +1,27 @@
 /**
  * Column Toggle Component
  * Manages column visibility state for resource tables with localStorage persistence.
+ * Uses DashWire's generic storage utilities.
  */
 export function initColumnToggle() {
-  const STORAGE_PREFIX = 'dash:columns:';
-  const stateRegistry = window.DashColumnToggleStates = window.DashColumnToggleStates || {};
-
-  function storageKey(slug) {
-    return STORAGE_PREFIX + slug;
-  }
-
-  function loadState(slug, defaults) {
-    try {
-      const raw = window.localStorage.getItem(storageKey(slug));
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return { ...defaults, ...parsed };
-      }
-    } catch (_) {
-      // Ignore storage issues (private browsing, etc.)
-    }
-    return { ...defaults };
-  }
-
-  function saveState(slug, state) {
-    try {
-      window.localStorage.setItem(storageKey(slug), JSON.stringify(state));
-    } catch (_) {
-      // Ignore persistence failures and keep state in memory
-    }
-  }
-
+  /**
+   * Apply column visibility state to a table.
+   * Toggles 'column-hidden' class on elements with data-column attribute.
+   */
   function applyState(slug, state) {
-    const container = document.querySelector('[data-table-container="true"][data-resource-slug="' + slug + '"]');
+    const container = document.querySelector(`[data-resource-slug="${slug}"]`);
     if (!container) {
       return;
     }
     Object.keys(state).forEach((column) => {
       const isVisible = state[column] ?? true;
-      container.querySelectorAll('[data-column="' + column + '"]').forEach((el) => {
+      container.querySelectorAll(`[data-column="${column}"]`).forEach((el) => {
         el.classList.toggle('column-hidden', !isVisible);
       });
     });
   }
 
-  // Export public API
-  window.DashColumnToggle = {
-    load: loadState,
-    save: saveState,
-    apply: applyState,
-  };
-
-  // Alpine.js integration
+  // Register Alpine.js component
   document.addEventListener('alpine:init', () => {
     Alpine.data('columnVisibility', (slug, defaults) => ({
       open: false,
@@ -59,8 +29,8 @@ export function initColumnToggle() {
       defaults,
       state: {},
       init() {
-        this.state = window.DashColumnToggle.load(slug, defaults);
-        stateRegistry[slug] = this.state;
+        // Use DashWire's generic storage utilities
+        this.state = window.DashWire.storage.load(`columns:${slug}`, defaults);
         this.apply();
       },
       isVisible(column) {
@@ -87,15 +57,12 @@ export function initColumnToggle() {
         this.persist();
       },
       persist() {
-        stateRegistry[this.slug] = this.state;
-        window.DashColumnToggle.save(this.slug, this.state);
+        window.DashWire.storage.save(`columns:${this.slug}`, this.state);
         this.apply();
       },
       apply() {
-        window.DashColumnToggle.apply(this.slug, this.state);
+        applyState(this.slug, this.state);
       },
     }));
   });
-
-
 }

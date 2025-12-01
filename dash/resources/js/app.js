@@ -3,19 +3,19 @@
  * This file imports and initializes all JavaScript modules.
  */
 
-// Import column toggle functionality
+// Import DashWire interactive component system (must be first - provides utilities)
+import { initDashWire } from './dash-wire.js';
+
+// Import column toggle functionality (uses DashWire storage)
 import { initColumnToggle } from './column-toggle.js';
 
 // Import file upload functionality
 import { initFileUpload } from './file-upload.js';
 
-// Import DashWire interactive component system
-import { initDashWire } from './dash-wire.js';
-
-// Initialize all features
+// Initialize all features (DashWire first to expose utilities)
+initDashWire();
 initColumnToggle();
 initFileUpload();
-initDashWire();
 
 // Add more imports and initialization here as needed
 // import { initAnotherFeature } from './another-feature.js';

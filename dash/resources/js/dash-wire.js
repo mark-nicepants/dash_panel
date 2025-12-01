@@ -867,6 +867,57 @@ export function initDashWire() {
   initEventListeners();
   initAlpineIntegration();
 
+  // ============================================================
+  // LocalStorage Utilities
+  // ============================================================
+
+  /**
+   * Load JSON data from localStorage with a prefixed key.
+   * @param {string} key - The storage key (will be prefixed with 'dash:')
+   * @param {object} defaults - Default values to merge with stored data
+   * @returns {object} The stored data merged with defaults
+   */
+  function storageLoad(key, defaults = {}) {
+    const prefixedKey = `dash:${key}`;
+    try {
+      const raw = window.localStorage.getItem(prefixedKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return { ...defaults, ...parsed };
+      }
+    } catch (_) {
+      // Ignore storage issues (private browsing, etc.)
+    }
+    return { ...defaults };
+  }
+
+  /**
+   * Save JSON data to localStorage with a prefixed key.
+   * @param {string} key - The storage key (will be prefixed with 'dash:')
+   * @param {object} data - The data to store
+   */
+  function storageSave(key, data) {
+    const prefixedKey = `dash:${key}`;
+    try {
+      window.localStorage.setItem(prefixedKey, JSON.stringify(data));
+    } catch (_) {
+      // Ignore persistence failures
+    }
+  }
+
+  /**
+   * Remove data from localStorage.
+   * @param {string} key - The storage key (will be prefixed with 'dash:')
+   */
+  function storageRemove(key) {
+    const prefixedKey = `dash:${key}`;
+    try {
+      window.localStorage.removeItem(prefixedKey);
+    } catch (_) {
+      // Ignore removal failures
+    }
+  }
+
   // Expose global API
   window.DashWire = {
     config,
@@ -876,6 +927,12 @@ export function initDashWire() {
     getComponentData,
     dispatch: dispatchEvent,
     broadcast: broadcastEvents,
+    // LocalStorage utilities
+    storage: {
+      load: storageLoad,
+      save: storageSave,
+      remove: storageRemove,
+    },
   };
 
   log('DashWire initialized');
