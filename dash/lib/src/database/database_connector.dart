@@ -1,4 +1,4 @@
-import 'package:dash/src/database/query_log.dart';
+import 'package:dash/src/cli/cli_logger.dart';
 
 /// Abstract base class for database connectors.
 ///
@@ -6,7 +6,8 @@ import 'package:dash/src/database/query_log.dart';
 /// consistent database operations across different database systems.
 ///
 /// Query logging is built into the base class - all operations are
-/// automatically logged when [QueryLog.isEnabled] is true.
+/// automatically logged when [QueryLog.isEnabled] is true, and also
+/// logged to the CLI via [cliLogQuery].
 abstract class DatabaseConnector {
   /// Establishes a connection to the database.
   Future<void> connect();
@@ -22,7 +23,7 @@ abstract class DatabaseConnector {
     final results = await queryImpl(sql, parameters);
     stopwatch.stop();
 
-    QueryLog.log(sql: sql, parameters: parameters, duration: stopwatch.elapsed, rowCount: results.length);
+    cliLogQuery(sql: sql, parameters: parameters, duration: stopwatch.elapsed, rowCount: results.length);
 
     return results;
   }
@@ -39,7 +40,7 @@ abstract class DatabaseConnector {
     final result = await executeImpl(sql, parameters);
     stopwatch.stop();
 
-    QueryLog.log(sql: sql, parameters: parameters, duration: stopwatch.elapsed);
+    cliLogQuery(sql: sql, parameters: parameters, duration: stopwatch.elapsed);
 
     return result;
   }
@@ -60,7 +61,7 @@ abstract class DatabaseConnector {
     final placeholders = List.filled(columns.length, '?').join(', ');
     final sql = 'INSERT INTO $table (${columns.join(', ')}) VALUES ($placeholders)';
 
-    QueryLog.log(sql: sql, parameters: data.values.toList(), duration: stopwatch.elapsed, rowCount: 1);
+    cliLogQuery(sql: sql, parameters: data.values.toList(), duration: stopwatch.elapsed, rowCount: 1);
 
     return result;
   }
@@ -83,12 +84,9 @@ abstract class DatabaseConnector {
       sql.write(' WHERE $where');
     }
 
-    QueryLog.log(
-      sql: sql.toString(),
-      parameters: [...data.values, ...?whereArgs],
-      duration: stopwatch.elapsed,
-      rowCount: result,
-    );
+    final allParams = [...data.values, ...?whereArgs];
+
+    cliLogQuery(sql: sql.toString(), parameters: allParams, duration: stopwatch.elapsed, rowCount: result);
 
     return result;
   }
@@ -110,7 +108,7 @@ abstract class DatabaseConnector {
       sql.write(' WHERE $where');
     }
 
-    QueryLog.log(sql: sql.toString(), parameters: whereArgs, duration: stopwatch.elapsed, rowCount: result);
+    cliLogQuery(sql: sql.toString(), parameters: whereArgs, duration: stopwatch.elapsed, rowCount: result);
 
     return result;
   }

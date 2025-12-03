@@ -1,12 +1,12 @@
-import 'package:dash/src/generators/schema_parser.dart';
+import 'schema_parser.dart';
 
 /// Generates an empty Resource class for a model.
 class ResourceGenerator {
+  ResourceGenerator(this.schema, {required this.packageName, this.importPathPrefix = ''});
+
   final ParsedSchema schema;
   final String packageName;
   final String importPathPrefix;
-
-  ResourceGenerator(this.schema, {required this.packageName, this.importPathPrefix = ''});
 
   /// Generate the resource class code.
   String generate() {

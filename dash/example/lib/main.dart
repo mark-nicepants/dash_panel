@@ -1,6 +1,5 @@
 import 'package:dash/dash.dart';
 import 'package:dash_analytics/dash_analytics.dart';
-import 'package:dash_example/commands/seed_commands.dart';
 import 'package:dash_example/models/models.dart';
 
 Future<void> main() async {
@@ -13,12 +12,6 @@ Future<void> main() async {
   await Panel()
       .applyConfig('example/schemas/panel.yaml')
       .authModel<User>()
-      .addDevCommands([
-        seedUsersCommand(), //
-        seedPostsCommand(),
-        seedAllCommand(),
-        clearDatabaseCommand(),
-      ])
       .plugin(
         AnalyticsPlugin.make() //
             .enableDashboardWidget(true)

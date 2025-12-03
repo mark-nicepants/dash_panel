@@ -301,19 +301,9 @@ class FormSchema<T extends Model> {
   Future<List<dynamic>> _loadHasManyIds(RelationshipMeta meta) async {
     if (_record == null || _record!.getKey() == null) return [];
 
-    final pivotTable = meta.pivotTable;
-    final localKey = meta.pivotLocalKey;
-    final relatedKey = meta.pivotRelatedKey;
-
-    if (pivotTable == null || localKey == null || relatedKey == null) {
-      return [];
-    }
-
     try {
-      final rows = await Model.connector.query('SELECT $relatedKey FROM $pivotTable WHERE $localKey = ?', [
-        _record!.getKey(),
-      ]);
-      return rows.map((r) => r[relatedKey]).toList();
+      // Use the base Model's loadHasManyIds method
+      return await _record!.loadHasManyIds(meta.name);
     } catch (e) {
       // Pivot table might not exist yet
       return [];

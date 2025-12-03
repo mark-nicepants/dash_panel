@@ -1,0 +1,19 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+  errors:
+    # Treat missing required params as errors
+    missing_required_param: error
+    # Treat missing return types as warnings
+    missing_return: warning
+
+linter:
+  rules:
+    - avoid_print: false  # CLI uses print statements
+    - prefer_single_quotes
+    - prefer_final_locals
+    - sort_constructors_first
+    - unnecessary_this
+    - use_super_parameters

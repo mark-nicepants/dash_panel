@@ -18,7 +18,6 @@ class PanelConfig {
   String _path = '/admin';
   final List<Resource> _resources = [];
   final List<Widget> _widgets = [];
-  final List<DevCommand> _devCommands = [];
   PanelColors _colors = PanelColors.defaults;
 
   DatabaseConfig? _databaseConfig;
@@ -46,9 +45,6 @@ class PanelConfig {
 
   /// The database configuration for this panel.
   DatabaseConfig? get databaseConfig => _databaseConfig;
-
-  /// Custom dev commands registered with this panel.
-  List<DevCommand> get devCommands => List.unmodifiable(_devCommands);
 
   /// The color configuration for this panel.
   PanelColors get colors => _colors;
@@ -129,11 +125,6 @@ class PanelConfig {
   /// Registers widgets with this panel.
   void registerWidgets(List<Widget> widgets) {
     _widgets.addAll(widgets);
-  }
-
-  /// Registers custom dev commands with this panel.
-  void registerDevCommands(List<DevCommand> commands) {
-    _devCommands.addAll(commands);
   }
 
   // ============================================================

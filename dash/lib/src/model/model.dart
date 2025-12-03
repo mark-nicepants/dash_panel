@@ -115,8 +115,14 @@ abstract class Model {
   /// This is generated automatically by the @DashModel annotation.
   List<String> getFields();
 
-  /// Stores loaded relationship models.
+  /// Stores loaded belongsTo/hasOne relationship models.
   final Map<String, Model> _loadedRelations = {};
+
+  /// Stores loaded hasMany relationship lists.
+  final Map<String, List<Model>> _loadedHasManyRelations = {};
+
+  /// Stores loaded hasMany relationship IDs (for form pre-population).
+  final Map<String, List<dynamic>> _loadedHasManyIds = {};
 
   /// Returns the value of a relationship by name.
   /// Override this in generated code to provide relationship access.
@@ -126,6 +132,22 @@ abstract class Model {
   /// Sets a loaded relationship by name.
   void setRelation(String name, Model value) {
     _loadedRelations[name] = value;
+  }
+
+  /// Gets loaded hasMany relationship models.
+  List<Model> getHasManyRelation(String name) => _loadedHasManyRelations[name] ?? [];
+
+  /// Sets loaded hasMany relationship models.
+  void setHasManyRelation(String name, List<Model> values) {
+    _loadedHasManyRelations[name] = values;
+  }
+
+  /// Gets loaded hasMany relationship IDs.
+  List<dynamic> getHasManyIds(String name) => _loadedHasManyIds[name] ?? [];
+
+  /// Sets loaded hasMany relationship IDs.
+  void setHasManyIds(String name, List<dynamic> values) {
+    _loadedHasManyIds[name] = values;
   }
 
   /// Returns metadata about relationships defined on this model.
@@ -152,6 +174,114 @@ abstract class Model {
     }
 
     return null;
+  }
+
+  // ===== HasMany Relationship Methods =====
+
+  /// Gets the RelationshipMeta for a hasMany relationship by name.
+  /// Throws if the relationship doesn't exist or isn't a hasMany type.
+  RelationshipMeta _getHasManyMeta(String relationName) {
+    final meta = getRelationships().firstWhereOrNull((rel) => rel.name == relationName);
+    if (meta == null) {
+      throw StateError('Relationship "$relationName" not defined on model $runtimeType.');
+    }
+    if (!meta.usesPivotTable) {
+      throw StateError('Relationship "$relationName" is not a hasMany (pivot table) relationship.');
+    }
+    return meta;
+  }
+
+  /// Loads the IDs of related models for a hasMany relationship.
+  /// Results are cached in [_loadedHasManyIds].
+  Future<List<dynamic>> loadHasManyIds(String relationName) async {
+    if (getKey() == null) return [];
+
+    // Check cache first
+    if (_loadedHasManyIds.containsKey(relationName)) {
+      return _loadedHasManyIds[relationName]!;
+    }
+
+    final meta = _getHasManyMeta(relationName);
+    final pivotTable = meta.pivotTable!;
+    final localKey = meta.pivotLocalKey!;
+    final relatedKey = meta.pivotRelatedKey!;
+
+    final rows = await connector.query('SELECT $relatedKey FROM $pivotTable WHERE $localKey = ?', [getKey()]);
+
+    final ids = rows.map((r) => r[relatedKey]).toList();
+    _loadedHasManyIds[relationName] = ids;
+    return ids;
+  }
+
+  /// Attaches related model IDs to this model via a hasMany pivot table.
+  Future<void> attachMany(String relationName, List<dynamic> ids) async {
+    if (getKey() == null) {
+      throw StateError('Cannot attach relationships without a primary key.');
+    }
+    if (ids.isEmpty) return;
+
+    final meta = _getHasManyMeta(relationName);
+    final pivotTable = meta.pivotTable!;
+    final localKey = meta.pivotLocalKey!;
+    final relatedKey = meta.pivotRelatedKey!;
+
+    for (final id in ids) {
+      await connector.insert(pivotTable, {localKey: getKey(), relatedKey: id});
+    }
+
+    // Invalidate cache
+    _loadedHasManyIds.remove(relationName);
+  }
+
+  /// Detaches related model IDs from this model via a hasMany pivot table.
+  Future<void> detachMany(String relationName, List<dynamic> ids) async {
+    if (getKey() == null) return;
+    if (ids.isEmpty) return;
+
+    final meta = _getHasManyMeta(relationName);
+    final pivotTable = meta.pivotTable!;
+    final localKey = meta.pivotLocalKey!;
+    final relatedKey = meta.pivotRelatedKey!;
+
+    for (final id in ids) {
+      await connector.delete(pivotTable, where: '$localKey = ? AND $relatedKey = ?', whereArgs: [getKey(), id]);
+    }
+
+    // Invalidate cache
+    _loadedHasManyIds.remove(relationName);
+  }
+
+  /// Syncs a hasMany relationship to exactly the given IDs.
+  /// Removes relationships not in the list and adds missing ones.
+  Future<void> syncMany(String relationName, List<dynamic> ids) async {
+    if (getKey() == null) {
+      throw StateError('Cannot sync relationships without a primary key.');
+    }
+
+    final meta = _getHasManyMeta(relationName);
+    final pivotTable = meta.pivotTable!;
+    final localKey = meta.pivotLocalKey!;
+    final relatedKey = meta.pivotRelatedKey!;
+
+    // Get existing related IDs
+    final existingRows = await connector.query('SELECT $relatedKey FROM $pivotTable WHERE $localKey = ?', [getKey()]);
+    final existingIds = existingRows.map((r) => r[relatedKey]).toSet();
+
+    // Calculate changes
+    final newIds = ids.toSet();
+    final toDetach = existingIds.difference(newIds);
+    final toAttach = newIds.difference(existingIds);
+
+    // Apply changes
+    if (toDetach.isNotEmpty) {
+      await detachMany(relationName, toDetach.toList());
+    }
+    if (toAttach.isNotEmpty) {
+      await attachMany(relationName, toAttach.toList());
+    }
+
+    // Update cache
+    _loadedHasManyIds[relationName] = ids;
   }
 
   // ===== Helper Methods for Subclasses =====

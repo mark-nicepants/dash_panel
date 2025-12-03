@@ -7,7 +7,6 @@ import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/model/model.dart';
-import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_auth.dart';
 import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -409,28 +408,6 @@ class Panel {
     return this;
   }
 
-  /// Adds custom dev commands to this panel.
-  ///
-  /// These commands will be available in the interactive dev console
-  /// when running the server in development mode.
-  ///
-  /// Example:
-  /// ```dart
-  /// panel.addDevCommands([
-  ///   DevCommand(
-  ///     name: 'seed',
-  ///     description: 'Seed the database with test data',
-  ///     handler: (args) async {
-  ///       // Your seeding logic here
-  ///     },
-  ///   ),
-  /// ]);
-  /// ```
-  Panel addDevCommands(List<DevCommand> commands) {
-    _config.registerDevCommands(commands);
-    return this;
-  }
-
   // ============================================================
   // Event Hooks
   // ============================================================
@@ -548,21 +525,6 @@ class Panel {
   Future<void> _bootPlugins() async {
     for (final plugin in _config.plugins.values) {
       await plugin.boot(this);
-    }
-  }
-
-  /// Shuts down the panel and cleans up resources.
-  ///
-  /// This closes the database connection and stops the HTTP server.
-  Future<void> shutdown() async {
-    // Stop server
-    if (_server?.isRunning ?? false) {
-      await _server!.stop(force: true);
-    }
-
-    // Close database
-    if (_config.databaseConfig != null) {
-      await _config.databaseConfig!.close();
     }
   }
 

@@ -4,6 +4,24 @@ import 'package:yaml/yaml.dart';
 
 /// Parsed field information from Dash schema.
 class SchemaField {
+
+  const SchemaField({
+    required this.name,
+    required this.dartType,
+    required this.columnName,
+    required this.isRequired,
+    required this.isNullable,
+    this.isPrimaryKey = false,
+    this.autoIncrement = false,
+    this.min,
+    this.max,
+    this.pattern,
+    this.format,
+    this.enumValues,
+    this.defaultValue,
+    this.relation,
+    this.isUnique = false,
+  });
   final String name;
   final String dartType;
   final String columnName;
@@ -25,34 +43,16 @@ class SchemaField {
 
   // Database
   final bool isUnique;
-
-  const SchemaField({
-    required this.name,
-    required this.dartType,
-    required this.columnName,
-    required this.isRequired,
-    required this.isNullable,
-    this.isPrimaryKey = false,
-    this.autoIncrement = false,
-    this.min,
-    this.max,
-    this.pattern,
-    this.format,
-    this.enumValues,
-    this.defaultValue,
-    this.relation,
-    this.isUnique = false,
-  });
 }
 
 /// Relationship configuration.
-class RelationConfig {
+class RelationConfig { // Custom field name for the relation (via 'as')
+
+  const RelationConfig({required this.type, required this.model, required this.foreignKey, this.name});
   final String type; // belongsTo, hasOne, hasMany
   final String model;
   final String foreignKey;
-  final String? name; // Custom field name for the relation (via 'as')
-
-  const RelationConfig({required this.type, required this.model, required this.foreignKey, this.name});
+  final String? name;
 }
 
 /// Configuration for models that can be used for authentication.
@@ -60,6 +60,12 @@ class RelationConfig {
 /// When a model has authenticatable config, it will generate the
 /// [Authenticatable] mixin implementation with the specified field mappings.
 class AuthenticatableConfig {
+
+  const AuthenticatableConfig({
+    this.identifierField = 'email',
+    this.passwordField = 'password',
+    this.displayNameField = 'name',
+  });
   /// The field name used as the login identifier (e.g., 'email').
   final String identifierField;
 
@@ -68,31 +74,25 @@ class AuthenticatableConfig {
 
   /// The field name for the user's display name.
   final String displayNameField;
-
-  const AuthenticatableConfig({
-    this.identifierField = 'email',
-    this.passwordField = 'password',
-    this.displayNameField = 'name',
-  });
 }
 
 /// Dash model configuration from schema.
 class ModelConfig {
+
+  const ModelConfig({required this.table, this.timestamps = true, this.softDeletes = false});
   final String table;
   final bool timestamps;
   final bool softDeletes;
-
-  const ModelConfig({required this.table, this.timestamps = true, this.softDeletes = false});
 }
 
 /// Complete parsed schema.
 class ParsedSchema {
+
+  const ParsedSchema({required this.modelName, required this.config, required this.fields, this.authenticatable});
   final String modelName;
   final ModelConfig config;
   final List<SchemaField> fields;
   final AuthenticatableConfig? authenticatable;
-
-  const ParsedSchema({required this.modelName, required this.config, required this.fields, this.authenticatable});
 
   /// Gets the model class name (e.g., "User", "Post").
   String get className => modelName;

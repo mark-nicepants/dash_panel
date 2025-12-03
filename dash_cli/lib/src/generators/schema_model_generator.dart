@@ -1,12 +1,12 @@
-import 'package:dash/src/generators/schema_parser.dart';
+import 'schema_parser.dart';
 
 /// Generates Dart model code from a parsed schema.
 class SchemaModelGenerator {
+  SchemaModelGenerator(this.schema, {required this.packageName, this.importPathPrefix = ''});
+
   final ParsedSchema schema;
   final String packageName;
   final String importPathPrefix;
-
-  SchemaModelGenerator(this.schema, {required this.packageName, this.importPathPrefix = ''});
 
   /// Get fields that should have columns in the main table.
   /// Excludes hasMany relationships (they use pivot tables).
@@ -28,13 +28,6 @@ class SchemaModelGenerator {
     buffer.writeln("import 'package:dash/dash.dart';");
     final modelFileName = _toSnakeCase(schema.modelName);
     buffer.writeln("import 'package:$packageName/${importPathPrefix}resources/${modelFileName}_resource.dart';");
-
-    // Import related models for hasMany relationships
-    for (final field in _hasManyFields) {
-      final relatedModel = field.relation!.model;
-      final relatedFileName = _toSnakeCase(relatedModel);
-      buffer.writeln("import 'package:$packageName/${importPathPrefix}models/$relatedFileName.dart';");
-    }
     buffer.writeln();
 
     // Class declaration - with Authenticatable mixin if configured
@@ -101,9 +94,6 @@ class SchemaModelGenerator {
     // Relationship getters (comments for now)
     _generateRelationshipGetters(buffer);
 
-    // HasMany relationship methods
-    _generateHasManyMethods(buffer);
-
     // Authenticatable mixin methods if configured
     if (schema.authenticatable != null) {
       _generateAuthenticatableMethods(buffer);
@@ -120,17 +110,6 @@ class SchemaModelGenerator {
     for (final field in _columnFields) {
       final nullableSuffix = field.isNullable ? '?' : '';
       buffer.writeln('  ${field.dartType}$nullableSuffix ${field.name};');
-    }
-
-    // Add loaded relations map if there are any relationships
-    final hasRelations = schema.fields.any((f) => f.relation != null);
-    if (hasRelations) {
-      buffer.writeln();
-      buffer.writeln('  /// Stores loaded relationship models (for belongsTo/hasOne).');
-      buffer.writeln('  final Map<String, Model> _loadedRelations = {};');
-      buffer.writeln();
-      buffer.writeln('  /// Stores loaded hasMany relationship lists.');
-      buffer.writeln('  final Map<String, List<Model>> _loadedHasManyRelations = {};');
     }
 
     buffer.writeln();
@@ -330,26 +309,6 @@ class SchemaModelGenerator {
 
     buffer.writeln('  ];');
     buffer.writeln();
-
-    // Generate getRelation and setRelation methods if there are relationships
-    if (relationships.isNotEmpty) {
-      buffer.writeln('  @override');
-      buffer.writeln('  Model? getRelation(String name) => _loadedRelations[name];');
-      buffer.writeln();
-      buffer.writeln('  /// Sets a loaded relationship by name.');
-      buffer.writeln('  void setRelation(String name, Model value) {');
-      buffer.writeln('    _loadedRelations[name] = value;');
-      buffer.writeln('  }');
-      buffer.writeln();
-      buffer.writeln('  /// Gets loaded hasMany relationship models.');
-      buffer.writeln('  List<Model> getHasManyRelation(String name) => _loadedHasManyRelations[name] ?? [];');
-      buffer.writeln();
-      buffer.writeln('  /// Sets loaded hasMany relationship models.');
-      buffer.writeln('  void setHasManyRelation(String name, List<Model> values) {');
-      buffer.writeln('    _loadedHasManyRelations[name] = values;');
-      buffer.writeln('  }');
-    }
-    buffer.writeln();
   }
 
   String _mapRelationType(String yamlType) {
@@ -359,129 +318,6 @@ class SchemaModelGenerator {
       'hasMany' => 'hasMany',
       _ => 'belongsTo',
     };
-  }
-
-  /// Generates methods for managing hasMany relationships via pivot tables.
-  void _generateHasManyMethods(StringBuffer buffer) {
-    final hasManyRelations = _hasManyFields;
-    if (hasManyRelations.isEmpty) return;
-
-    final tableName = schema.config.table;
-    final modelName = schema.modelName;
-    final pkField = schema.primaryKey;
-    if (pkField == null) return;
-
-    buffer.writeln('  // ═══════════════════════════════════════════════════════════════════════════');
-    buffer.writeln('  // HasMany relationship methods');
-    buffer.writeln('  // ═══════════════════════════════════════════════════════════════════════════');
-    buffer.writeln();
-
-    for (final field in hasManyRelations) {
-      final rel = field.relation!;
-      final relationName = rel.name ?? field.name;
-      final relatedModel = rel.model;
-      final relatedTable = '${_toSnakeCase(relatedModel)}s';
-      final pivotTableName = _generatePivotTableName(tableName, relatedTable);
-      final localKey = '${_toSnakeCase(modelName)}_id';
-      final relatedKey = '${_toSnakeCase(relatedModel)}_id';
-      final capitalRelationName = relationName[0].toUpperCase() + relationName.substring(1);
-
-      // Load method
-      buffer.writeln('  /// Loads the $relationName relationship from the database.');
-      buffer.writeln('  Future<List<$relatedModel>> load$capitalRelationName() async {');
-      buffer.writeln('    if (getKey() == null) return [];');
-      buffer.writeln();
-      buffer.writeln('    final pivotRows = await Model.connector.query(');
-      buffer.writeln("      'SELECT $relatedKey FROM $pivotTableName WHERE $localKey = ?',");
-      buffer.writeln('      [getKey()],');
-      buffer.writeln('    );');
-      buffer.writeln();
-      buffer.writeln('    if (pivotRows.isEmpty) {');
-      buffer.writeln("      setHasManyRelation('$relationName', []);");
-      buffer.writeln('      return [];');
-      buffer.writeln('    }');
-      buffer.writeln();
-      buffer.writeln("    final relatedIds = pivotRows.map((r) => r['$relatedKey']).toList();");
-      buffer.writeln('    final relatedModels = await $relatedModel.query().whereIn(\'id\', relatedIds).get();');
-      buffer.writeln("    setHasManyRelation('$relationName', relatedModels);");
-      buffer.writeln('    return relatedModels;');
-      buffer.writeln('  }');
-      buffer.writeln();
-
-      // Attach method
-      buffer.writeln('  /// Attaches $relatedModel(s) to this $modelName via the $relationName relationship.');
-      buffer.writeln('  Future<void> attach$capitalRelationName(List<dynamic> ids) async {');
-      buffer.writeln('    if (getKey() == null) {');
-      buffer.writeln("      throw StateError('Cannot attach relationships without a primary key.');");
-      buffer.writeln('    }');
-      buffer.writeln();
-      buffer.writeln('    for (final id in ids) {');
-      buffer.writeln('      await Model.connector.insert(');
-      buffer.writeln("        '$pivotTableName',");
-      buffer.writeln("        {'$localKey': getKey(), '$relatedKey': id},");
-      buffer.writeln('      );');
-      buffer.writeln('    }');
-      buffer.writeln('  }');
-      buffer.writeln();
-
-      // Detach method
-      buffer.writeln('  /// Detaches $relatedModel(s) from this $modelName via the $relationName relationship.');
-      buffer.writeln('  Future<void> detach$capitalRelationName(List<dynamic> ids) async {');
-      buffer.writeln('    if (getKey() == null) return;');
-      buffer.writeln();
-      buffer.writeln('    for (final id in ids) {');
-      buffer.writeln('      await Model.connector.delete(');
-      buffer.writeln("        '$pivotTableName',");
-      buffer.writeln("        where: '$localKey = ? AND $relatedKey = ?',");
-      buffer.writeln('        whereArgs: [getKey(), id],');
-      buffer.writeln('      );');
-      buffer.writeln('    }');
-      buffer.writeln('  }');
-      buffer.writeln();
-
-      // Sync method
-      buffer.writeln('  /// Syncs the $relationName relationship to exactly the given IDs.');
-      buffer.writeln('  /// Removes any existing relationships not in the list and adds missing ones.');
-      buffer.writeln('  Future<void> sync$capitalRelationName(List<dynamic> ids) async {');
-      buffer.writeln('    if (getKey() == null) {');
-      buffer.writeln("      throw StateError('Cannot sync relationships without a primary key.');");
-      buffer.writeln('    }');
-      buffer.writeln();
-      buffer.writeln('    // Get existing related IDs');
-      buffer.writeln('    final existingRows = await Model.connector.query(');
-      buffer.writeln("      'SELECT $relatedKey FROM $pivotTableName WHERE $localKey = ?',");
-      buffer.writeln('      [getKey()],');
-      buffer.writeln('    );');
-      buffer.writeln("    final existingIds = existingRows.map((r) => r['$relatedKey']).toSet();");
-      buffer.writeln();
-      buffer.writeln('    // Calculate changes');
-      buffer.writeln('    final newIds = ids.toSet();');
-      buffer.writeln('    final toDetach = existingIds.difference(newIds);');
-      buffer.writeln('    final toAttach = newIds.difference(existingIds);');
-      buffer.writeln();
-      buffer.writeln('    // Apply changes');
-      buffer.writeln('    if (toDetach.isNotEmpty) {');
-      buffer.writeln('      await detach$capitalRelationName(toDetach.toList());');
-      buffer.writeln('    }');
-      buffer.writeln('    if (toAttach.isNotEmpty) {');
-      buffer.writeln('      await attach$capitalRelationName(toAttach.toList());');
-      buffer.writeln('    }');
-      buffer.writeln('  }');
-      buffer.writeln();
-
-      // Get IDs method
-      buffer.writeln('  /// Gets the IDs of related $relatedModel records for this $modelName.');
-      buffer.writeln('  Future<List<dynamic>> get${capitalRelationName}Ids() async {');
-      buffer.writeln('    if (getKey() == null) return [];');
-      buffer.writeln();
-      buffer.writeln('    final rows = await Model.connector.query(');
-      buffer.writeln("      'SELECT $relatedKey FROM $pivotTableName WHERE $localKey = ?',");
-      buffer.writeln('      [getKey()],');
-      buffer.writeln('    );');
-      buffer.writeln("    return rows.map((r) => r['$relatedKey']).toList();");
-      buffer.writeln('  }');
-      buffer.writeln();
-    }
   }
 
   /// Generates the Authenticatable mixin method implementations.

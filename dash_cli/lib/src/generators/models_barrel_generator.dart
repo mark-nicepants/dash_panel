@@ -1,13 +1,12 @@
-import 'package:dash/src/generators/schema_parser.dart';
+import 'schema_parser.dart';
 
 /// Generates a barrel file (models.dart) that exports all models
 /// and provides a `registerAllModels()` function.
 class ModelsBarrelGenerator {
+  ModelsBarrelGenerator(this.schemas, {required this.packageName, this.importPathPrefix = ''});
   final List<ParsedSchema> schemas;
   final String packageName;
   final String importPathPrefix;
-
-  ModelsBarrelGenerator(this.schemas, {required this.packageName, this.importPathPrefix = ''});
 
   /// Generate the models.dart barrel file content.
   String generate() {

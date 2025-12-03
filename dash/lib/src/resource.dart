@@ -441,13 +441,7 @@ abstract class Resource<T extends Model> {
     final relatedSlug = _toSnakeCase(meta.relatedModelType);
 
     // Try to get the related model instance from DI
-    Model relatedModel;
-    try {
-      relatedModel = modelInstanceFromSlug<Model>(relatedSlug);
-    } catch (_) {
-      // Model not registered, skip relationship loading
-      return;
-    }
+    final relatedModel = modelInstanceFromSlug<Model>(relatedSlug);
 
     // Collect all foreign key values
     final foreignKeyValues = <dynamic>{};
@@ -481,17 +475,8 @@ abstract class Resource<T extends Model> {
     for (final record in records) {
       final fkValue = record.toMap()[meta.foreignKey];
       if (fkValue != null && relatedMap.containsKey(fkValue)) {
-        _setRelation(record, meta.name, relatedMap[fkValue]!);
+        record.setRelation(meta.name, relatedMap[fkValue]!);
       }
-    }
-  }
-
-  /// Sets a relationship value on a model.
-  void _setRelation(T record, String relationName, Model relatedRecord) {
-    try {
-      (record as dynamic).setRelation(relationName, relatedRecord);
-    } catch (_) {
-      // Model doesn't support setRelation
     }
   }
 
@@ -678,7 +663,7 @@ abstract class Resource<T extends Model> {
   }
 
   /// Syncs hasMany relationships for a record.
-  /// Uses the model's sync methods to update pivot tables.
+  /// Uses the model's syncMany method to update pivot tables.
   Future<void> _syncHasManyRelationships(T record, Map<String, List<dynamic>> hasManyData) async {
     if (hasManyData.isEmpty) return;
 
@@ -693,51 +678,9 @@ abstract class Resource<T extends Model> {
           .firstOrNull;
 
       if (relationMeta != null && relationMeta.usesPivotTable) {
-        // Call the model's sync method dynamically
-        try {
-          final capitalName = relationName[0].toUpperCase() + relationName.substring(1);
-          final syncMethod = 'sync$capitalName';
-
-          // Use reflection-like approach via dynamic call
-          await (record as dynamic).callMethod(Symbol(syncMethod), [relatedIds]);
-        } catch (_) {
-          // If direct method call fails, use raw pivot table operations
-          await _syncPivotTable(record, relationMeta, relatedIds);
-        }
+        // Use the base Model's generic syncMany method
+        await record.syncMany(relationName, relatedIds);
       }
-    }
-  }
-
-  /// Syncs a pivot table directly using SQL.
-  Future<void> _syncPivotTable(T record, RelationshipMeta meta, List<dynamic> relatedIds) async {
-    final pivotTable = meta.pivotTable;
-    final localKey = meta.pivotLocalKey;
-    final relatedKey = meta.pivotRelatedKey;
-    final recordId = record.getKey();
-
-    if (pivotTable == null || localKey == null || relatedKey == null || recordId == null) {
-      return;
-    }
-
-    // Get existing related IDs
-    final existingRows = await Model.connector.query('SELECT $relatedKey FROM $pivotTable WHERE $localKey = ?', [
-      recordId,
-    ]);
-    final existingIds = existingRows.map((r) => r[relatedKey]).toSet();
-
-    // Calculate changes
-    final newIds = relatedIds.toSet();
-    final toDetach = existingIds.difference(newIds);
-    final toAttach = newIds.difference(existingIds);
-
-    // Detach removed relations
-    for (final id in toDetach) {
-      await Model.connector.delete(pivotTable, where: '$localKey = ? AND $relatedKey = ?', whereArgs: [recordId, id]);
-    }
-
-    // Attach new relations
-    for (final id in toAttach) {
-      await Model.connector.insert(pivotTable, {localKey: recordId, relatedKey: id});
     }
   }
 

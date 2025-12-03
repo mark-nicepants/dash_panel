@@ -52,7 +52,6 @@ export 'src/database/migrations/migration_runner.dart';
 export 'src/database/migrations/schema_definition.dart';
 export 'src/database/migrations/schema_inspector.dart';
 export 'src/database/query_builder.dart';
-export 'src/database/query_log.dart';
 export 'src/database/schema_builder.dart';
 export 'src/form/fields/checkbox.dart';
 export 'src/form/fields/date_picker.dart';
@@ -69,11 +68,6 @@ export 'src/form/fields/textarea.dart';
 export 'src/form/fields/toggle.dart';
 // Forms
 export 'src/form/form_schema.dart';
-// Generators (Schema-based code generation)
-export 'src/generators/models_barrel_generator.dart';
-export 'src/generators/resource_generator.dart';
-export 'src/generators/schema_model_generator.dart';
-export 'src/generators/schema_parser.dart';
 // Models
 export 'src/model/annotations.dart';
 export 'src/model/model.dart';
@@ -81,7 +75,6 @@ export 'src/model/model_metadata.dart';
 export 'src/model/model_query_builder.dart';
 export 'src/model/soft_deletes.dart';
 // Panel
-export 'src/panel/dev_console.dart';
 export 'src/panel/panel.dart' show Panel, RequestCallback, CustomRouteHandler, ModelCallback;
 export 'src/panel/panel_colors.dart';
 export 'src/panel/panel_config.dart';
