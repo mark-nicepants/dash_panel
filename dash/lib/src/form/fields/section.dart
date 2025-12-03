@@ -51,6 +51,12 @@ class Section {
   /// Whether the section is hidden.
   bool _hidden = false;
 
+  /// The number of grid columns this section spans.
+  int _columnSpan = 1;
+
+  /// Column span for different breakpoints.
+  final Map<String, int> _columnSpanBreakpoints = {};
+
   /// Creates a section with an optional heading.
   Section([this._heading]);
 
@@ -161,4 +167,47 @@ class Section {
 
   /// Checks if the section is hidden.
   bool isHidden() => _hidden;
+
+  /// Sets how many grid columns this section spans.
+  ///
+  /// Example:
+  /// ```dart
+  /// Grid.make(3).schema([
+  ///   Section.make('Main').columnSpan(2),  // Takes 2 of 3 columns
+  ///   Section.make('Side').columnSpan(1),  // Takes 1 of 3 columns
+  /// ])
+  /// ```
+  Section columnSpan(int span) {
+    _columnSpan = span;
+    return this;
+  }
+
+  /// Gets the column span.
+  int getColumnSpan() => _columnSpan;
+
+  /// Sets column span for a specific breakpoint.
+  Section columnSpanBreakpoint(String breakpoint, int span) {
+    _columnSpanBreakpoints[breakpoint] = span;
+    return this;
+  }
+
+  /// Gets the column span breakpoints.
+  Map<String, int> getColumnSpanBreakpoints() => _columnSpanBreakpoints;
+
+  /// Makes this section span all columns in the parent grid.
+  Section columnSpanFull() {
+    _columnSpan = -1; // -1 indicates full width
+    return this;
+  }
+
+  /// Checks if the section spans full width.
+  bool isColumnSpanFull() => _columnSpan == -1;
+
+  /// Gets the Tailwind classes for column span.
+  String getColumnSpanClasses(int totalColumns) {
+    if (isColumnSpanFull() || _columnSpan >= totalColumns) {
+      return 'col-span-full';
+    }
+    return 'col-span-$_columnSpan';
+  }
 }

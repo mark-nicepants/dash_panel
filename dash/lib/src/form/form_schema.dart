@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:dash/src/actions/action.dart';
 import 'package:dash/src/form/fields/field.dart';
+import 'package:dash/src/form/fields/grid.dart';
 import 'package:dash/src/form/fields/section.dart';
 import 'package:dash/src/model/model.dart';
 
@@ -83,13 +84,15 @@ class FormSchema<T extends Model> {
   /// Gets the components in this form.
   List<FormComponent> getComponents() => _components;
 
-  /// Gets all fields from components (flattening sections).
+  /// Gets all fields from components (flattening sections and grids).
   List<FormField> getFields() {
     final fields = <FormField>[];
     for (final component in _components) {
       if (component is FormField) {
         fields.add(component);
       } else if (component is Section) {
+        fields.addAll(component.getFields());
+      } else if (component is Grid) {
         fields.addAll(component.getFields());
       }
     }

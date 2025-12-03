@@ -1,6 +1,7 @@
 import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/components/partials/forms/form_section.dart';
 import 'package:dash/src/form/fields/field.dart';
+import 'package:dash/src/form/fields/grid.dart';
 import 'package:dash/src/form/fields/section.dart';
 import 'package:dash/src/form/form_schema.dart';
 import 'package:jaspr/jaspr.dart';
@@ -67,15 +68,17 @@ class FormRenderer extends StatelessComponent {
       }
     }
 
-    // Check if we have sections or just flat fields
-    final hasSections = components.any((c) => c is Section);
+    // Check if we have sections, grids or just flat fields
+    final hasLayoutComponents = components.any((c) => c is Section || c is Grid);
 
-    if (hasSections) {
-      // Render sections and standalone fields
+    if (hasLayoutComponents) {
+      // Render sections, grids, and standalone fields
       return div(classes: 'space-y-6', [
         for (final component in components)
           if (component is Section)
             _buildSection(component, context)
+          else if (component is Grid)
+            _buildGrid(component, context)
           else if (component is FormField && !component.isHidden())
             _buildFieldWrapper(component, context, columns),
         // Form actions
@@ -137,6 +140,63 @@ class FormRenderer extends StatelessComponent {
     );
 
     return FormSection(section: section, children: [fieldGrid]);
+  }
+
+  /// Builds a Grid layout component.
+  Component _buildGrid(Grid grid, BuildContext context) {
+    if (grid.isHidden()) {
+      return div([]);
+    }
+
+    final gridClasses = grid.getGridClasses();
+    final defaultColumns = grid.getDefaultColumns();
+
+    return div(classes: gridClasses, [
+      for (final component in grid.getComponents())
+        if (component is Section && !component.isHidden())
+          _buildSectionInGrid(component, context, defaultColumns)
+        else if (component is Grid && !component.isHidden())
+          _buildNestedGrid(component, context, defaultColumns)
+        else if (component is FormField && !component.isHidden())
+          _buildFieldWrapper(component, context, defaultColumns),
+    ]);
+  }
+
+  /// Builds a section inside a grid, applying column span.
+  Component _buildSectionInGrid(Section section, BuildContext context, int totalColumns) {
+    final spanClasses = section.getColumnSpanClasses(totalColumns);
+    final sectionColumns = section.getColumns();
+    final sectionGap = section.getGap();
+
+    // Build the field grid for this section
+    final fieldGrid = div(
+      classes: 'grid grid-cols-1 ${sectionColumns > 1 ? 'md:grid-cols-$sectionColumns' : ''} gap-$sectionGap',
+      [
+        for (final field in section.getFields())
+          if (!field.isHidden()) _buildFieldWrapper(field, context, sectionColumns),
+      ],
+    );
+
+    return div(classes: spanClasses, [FormSection(section: section, children: [fieldGrid])]);
+  }
+
+  /// Builds a nested grid inside a parent grid, applying column span.
+  Component _buildNestedGrid(Grid grid, BuildContext context, int totalColumns) {
+    final spanClasses = grid.getColumnSpanClasses(totalColumns);
+    final gridClasses = grid.getGridClasses();
+    final defaultColumns = grid.getDefaultColumns();
+
+    return div(classes: spanClasses, [
+      div(classes: gridClasses, [
+        for (final component in grid.getComponents())
+          if (component is Section && !component.isHidden())
+            _buildSectionInGrid(component, context, defaultColumns)
+          else if (component is Grid && !component.isHidden())
+            _buildNestedGrid(component, context, defaultColumns)
+          else if (component is FormField && !component.isHidden())
+            _buildFieldWrapper(component, context, defaultColumns),
+      ]),
+    ]);
   }
 
   Component _buildFieldWrapper(FormField field, BuildContext context, int totalColumns) {

@@ -59,57 +59,61 @@ class PostResource extends Resource<Post> {
   @override
   FormSchema<Post> form(FormSchema<Post> form) {
     return form.fields([
-      Section.make('Post Details') //
-          .description('Basic information about the blog post')
-          .icon('document-text')
-          .collapsible()
-          .columns(1)
-          .schema([
-            TextInput.make('title') //
-                .minLength(1)
-                .maxLength(255)
-                .label('Post Title')
-                .placeholder('Enter post title')
-                .required()
-                .columnSpanFull(),
+      Grid.make(3).schema([
+        Section.make('Post Details') //
+            .description('Basic information about the blog post')
+            .icon('document-text')
+            .collapsible()
+            .columnSpan(2) // Takes 2 of 3 columns (larger)
+            .columns(1)
+            .schema([
+              TextInput.make('title') //
+                  .minLength(1)
+                  .maxLength(255)
+                  .label('Post Title')
+                  .placeholder('Enter post title')
+                  .required()
+                  .columnSpanFull(),
 
-            TextInput.make('slug') //
-                .label('Slug')
-                .placeholder('post-url-slug')
-                .helperText('URL-friendly identifier (lowercase letters, numbers, and hyphens only)')
-                .required()
-                .columnSpanFull(),
+              TextInput.make('slug') //
+                  .label('Slug')
+                  .placeholder('post-url-slug')
+                  .helperText('URL-friendly identifier (lowercase letters, numbers, and hyphens only)')
+                  .required()
+                  .columnSpanFull(),
 
-            Textarea.make('content') //
-                .rows(8)
-                .label('Content')
-                .placeholder('Write your post content here...')
-                .columnSpanFull(),
-          ]),
+              Textarea.make('content') //
+                  .rows(8)
+                  .label('Content')
+                  .placeholder('Write your post content here...')
+                  .columnSpanFull(),
+            ]),
 
-      Section.make('Publishing Options') //
-          .description('Control when and how your post is published')
-          .icon('calendar')
-          .collapsible()
-          .columns(1)
-          .schema([
-            RelationshipSelect.make('author')
-                .relationship('author', 'User')
-                .label('Author')
-                .displayColumn('name')
-                .searchColumns(['name', 'email'])
-                .preload(limit: 10)
-                .required(),
+        Section.make('Publishing Options') //
+            .description('Control when and how your post is published')
+            .icon('calendar')
+            .collapsible()
+            .columnSpan(1) // Takes 1 of 3 columns (smaller)
+            .columns(1)
+            .schema([
+              RelationshipSelect.make('author')
+                  .relationship('author', 'User')
+                  .label('Author')
+                  .displayColumn('name')
+                  .searchColumns(['name', 'email'])
+                  .preload(limit: 10)
+                  .required(),
 
-            Toggle.make('is_published') //
-                .label('Published')
-                .helperText('When enabled, this post will be visible to the public')
-                .defaultValue(false),
+              Toggle.make('is_published') //
+                  .label('Published')
+                  .helperText('When enabled, this post will be visible to the public')
+                  .defaultValue(false),
 
-            DatePicker.make('published_at') //
-                .withTime()
-                .label('Publish Date'),
-          ]),
+              DatePicker.make('published_at') //
+                  .withTime()
+                  .label('Publish Date'),
+            ]),
+      ]),
     ]);
   }
 }
