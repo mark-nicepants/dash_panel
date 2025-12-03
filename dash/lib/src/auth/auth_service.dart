@@ -240,14 +240,6 @@ class AuthService<T extends Model> {
     return refreshedUser;
   }
 
-  /// Cleans up expired sessions.
-  ///
-  /// Should be called periodically to prevent memory leaks.
-  Future<void> cleanupExpiredSessions() async {
-    _sessions.removeWhere((_, session) => session.isExpired);
-    await _sessionStore.cleanupExpired();
-  }
-
   /// Generates a cryptographically secure random session ID.
   ///
   /// Uses Dart's Random.secure() to generate a 32-byte random token,

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/auth/request_session.dart';
+import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/storage/storage.dart';
@@ -168,6 +169,7 @@ class RequestHandler {
         headers: {'content-type': 'application/json'},
       );
     } catch (e) {
+      cliLogException(e);
       print('File upload error: $e');
       return _jsonError('Upload failed: $e', 500);
     }

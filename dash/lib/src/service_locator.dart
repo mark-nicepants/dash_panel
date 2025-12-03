@@ -1,4 +1,5 @@
 import 'package:dash/dash.dart';
+import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:get_it/get_it.dart';
 
@@ -54,9 +55,7 @@ List<Resource> buildRegisteredResources() {
 /// Returns the path unchanged if it's already a full URL or absolute path.
 String getStorageUrl(String path, {String? disk}) {
   // If it's already a full URL or absolute path, return as-is
-  if (path.startsWith('http://') ||
-      path.startsWith('https://') ||
-      path.startsWith('/')) {
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
     return path;
   }
 
@@ -66,8 +65,8 @@ String getStorageUrl(String path, {String? disk}) {
     try {
       final storage = storageManager.disk(disk);
       return storage.url(path);
-    } catch (_) {
-      // Disk not found, fall through to fallback
+    } catch (e) {
+      cliLogException(e);
     }
   }
 
@@ -90,10 +89,7 @@ String getStorageUrl(String path, {String? disk}) {
 /// - ResourceLoader: Static asset loader
 ///
 /// Call this during Panel.boot() before starting the server.
-Future<void> setupServiceLocator({
-  required PanelConfig config,
-  required DatabaseConnector connector,
-}) async {
+Future<void> setupServiceLocator({required PanelConfig config, required DatabaseConnector connector}) async {
   // Register panel config as singleton
   if (!inject.isRegistered<PanelConfig>()) {
     inject.registerSingleton<PanelConfig>(config);

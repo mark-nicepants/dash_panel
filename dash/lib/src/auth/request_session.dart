@@ -112,12 +112,9 @@ class RequestSession {
   /// Tries to get the 'avatar' field from the user model's map representation.
   String? get userAvatarUrl {
     if (_user == null) return null;
-    try {
-      final userMap = (_user as dynamic).toMap();
-      return userMap['avatar'] as String?;
-    } catch (_) {
-      return null;
-    }
+
+    final userMap = getUser<Model>()?.toMap();
+    return userMap?['avatar'] as String?;
   }
 
   /// Clears the session data.

@@ -263,6 +263,7 @@ class PanelServer {
 
           return Response.ok(data, headers: {'content-type': mimeType, 'cache-control': 'public, max-age=31536000'});
         } on StateError catch (e) {
+          cliLogException(e);
           return Response.notFound('Storage error: ${e.message}');
         }
       };

@@ -1,5 +1,6 @@
 import 'package:dash/src/actions/handler/action_context.dart';
 import 'package:dash/src/actions/handler/action_handler.dart';
+import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/service_locator.dart';
 
@@ -50,7 +51,9 @@ class ToggleBooleanHandler<T extends Model> extends ActionHandler {
       await resource.updateRecord(record, {field: newValue});
 
       return ActionResult.success();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      cliLogException(e, stackTrace: stackTrace);
+
       print('Error toggling boolean field: $e');
       return ActionResult.failure('Failed to toggle value: $e');
     }

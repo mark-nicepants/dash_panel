@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/components/interactive/component_registry.dart';
 import 'package:dash/src/components/interactive/interactive_component.dart';
 import 'package:jaspr/server.dart';
@@ -107,6 +108,7 @@ class WireHandler {
     } catch (e, stack) {
       print('WireHandler error: $e');
       print(stack);
+      cliLogException(e, stackTrace: stack);
       return Response.internalServerError(body: 'Wire request failed: $e');
     }
   }

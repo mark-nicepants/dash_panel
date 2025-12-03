@@ -6,6 +6,7 @@ import 'package:dash/src/actions/handler/action_handler_registry.dart';
 import 'package:dash/src/actions/prebuilt/delete_action.dart';
 import 'package:dash/src/actions/prebuilt/edit_action.dart';
 import 'package:dash/src/actions/prebuilt/toggle_boolean_action.dart';
+import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/components/interactive/interactive_component.dart';
 import 'package:dash/src/components/partials/breadcrumbs.dart';
 import 'package:dash/src/components/partials/page_scaffold.dart';
@@ -160,6 +161,7 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
         dispatch('redirect', {'url': result.redirectUrl});
       }
     } catch (e) {
+      cliLogException(e);
       dispatch('action-error', {'message': 'Action failed: $e'});
     }
   }

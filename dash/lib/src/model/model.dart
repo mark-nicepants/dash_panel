@@ -286,9 +286,9 @@ abstract class Model {
 
   // ===== Helper Methods for Subclasses =====
 
-  /// Safely casts a value to the specified type.
-  /// Returns null if the value cannot be cast.
-  T? getAs<T>(dynamic value) {
+  /// Safely gets a value from a map and casts it to the specified type.
+  T? getFromMap<T>(Map<String, dynamic> map, String key) {
+    final value = map[key];
     if (value == null) return null;
     try {
       return value as T;
@@ -296,11 +296,6 @@ abstract class Model {
       // Log warning in development
       return null;
     }
-  }
-
-  /// Safely gets a value from a map and casts it to the specified type.
-  T? getFromMap<T>(Map<String, dynamic> map, String key) {
-    return getAs<T>(map[key]);
   }
 
   /// Parses a DateTime from various formats.

@@ -53,14 +53,6 @@ abstract class SessionStore {
 
   /// Deletes a session by ID.
   Future<void> delete(String sessionId);
-
-  /// Loads all sessions.
-  ///
-  /// Used during startup to restore sessions.
-  Future<List<SessionData>> loadAll();
-
-  /// Deletes all expired sessions.
-  Future<void> cleanupExpired();
 }
 
 /// In-memory session store for testing.
@@ -82,16 +74,6 @@ class InMemorySessionStore extends SessionStore {
   @override
   Future<void> delete(String sessionId) async {
     _sessions.remove(sessionId);
-  }
-
-  @override
-  Future<List<SessionData>> loadAll() async {
-    return _sessions.values.toList();
-  }
-
-  @override
-  Future<void> cleanupExpired() async {
-    _sessions.removeWhere((_, session) => session.isExpired);
   }
 }
 
@@ -147,8 +129,16 @@ class FileSessionStore extends SessionStore {
     try {
       final json = await file.readAsString();
       final data = jsonDecode(json) as Map<String, dynamic>;
-      return SessionData.fromJson(data);
-    } catch (e) {
+      final session = SessionData.fromJson(data);
+
+      if (session.isExpired) {
+        // Session expired - delete file and return null
+        await file.delete();
+        return null;
+      }
+
+      return session;
+    } catch (_) {
       // Invalid JSON or corrupted file - remove it
       await file.delete();
       return null;
@@ -160,38 +150,6 @@ class FileSessionStore extends SessionStore {
     final file = File(_sessionFilePath(sessionId));
     if (await file.exists()) {
       await file.delete();
-    }
-  }
-
-  @override
-  Future<List<SessionData>> loadAll() async {
-    await _ensureDirectory();
-    final dir = Directory(basePath);
-    final sessions = <SessionData>[];
-
-    await for (final entity in dir.list()) {
-      if (entity is File && entity.path.endsWith('.json')) {
-        try {
-          final json = await entity.readAsString();
-          final data = jsonDecode(json) as Map<String, dynamic>;
-          sessions.add(SessionData.fromJson(data));
-        } catch (e) {
-          // Invalid JSON - delete corrupted file
-          await entity.delete();
-        }
-      }
-    }
-
-    return sessions;
-  }
-
-  @override
-  Future<void> cleanupExpired() async {
-    final sessions = await loadAll();
-    for (final session in sessions) {
-      if (session.isExpired) {
-        await delete(session.id);
-      }
     }
   }
 }

@@ -4,6 +4,8 @@
 /// table structures for automatic migrations.
 library;
 
+import 'package:collection/collection.dart';
+
 /// Represents a database column type.
 enum ColumnType { integer, text, real, blob, boolean, datetime }
 
@@ -245,11 +247,7 @@ class TableSchema {
 
   /// Gets a column by name.
   ColumnDefinition? getColumn(String name) {
-    try {
-      return columns.firstWhere((col) => col.name == name);
-    } catch (e) {
-      return null;
-    }
+    return columns.firstWhereOrNull((col) => col.name == name);
   }
 
   /// Checks if a column exists in the table.
@@ -259,11 +257,7 @@ class TableSchema {
 
   /// Gets the primary key column, if any.
   ColumnDefinition? get primaryKey {
-    try {
-      return columns.firstWhere((col) => col.isPrimaryKey);
-    } catch (e) {
-      return null;
-    }
+    return columns.firstWhereOrNull((col) => col.isPrimaryKey);
   }
 
   @override

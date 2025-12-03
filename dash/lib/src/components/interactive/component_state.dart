@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
+import 'package:dash/src/cli/cli_logger.dart';
 
 /// Handles secure serialization and deserialization of component state.
 ///
@@ -67,6 +68,7 @@ class ComponentState {
 
       return payload['state'] as Map<String, dynamic>?;
     } catch (e) {
+      cliLogException(e);
       print('ComponentState: Failed to deserialize - $e');
       return null;
     }

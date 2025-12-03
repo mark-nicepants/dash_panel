@@ -242,31 +242,6 @@ void main() {
       final user = await authService.getUser(sessionId);
       expect(user, isNull);
     });
-
-    test('cleanupExpiredSessions removes expired sessions', () async {
-      final session1 = await authService.login(
-        'test@example.com',
-        'password',
-        sessionDuration: const Duration(milliseconds: 50),
-      );
-
-      await authService.logout(session1!);
-
-      final session2 = await authService.login(
-        'test@example.com',
-        'password',
-        sessionDuration: const Duration(milliseconds: 50),
-      );
-
-      // Wait for expiration
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      // Cleanup
-      await authService.cleanupExpiredSessions();
-
-      // Session should be gone
-      expect(await authService.isAuthenticated(session2), isFalse);
-    });
   });
 
   group('Session class', () {
