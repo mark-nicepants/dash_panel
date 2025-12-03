@@ -594,11 +594,17 @@ abstract class Resource<T extends Model> {
   Future<T> createRecord(Map<String, dynamic> data) async {
     final instance = newModelInstance();
 
+    // Extract hasMany relationship data before applying to model
+    final hasManyData = _extractHasManyData(data);
+
     // Apply the form data to the model
     _applyDataToModel(instance, data);
 
     // Save the model
     await instance.save();
+
+    // Sync hasMany relationships after the main record is saved
+    await _syncHasManyRelationships(instance, hasManyData);
 
     return instance;
   }
@@ -606,11 +612,17 @@ abstract class Resource<T extends Model> {
   /// Updates an existing record with the given data.
   /// Override this method to customize record updates.
   Future<T> updateRecord(T record, Map<String, dynamic> data) async {
+    // Extract hasMany relationship data before applying to model
+    final hasManyData = _extractHasManyData(data);
+
     // Apply the form data to the model
     _applyDataToModel(record, data);
 
     // Save the model
     await record.save();
+
+    // Sync hasMany relationships after the main record is saved
+    await _syncHasManyRelationships(record, hasManyData);
 
     return record;
   }
@@ -619,6 +631,114 @@ abstract class Resource<T extends Model> {
   /// Override this method to customize record deletion.
   Future<void> deleteRecord(T record) async {
     await record.delete();
+  }
+
+  /// Extracts hasMany relationship data from form data.
+  /// Returns a map of relationship names to lists of related IDs.
+  Map<String, List<dynamic>> _extractHasManyData(Map<String, dynamic> data) {
+    final hasManyData = <String, List<dynamic>>{};
+    final formSchema = form(FormSchema<T>());
+    final instance = newModelInstance();
+    final relationships = instance.getRelationships();
+
+    for (final field in formSchema.getFields()) {
+      final fieldName = field.getName();
+      // Check if this field corresponds to a hasMany relationship
+      final relationMeta = relationships
+          .where((r) => r.name == fieldName && r.type == RelationshipType.hasMany)
+          .firstOrNull;
+
+      if (relationMeta != null && data.containsKey(fieldName)) {
+        // Get the value and convert to list
+        final value = data[fieldName];
+
+        if (value == null) {
+          hasManyData[fieldName] = [];
+        } else if (value is List) {
+          hasManyData[fieldName] = value.map(_convertToIdType).toList();
+        } else if (value is String && value.isEmpty) {
+          hasManyData[fieldName] = [];
+        } else {
+          hasManyData[fieldName] = [_convertToIdType(value)];
+        }
+      }
+    }
+
+    return hasManyData;
+  }
+
+  /// Converts a value to an appropriate ID type (int if possible).
+  dynamic _convertToIdType(dynamic value) {
+    if (value is int) return value;
+    if (value is String) {
+      final asInt = int.tryParse(value);
+      if (asInt != null) return asInt;
+    }
+    return value;
+  }
+
+  /// Syncs hasMany relationships for a record.
+  /// Uses the model's sync methods to update pivot tables.
+  Future<void> _syncHasManyRelationships(T record, Map<String, List<dynamic>> hasManyData) async {
+    if (hasManyData.isEmpty) return;
+
+    final relationships = record.getRelationships();
+
+    for (final entry in hasManyData.entries) {
+      final relationName = entry.key;
+      final relatedIds = entry.value;
+
+      final relationMeta = relationships
+          .where((r) => r.name == relationName && r.type == RelationshipType.hasMany)
+          .firstOrNull;
+
+      if (relationMeta != null && relationMeta.usesPivotTable) {
+        // Call the model's sync method dynamically
+        try {
+          final capitalName = relationName[0].toUpperCase() + relationName.substring(1);
+          final syncMethod = 'sync$capitalName';
+
+          // Use reflection-like approach via dynamic call
+          await (record as dynamic).callMethod(Symbol(syncMethod), [relatedIds]);
+        } catch (_) {
+          // If direct method call fails, use raw pivot table operations
+          await _syncPivotTable(record, relationMeta, relatedIds);
+        }
+      }
+    }
+  }
+
+  /// Syncs a pivot table directly using SQL.
+  Future<void> _syncPivotTable(T record, RelationshipMeta meta, List<dynamic> relatedIds) async {
+    final pivotTable = meta.pivotTable;
+    final localKey = meta.pivotLocalKey;
+    final relatedKey = meta.pivotRelatedKey;
+    final recordId = record.getKey();
+
+    if (pivotTable == null || localKey == null || relatedKey == null || recordId == null) {
+      return;
+    }
+
+    // Get existing related IDs
+    final existingRows = await Model.connector.query('SELECT $relatedKey FROM $pivotTable WHERE $localKey = ?', [
+      recordId,
+    ]);
+    final existingIds = existingRows.map((r) => r[relatedKey]).toSet();
+
+    // Calculate changes
+    final newIds = relatedIds.toSet();
+    final toDetach = existingIds.difference(newIds);
+    final toAttach = newIds.difference(existingIds);
+
+    // Detach removed relations
+    for (final id in toDetach) {
+      await Model.connector.delete(pivotTable, where: '$localKey = ? AND $relatedKey = ?', whereArgs: [recordId, id]);
+    }
+
+    // Attach new relations
+    for (final id in toAttach) {
+      await Model.connector.insert(pivotTable, {localKey: recordId, relatedKey: id});
+    }
   }
 
   /// Applies form data to a model instance.

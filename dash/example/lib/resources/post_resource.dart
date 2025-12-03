@@ -104,6 +104,14 @@ class PostResource extends Resource<Post> {
                   .preload(limit: 10)
                   .required(),
 
+              HasManySelect.make('tags')
+                  .relationship('tags', 'Tag')
+                  .label('Tags')
+                  .displayColumn('name')
+                  .searchColumns(['name'])
+                  .preload(limit: 20)
+                  .helperText('Select tags for this post'),
+
               Toggle.make('is_published') //
                   .label('Published')
                   .helperText('When enabled, this post will be visible to the public')

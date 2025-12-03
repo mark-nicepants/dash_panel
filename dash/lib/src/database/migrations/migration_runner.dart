@@ -19,14 +19,25 @@ class MigrationRunner {
   /// For each table:
   /// - If the table doesn't exist, creates it
   /// - If the table exists, adds any missing columns
+  /// - Creates any pivot tables for hasMany relationships
   ///
   /// Returns a list of executed SQL statements.
   Future<List<String>> runMigrations(List<TableSchema> schemas) async {
     final executedStatements = <String>[];
 
+    // First, migrate all regular tables
     for (final schema in schemas) {
       final statements = await _migrateTable(schema);
       executedStatements.addAll(statements);
+    }
+
+    // Then, migrate all pivot tables
+    for (final schema in schemas) {
+      for (final pivotSchema in schema.pivotTables) {
+        final pivotTableSchema = pivotSchema.toTableSchema();
+        final statements = await _migrateTable(pivotTableSchema);
+        executedStatements.addAll(statements);
+      }
     }
 
     return executedStatements;

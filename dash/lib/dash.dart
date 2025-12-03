@@ -58,6 +58,7 @@ export 'src/form/fields/field.dart';
 export 'src/form/fields/file_upload.dart';
 export 'src/form/fields/form_renderer.dart';
 export 'src/form/fields/grid.dart';
+export 'src/form/fields/has_many_select.dart';
 export 'src/form/fields/relationship_select.dart';
 export 'src/form/fields/section.dart';
 export 'src/form/fields/select.dart';

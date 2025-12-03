@@ -3,6 +3,7 @@ import 'package:dash/src/actions/action.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/form/fields/grid.dart';
 import 'package:dash/src/form/fields/section.dart';
+import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model.dart';
 
 /// A component that can be placed in a form schema.
@@ -251,6 +252,7 @@ class FormSchema<T extends Model> {
   /// This method properly handles:
   /// - Simple field values from the record
   /// - BelongsTo relationship fields (loads related model via foreign key)
+  /// - HasMany relationship fields (loads related IDs from pivot table)
   /// - Applies hydration callbacks if defined on fields
   ///
   /// Example:
@@ -273,11 +275,16 @@ class FormSchema<T extends Model> {
       final relationship = relationships.where((rel) => rel.name == name).firstOrNull;
 
       dynamic value;
-      if (relationship != null && recordData.containsKey(relationship.foreignKey)) {
-        // This field maps to a relationship - use the foreign key value
-        value = recordData[relationship.foreignKey];
-        // Load the related model for display purposes
-        await _record!.loadRelationship(name, value);
+      if (relationship != null) {
+        if (relationship.type == RelationshipType.belongsTo && recordData.containsKey(relationship.foreignKey)) {
+          // BelongsTo: use the foreign key value
+          value = recordData[relationship.foreignKey];
+          // Load the related model for display purposes
+          await _record!.loadRelationship(name, value);
+        } else if (relationship.type == RelationshipType.hasMany && relationship.usesPivotTable) {
+          // HasMany: load related IDs from pivot table
+          value = await _loadHasManyIds(relationship);
+        }
       } else if (recordData.containsKey(name)) {
         value = recordData[name];
       }
@@ -287,6 +294,29 @@ class FormSchema<T extends Model> {
         value = field.hydrateValue(value);
         field.defaultValue(value);
       }
+    }
+  }
+
+  /// Loads the IDs of related records for a hasMany relationship.
+  Future<List<dynamic>> _loadHasManyIds(RelationshipMeta meta) async {
+    if (_record == null || _record!.getKey() == null) return [];
+
+    final pivotTable = meta.pivotTable;
+    final localKey = meta.pivotLocalKey;
+    final relatedKey = meta.pivotRelatedKey;
+
+    if (pivotTable == null || localKey == null || relatedKey == null) {
+      return [];
+    }
+
+    try {
+      final rows = await Model.connector.query('SELECT $relatedKey FROM $pivotTable WHERE $localKey = ?', [
+        _record!.getKey(),
+      ]);
+      return rows.map((r) => r[relatedKey]).toList();
+    } catch (e) {
+      // Pivot table might not exist yet
+      return [];
     }
   }
 

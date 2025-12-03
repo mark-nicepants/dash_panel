@@ -28,11 +28,29 @@ class RelationshipMeta {
   /// The type of the related model as a string.
   final String relatedModelType;
 
+  /// For hasMany relationships, the pivot table name.
+  /// Null for belongsTo and hasOne relationships.
+  final String? pivotTable;
+
+  /// For hasMany relationships, the local key column in the pivot table.
+  /// E.g., for Post hasMany Tag, this would be 'post_id'.
+  final String? pivotLocalKey;
+
+  /// For hasMany relationships, the related key column in the pivot table.
+  /// E.g., for Post hasMany Tag, this would be 'tag_id'.
+  final String? pivotRelatedKey;
+
   const RelationshipMeta({
     required this.name,
     required this.type,
     required this.foreignKey,
     required this.relatedKey,
     required this.relatedModelType,
+    this.pivotTable,
+    this.pivotLocalKey,
+    this.pivotRelatedKey,
   });
+
+  /// Whether this is a many-to-many relationship using a pivot table.
+  bool get usesPivotTable => type == RelationshipType.hasMany && pivotTable != null;
 }

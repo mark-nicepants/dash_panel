@@ -311,18 +311,55 @@ class PanelRouter {
   }
 
   /// Parses form data from the request body.
+  /// Handles array fields like `tags[]` by collecting multiple values into a list.
   Future<Map<String, dynamic>> _parseFormData(Request request) async {
     final contentType = request.headers['content-type'] ?? '';
     final body = await request.readAsString();
 
     if (contentType.contains('application/x-www-form-urlencoded')) {
-      return Uri.splitQueryString(body);
+      return _parseUrlEncodedFormData(body);
     } else if (contentType.contains('application/json')) {
       // Handle JSON data if needed in future
       return {};
     }
 
-    return Uri.splitQueryString(body);
+    return _parseUrlEncodedFormData(body);
+  }
+
+  /// Parses URL-encoded form data, handling array fields.
+  Map<String, dynamic> _parseUrlEncodedFormData(String body) {
+    final result = <String, dynamic>{};
+    final pairs = body.split('&');
+
+    for (final pair in pairs) {
+      if (pair.isEmpty) continue;
+
+      final equalIndex = pair.indexOf('=');
+      if (equalIndex == -1) continue;
+
+      var key = Uri.decodeQueryComponent(pair.substring(0, equalIndex));
+      final value = Uri.decodeQueryComponent(pair.substring(equalIndex + 1));
+
+      // Check for array notation (key[])
+      if (key.endsWith('[]')) {
+        key = key.substring(0, key.length - 2);
+
+        // Initialize or append to the list
+        if (result[key] == null) {
+          result[key] = <String>[value];
+        } else if (result[key] is List) {
+          (result[key] as List).add(value);
+        } else {
+          // Convert existing value to list and add new value
+          result[key] = <String>[result[key].toString(), value];
+        }
+      } else {
+        // Non-array field - just set the value
+        result[key] = value;
+      }
+    }
+
+    return result;
   }
 
   /// Determines which page component to render based on the path.
