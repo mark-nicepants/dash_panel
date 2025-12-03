@@ -58,17 +58,14 @@ class ResourceLoader {
   /// - Pub.dev packages (file:// URIs to .pub-cache)
   static Future<String?> _resolveDashPackageRoot() async {
     // Look for package_config.json in standard locations
-    final configPaths = [
-      '.dart_tool/package_config.json',
-    ];
+    final configPaths = ['.dart_tool/package_config.json'];
 
     for (final configPath in configPaths) {
       final configFile = File(configPath);
       if (!await configFile.exists()) continue;
 
       try {
-        final content =
-            jsonDecode(await configFile.readAsString()) as Map<String, dynamic>;
+        final content = jsonDecode(await configFile.readAsString()) as Map<String, dynamic>;
         final packages = content['packages'] as List<dynamic>?;
         if (packages == null) continue;
 
