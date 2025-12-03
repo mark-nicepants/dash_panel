@@ -5,8 +5,8 @@
       "name": "Example",
       "type": "dart",
       "request": "launch",
-      "program": "example/lib/main.dart",
-      "cwd": "${workspaceFolder}",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}/example",
       "console": "terminal",
       "vmAdditionalArgs": [
         "--enable-vm-service",
@@ -17,8 +17,8 @@
       "name": "Example (Production)",
       "type": "dart",
       "request": "launch",
-      "program": "example/lib/main.dart",
-      "cwd": "${workspaceFolder}",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}/example",
       "console": "terminal",
       "env": {
         "DASH_ENV": "production"

@@ -1,15 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dash/dash.dart';
 import 'package:dash/src/auth/auth_middleware.dart';
-import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/cli/cli_api_handler.dart';
-import 'package:dash/src/components/interactive/wire_handler.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/panel/panel_router.dart';
-import 'package:dash/src/panel/request_handler.dart';
-import 'package:dash/src/storage/storage.dart';
+import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
 import 'package:shelf/shelf.dart';
@@ -33,16 +28,9 @@ class PanelServer {
   /// Storage manager for file uploads.
   StorageManager? _storageManager;
 
-  /// Whether to enable interactive dev console mode.
-  /// Defaults to true unless DASH_ENV is set to 'production'.
-  bool enableDevConsole = Platform.environment['DASH_ENV'] != 'production';
-
   /// Whether to enable CLI API endpoints (/_cli/*).
   /// Defaults to true unless DASH_ENV is set to 'production'.
   bool enableCliApi = Platform.environment['DASH_ENV'] != 'production';
-
-  /// Whether HTTP request logging is enabled.
-  bool httpLoggingEnabled = Platform.environment['DASH_ENV'] == 'production';
 
   PanelServer(this._config, this._authService, this._resourceLoader) {
     _router = PanelRouter(_config, _resourceLoader);
@@ -80,6 +68,10 @@ class PanelServer {
   Future<void> start({String host = 'localhost', int port = 8080}) async {
     if (_server != null) {
       throw StateError('Server is already running');
+    }
+
+    if (enableCliApi) {
+      inject.registerSingleton(cliApi);
     }
 
     // Initialize Jaspr
@@ -136,15 +128,12 @@ class PanelServer {
       return (Request request) async {
         final path = request.url.path;
 
-        // Not a CLI API request, continue to next handler
-        if (!path.startsWith(cliPrefix) || !enableCliApi) {
-          return innerHandler(request);
-        }
-
         // Handle CLI API request
-        final cliResponse = await _cliApiHandler.handle(request);
-        if (cliResponse != null) {
-          return cliResponse;
+        if (path.startsWith(cliPrefix) && enableCliApi) {
+          final cliResponse = await _cliApiHandler.handle(request);
+          if (cliResponse != null) {
+            return cliResponse;
+          }
         }
 
         return innerHandler(request);
@@ -280,19 +269,23 @@ class PanelServer {
     };
   }
 
-  /// Creates a middleware that conditionally logs requests based on [httpLoggingEnabled].
+  /// Creates a middleware that logs requests except for CLI API requests.
   Middleware _conditionalLogRequests() {
     return (Handler innerHandler) {
       return (Request request) async {
+        if (request.url.path.contains('_cli/')) {
+          // Skip logging for CLI API requests to avoid clutter
+          return await innerHandler(request);
+        }
+
         final startTime = DateTime.now();
         final response = await innerHandler(request);
 
-        if (httpLoggingEnabled) {
-          final duration = DateTime.now().difference(startTime);
-          final method = request.method.padRight(7);
-          final statusCode = response.statusCode;
-          print('$startTime  ${duration.toString().padRight(15)} $method [$statusCode] ${request.requestedUri.path}');
-        }
+        final duration = DateTime.now().difference(startTime);
+        final method = request.method.padRight(7);
+        final statusCode = response.statusCode;
+
+        cliLogRequest(method: method, path: request.requestedUri.path, statusCode: statusCode, duration: duration);
 
         return response;
       };

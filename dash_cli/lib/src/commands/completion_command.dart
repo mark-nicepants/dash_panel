@@ -191,17 +191,17 @@ _dcli() {
   esac
 }
 
-_dash "\$@"
+_dcli "\$@"
 ''';
   }
 
   String _generateBashCompletion() {
     return '''
 # Dash CLI Bash Completion
-# Install: dash completion bash > /etc/bash_completion.d/dash
-# Or: dash completion bash >> ~/.bashrc
+# Install: dcli completion bash > /etc/bash_completion.d/dcli
+# Or: dcli completion bash >> ~/.bashrc
 
-_dash_completions() {
+_dcli_completions() {
   local cur prev commands
   COMPREPLY=()
   cur="\${COMP_WORDS[COMP_CWORD]}"
@@ -257,7 +257,7 @@ _dash_completions() {
   return 0
 }
 
-complete -F _dash_completions dash
+complete -F _dcli_completions dcli
 ''';
   }
 
@@ -321,7 +321,7 @@ complete -F _dash_completions dash
     // Try system completion directory first
     final systemDir = '/etc/bash_completion.d';
     if (Directory(systemDir).existsSync()) {
-      final targetFile = '$systemDir/dash';
+      final targetFile = '$systemDir/dcli';
       try {
         File(targetFile).writeAsStringSync(_generateBashCompletion());
         ConsoleUtils.success('Installed completion to $targetFile');
@@ -338,7 +338,7 @@ complete -F _dash_completions dash
     try {
       final content = File(bashrc).existsSync() ? File(bashrc).readAsStringSync() : '';
 
-      if (content.contains('_dash_completions')) {
+      if (content.contains('_dcli_completions')) {
         ConsoleUtils.info('Bash completion already installed');
         return 0;
       }

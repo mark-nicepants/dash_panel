@@ -10,7 +10,7 @@ Future<void> main() async {
 
   // Create and configure the admin panel
   await Panel()
-      .applyConfig('example/schemas/panel.yaml')
+      .applyConfig('schemas/panel.yaml')
       .authModel<User>()
       .plugin(
         AnalyticsPlugin.make() //
