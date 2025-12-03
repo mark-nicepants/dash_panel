@@ -177,7 +177,9 @@ class FormRenderer extends StatelessComponent {
       ],
     );
 
-    return div(classes: spanClasses, [FormSection(section: section, children: [fieldGrid])]);
+    return div(classes: spanClasses, [
+      FormSection(section: section, children: [fieldGrid]),
+    ]);
   }
 
   /// Builds a nested grid inside a parent grid, applying column span.

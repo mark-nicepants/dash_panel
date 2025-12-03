@@ -17,11 +17,7 @@ void main() {
 
     group('Columns', () {
       test('columns() sets responsive breakpoints', () {
-        final grid = Grid.make().columns({
-          'default': 1,
-          'md': 2,
-          'lg': 3,
-        });
+        final grid = Grid.make().columns({'default': 1, 'md': 2, 'lg': 3});
 
         final columns = grid.getColumns();
         expect(columns['default'], equals(1));
@@ -30,21 +26,14 @@ void main() {
       });
 
       test('getColumnsAt() returns columns for specific breakpoint', () {
-        final grid = Grid.make().columns({
-          'default': 1,
-          'md': 2,
-          'lg': 3,
-        });
+        final grid = Grid.make().columns({'default': 1, 'md': 2, 'lg': 3});
 
         expect(grid.getColumnsAt('md'), equals(2));
         expect(grid.getColumnsAt('xl'), isNull);
       });
 
       test('columns() updates lg column count', () {
-        final grid = Grid.make().columns({
-          'default': 1,
-          'lg': 4,
-        });
+        final grid = Grid.make().columns({'default': 1, 'lg': 4});
 
         expect(grid.getDefaultColumns(), equals(4));
       });
@@ -64,19 +53,13 @@ void main() {
 
     group('Schema', () {
       test('schema() sets child components', () {
-        final grid = Grid.make().schema([
-          TextInput.make('name'),
-          TextInput.make('email'),
-        ]);
+        final grid = Grid.make().schema([TextInput.make('name'), TextInput.make('email')]);
 
         expect(grid.getComponents(), hasLength(2));
       });
 
       test('getFields() extracts fields from components', () {
-        final grid = Grid.make().schema([
-          TextInput.make('name'),
-          TextInput.make('email'),
-        ]);
+        final grid = Grid.make().schema([TextInput.make('name'), TextInput.make('email')]);
 
         final fields = grid.getFields();
         expect(fields, hasLength(2));
@@ -85,10 +68,7 @@ void main() {
 
       test('getFields() extracts fields from nested sections', () {
         final grid = Grid.make().schema([
-          Section.make('Details').schema([
-            TextInput.make('name'),
-            TextInput.make('email'),
-          ]),
+          Section.make('Details').schema([TextInput.make('name'), TextInput.make('email')]),
         ]);
 
         final fields = grid.getFields();
@@ -97,10 +77,7 @@ void main() {
 
       test('getFields() extracts fields from nested grids', () {
         final grid = Grid.make().schema([
-          Grid.make().schema([
-            TextInput.make('name'),
-            TextInput.make('email'),
-          ]),
+          Grid.make().schema([TextInput.make('name'), TextInput.make('email')]),
         ]);
 
         final fields = grid.getFields();
@@ -177,12 +154,7 @@ void main() {
       });
 
       test('getGridClasses() includes responsive breakpoints', () {
-        final grid = Grid.make().columns({
-          'default': 1,
-          'sm': 2,
-          'md': 3,
-          'lg': 4,
-        });
+        final grid = Grid.make().columns({'default': 1, 'sm': 2, 'md': 3, 'lg': 4});
         final classes = grid.getGridClasses();
 
         expect(classes, contains('grid-cols-1'));
@@ -201,14 +173,10 @@ void main() {
 
     group('Fluent API Chaining', () {
       test('methods can be chained together', () {
-        final grid = Grid.make(3)
-            .columns({'default': 1, 'md': 2, 'lg': 3})
-            .gap('6')
-            .columnSpan(2)
-            .schema([
-              TextInput.make('name'),
-              TextInput.make('email'),
-            ]);
+        final grid = Grid.make(3).columns({'default': 1, 'md': 2, 'lg': 3}).gap('6').columnSpan(2).schema([
+          TextInput.make('name'),
+          TextInput.make('email'),
+        ]);
 
         expect(grid.getDefaultColumns(), equals(3));
         expect(grid.getGap(), equals('6'));
@@ -260,30 +228,20 @@ void main() {
   group('Grid in FormSchema', () {
     test('getFields() extracts fields from grid components', () {
       final schema = FormSchema().fields([
-        Grid.make(2).schema([
-          TextInput.make('first_name'),
-          TextInput.make('last_name'),
-        ]),
+        Grid.make(2).schema([TextInput.make('first_name'), TextInput.make('last_name')]),
         TextInput.make('email'),
       ]);
 
       final fields = schema.getFields();
       expect(fields, hasLength(3));
-      expect(
-        fields.map((f) => f.getName()),
-        containsAll(['first_name', 'last_name', 'email']),
-      );
+      expect(fields.map((f) => f.getName()), containsAll(['first_name', 'last_name', 'email']));
     });
 
     test('getFields() extracts fields from nested grid in section', () {
       final schema = FormSchema().fields([
         Grid.make(2).schema([
-          Section.make('Personal Info').schema([
-            TextInput.make('name'),
-          ]),
-          Section.make('Contact Info').schema([
-            TextInput.make('email'),
-          ]),
+          Section.make('Personal Info').schema([TextInput.make('name')]),
+          Section.make('Contact Info').schema([TextInput.make('email')]),
         ]),
       ]);
 
@@ -294,10 +252,9 @@ void main() {
 
   group('Grid with different sized sections', () {
     test('sections can have different column spans in a grid', () {
-      final grid = Grid.make(3).schema([
-        Section.make('Main Content').columnSpan(2),
-        Section.make('Sidebar').columnSpan(1),
-      ]);
+      final grid = Grid.make(
+        3,
+      ).schema([Section.make('Main Content').columnSpan(2), Section.make('Sidebar').columnSpan(1)]);
 
       final components = grid.getComponents();
       expect(components, hasLength(2));
