@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dash/src/interactive/component_state.dart';
+import 'package:dash/src/components/interactive/component_state.dart';
 import 'package:dash/src/plugin/asset.dart';
 import 'package:jaspr/jaspr.dart';
 

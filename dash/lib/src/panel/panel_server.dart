@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:dash/src/auth/auth_middleware.dart';
 import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/interactive/wire_handler.dart';
+import 'package:dash/src/components/interactive/wire_handler.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_config.dart';

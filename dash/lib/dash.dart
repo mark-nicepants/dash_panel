@@ -24,6 +24,8 @@ export 'src/auth/auth_service.dart' show AuthService, Session;
 export 'src/auth/authenticatable.dart';
 export 'src/auth/request_session.dart';
 export 'src/auth/session_store.dart' show SessionStore, FileSessionStore, InMemorySessionStore, SessionData;
+// Interactive Components (Livewire-like)
+export 'src/components/interactive/interactive.dart';
 // Components
 export 'src/components/layout.dart';
 export 'src/components/pages/dashboard_page.dart';
@@ -72,8 +74,6 @@ export 'src/generators/models_barrel_generator.dart';
 export 'src/generators/resource_generator.dart';
 export 'src/generators/schema_model_generator.dart';
 export 'src/generators/schema_parser.dart';
-// Interactive Components (Livewire-like)
-export 'src/interactive/interactive.dart';
 // Models
 export 'src/model/annotations.dart';
 export 'src/model/model.dart';

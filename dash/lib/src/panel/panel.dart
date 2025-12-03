@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/auth/session_store.dart';
+import 'package:dash/src/components/interactive/component_registry.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/database/query_builder.dart';
-import 'package:dash/src/interactive/component_registry.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_auth.dart';
