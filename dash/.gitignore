@@ -37,7 +37,6 @@ coverage/
 *.backup
 
 node_modules/
-resources/dist/
 /storage/
 
 # FVM Version Cache
