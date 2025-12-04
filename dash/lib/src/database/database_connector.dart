@@ -1,5 +1,13 @@
 import 'package:dash/src/cli/cli_logger.dart';
 
+/// Enum representing supported database connector types.
+///
+/// Currently only SQLite is supported.
+enum DatabaseConnectorType {
+  /// SQLite database connector.
+  sqlite,
+}
+
 /// Abstract base class for database connectors.
 ///
 /// All database connectors must implement this interface to provide
@@ -129,7 +137,7 @@ abstract class DatabaseConnector {
   bool get isConnected;
 
   /// Returns the type of this database connector.
-  String get type;
+  DatabaseConnectorType get type;
 
   /// Returns a SQL expression that truncates a datetime column to the given granularity.
   ///

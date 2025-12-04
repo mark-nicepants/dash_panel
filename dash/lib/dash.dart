@@ -44,12 +44,11 @@ export 'src/components/partials/page_header.dart';
 export 'src/components/partials/page_scaffold.dart';
 export 'src/components/partials/table/table_components.dart';
 export 'src/components/partials/user_menu.dart';
-export 'src/database/connectors/sqlite_connector.dart';
+export 'src/database/connectors/sqlite/sqlite_connector.dart';
 export 'src/database/database_config.dart';
 // Database
 export 'src/database/database_connector.dart';
-export 'src/database/migrations/builders/sqlite_migration_builder.dart';
-export 'src/database/migrations/inspectors/sqlite_schema_inspector.dart';
+export 'src/database/database_connector_cli.dart';
 export 'src/database/migrations/migration_builder.dart';
 export 'src/database/migrations/migration_config.dart';
 export 'src/database/migrations/migration_runner.dart';

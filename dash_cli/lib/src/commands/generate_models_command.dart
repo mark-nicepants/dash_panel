@@ -1,6 +1,8 @@
 import 'dart:io';
 
-import 'package:args/command_runner.dart';
+import 'package:dash_cli/src/commands/base_command.dart';
+import 'package:dash_cli/src/commands/completion_configuration.dart';
+import 'package:dash_cli/src/commands/dcli_argument.dart';
 import 'package:dash_cli/src/generators/models_barrel_generator.dart';
 import 'package:dash_cli/src/generators/resource_generator.dart';
 import 'package:dash_cli/src/generators/schema_model_generator.dart';
@@ -12,26 +14,38 @@ import 'package:yaml/yaml.dart';
 /// Generate Dart model classes from schema YAML files.
 ///
 /// Usage:
-///   dash generate:models [options]
-///   dash generate:models -s schemas/models -o lib
+///   dcli generate:models [options]
+///   dcli generate:models -s schemas/models -o lib
 ///
 /// Options:
 ///   -s, --schemas    Path to schema YAML files (default: schemas/models)
 ///   -o, --output     Output directory for generated code (default: lib)
 ///   --force          Overwrite existing resource files
-class GenerateModelsCommand extends Command<int> {
+class GenerateModelsCommand extends BaseCommand {
   GenerateModelsCommand() {
-    argParser
-      ..addOption(
-        'schemas',
-        abbr: 's',
-        help: 'Path to directory containing schema YAML files',
-        defaultsTo: 'schemas/models',
-      )
-      ..addOption('output', abbr: 'o', help: 'Output directory for generated code', defaultsTo: 'lib')
-      ..addFlag('force', abbr: 'f', help: 'Overwrite existing resource files', defaultsTo: false)
-      ..addFlag('verbose', abbr: 'v', help: 'Show detailed output', defaultsTo: false);
+    DcliArgument.addToParser(argParser, _arguments);
   }
+
+  /// Unified argument definitions.
+  static final _arguments = [
+    DcliArgument.option(
+      name: 'schemas',
+      abbr: 's',
+      help: 'Path to directory containing schema YAML files',
+      defaultsTo: 'schemas/models',
+      completionType: CompletionType.directory,
+    ),
+    DcliArgument.option(
+      name: 'output',
+      abbr: 'o',
+      help: 'Output directory for generated code',
+      defaultsTo: 'lib',
+      completionType: CompletionType.directory,
+    ),
+    DcliArgument.flag(name: 'force', abbr: 'f', help: 'Overwrite existing resource files'),
+    DcliArgument.flag(name: 'verbose', abbr: 'v', help: 'Show detailed output'),
+  ];
+
   @override
   final String name = 'generate:models';
 
@@ -227,5 +241,15 @@ class GenerateModelsCommand extends Command<int> {
     } catch (_) {
       return null;
     }
+  }
+
+  @override
+  CompletionConfiguration getCompletionConfig() {
+    return DcliArgument.toCompletionConfig(
+      name: name,
+      description: description,
+      arguments: _arguments,
+      aliases: aliases,
+    );
   }
 }

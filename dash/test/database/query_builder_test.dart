@@ -19,7 +19,7 @@ class MockDatabaseConnector extends DatabaseConnector {
   bool get isConnected => true;
 
   @override
-  String get type => 'mock';
+  DatabaseConnectorType get type => DatabaseConnectorType.sqlite;
 
   @override
   Future<List<Map<String, dynamic>>> queryImpl(String sql, [List<dynamic>? params]) async {

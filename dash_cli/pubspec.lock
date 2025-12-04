@@ -34,7 +34,7 @@ packages:
     source: hosted
     version: "2.13.0"
   bcrypt:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: bcrypt
       sha256: "9dc3f234d5935a76917a6056613e1a6d9b53f7fa56f98e24cd49b8969307764b"

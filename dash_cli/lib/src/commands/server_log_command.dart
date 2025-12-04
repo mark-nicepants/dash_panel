@@ -2,27 +2,40 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:args/command_runner.dart';
+import 'package:dash_cli/src/commands/base_command.dart';
+import 'package:dash_cli/src/commands/completion_configuration.dart';
+import 'package:dash_cli/src/commands/dcli_argument.dart';
 import 'package:dash_cli/src/utils/console_utils.dart';
 import 'package:http/http.dart' as http;
 
 /// Stream server logs to the console.
 ///
 /// Usage:
-///   dash server:log [options]
+///   dcli server:log [options]
 ///
 /// Options:
 ///   -f, --follow      Follow log output (tail mode)
 ///   -n, --lines       Number of lines to show (default: 50)
 ///   --url             Server URL (default: http://localhost:8080)
-class ServerLogCommand extends Command<int> {
+class ServerLogCommand extends BaseCommand {
   ServerLogCommand() {
-    argParser
-      ..addFlag('follow', abbr: 'f', help: 'Follow log output (like tail -f)', defaultsTo: false)
-      ..addOption('lines', abbr: 'n', help: 'Number of lines to show', defaultsTo: '50')
-      ..addOption('url', help: 'Server URL', defaultsTo: 'http://localhost:8080')
-      ..addOption('path', help: 'Admin panel base path', defaultsTo: '/admin');
+    DcliArgument.addToParser(argParser, _arguments);
   }
+
+  /// Unified argument definitions.
+  static final _arguments = [
+    DcliArgument.flag(name: 'follow', abbr: 'f', help: 'Follow log output (like tail -f)'),
+    DcliArgument.option(
+      name: 'lines',
+      abbr: 'n',
+      help: 'Number of lines to show',
+      defaultsTo: '50',
+      completionType: CompletionType.number,
+    ),
+    DcliArgument.option(name: 'url', help: 'Server URL', defaultsTo: 'http://localhost:8080'),
+    DcliArgument.option(name: 'path', help: 'Admin panel base path', defaultsTo: '/admin'),
+  ];
+
   @override
   final String name = 'server:log';
 
@@ -168,6 +181,16 @@ class ServerLogCommand extends Command<int> {
       '${ConsoleUtils.gray}$time${ConsoleUtils.reset} '
       '$levelColor[${level.toUpperCase().padRight(5)}]${ConsoleUtils.reset} '
       '$message',
+    );
+  }
+
+  @override
+  CompletionConfiguration getCompletionConfig() {
+    return DcliArgument.toCompletionConfig(
+      name: name,
+      description: description,
+      arguments: _arguments,
+      aliases: aliases,
     );
   }
 }

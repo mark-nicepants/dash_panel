@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:dash/src/auth/session_store.dart';
-import 'package:dash/src/database/connectors/sqlite_connector.dart';
+import 'package:dash/src/database/connectors/sqlite/sqlite_connector.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/database_connector.dart';
 import 'package:dash/src/database/migrations/migration_config.dart';
@@ -145,6 +145,40 @@ class DbConfigData {
 /// final panel = Panel()..applyConfig('schemas/panel.yaml');
 /// ```
 class PanelConfigLoader {
+  /// Finds a panel configuration file by convention.
+  ///
+  /// Searches for panel.yml or panel.yaml in:
+  /// 1. Current directory
+  /// 2. schemas/ subdirectory
+  /// 3. Parent directories recursively
+  ///
+  /// Returns the path to the config file, or null if not found.
+  static String? findPanelConfig([String? startPath]) {
+    var current = Directory(startPath ?? Directory.current.path);
+    final configNames = ['panel.yml', 'panel.yaml'];
+
+    while (true) {
+      // Check current directory
+      for (final name in configNames) {
+        final file = File(p.join(current.path, name));
+        if (file.existsSync()) return file.path;
+      }
+
+      // Check schemas/ subdirectory
+      for (final name in configNames) {
+        final file = File(p.join(current.path, 'schemas', name));
+        if (file.existsSync()) return file.path;
+      }
+
+      // Move to parent directory
+      final parent = current.parent;
+      if (parent.path == current.path) break; // Hit root
+      current = parent;
+    }
+
+    return null;
+  }
+
   /// Loads a panel configuration from a YAML file asynchronously.
   static Future<PanelConfigData> load(String configPath) async {
     final file = File(configPath);
@@ -193,15 +227,27 @@ class PanelConfigLoader {
 extension PanelConfigExtension on Panel {
   /// Applies configuration from a YAML file to this panel.
   ///
-  /// Loads the configuration from the specified path and configures the panel's
-  /// id, path, storage, session, and database settings.
+  /// If [configPath] is not provided, searches for panel.yml/panel.yaml by convention:
+  /// 1. Current directory (panel.yml, panel.yaml)
+  /// 2. schemas/ directory (schemas/panel.yml, schemas/panel.yaml)
+  /// 3. Parent directories recursively
   ///
   /// Example:
   /// ```dart
-  /// final panel = Panel()..applyConfig('schemas/panel.yaml');
+  /// // Auto-discover panel.yml
+  /// final panel = Panel()..applyConfig();
+  ///
+  /// // Or specify explicit path
+  /// final panel = Panel()..applyConfig('config/panel.yaml');
   /// ```
-  Panel applyConfig(String configPath) {
-    final config = PanelConfigLoader.loadSync(configPath);
+  Panel applyConfig([String? configPath]) {
+    final path = configPath ?? PanelConfigLoader.findPanelConfig();
+    if (path == null) {
+      // No config found, use defaults
+      return this;
+    }
+
+    final config = PanelConfigLoader.loadSync(path);
     setId(config.id);
     setPath(config.path);
 

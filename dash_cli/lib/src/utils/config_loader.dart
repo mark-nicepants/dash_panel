@@ -1,27 +1,34 @@
 import 'dart:io';
 
+import 'package:dash/dash.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
 /// Configuration loader for Dash CLI.
 ///
+/// Uses [PanelConfigLoader] from Dash for config file discovery,
+/// but provides CLI-specific configuration classes.
+///
 /// Loads configuration from:
-/// 1. dash.yaml in current directory
-/// 2. pubspec.yaml (dash section)
-/// 3. Command-line arguments (highest priority)
+/// 1. panel.yml/panel.yaml in current directory
+/// 2. panel.yml/panel.yaml in schemas/ directory
+/// 3. dash.yaml in current directory (legacy)
+/// 4. Command-line arguments (highest priority)
 class ConfigLoader {
   /// Load configuration from the current project.
+  ///
+  /// Uses [PanelConfigLoader.findPanelConfig] for discovery.
   static DashConfig load({String? configPath}) {
-    final cwd = Directory.current.path;
+    // Use Dash's config finder if no explicit path provided
+    final panelConfigPath = configPath ?? PanelConfigLoader.findPanelConfig();
 
-    // Try dash.yaml first
-    var dashConfigPath = configPath ?? path.join(cwd, 'dash.yaml');
-    if (File(dashConfigPath).existsSync()) {
-      return _loadFromFile(dashConfigPath);
+    if (panelConfigPath != null && File(panelConfigPath).existsSync()) {
+      return _loadFromFile(panelConfigPath);
     }
 
-    // Try panel.yaml in schemas directory
-    dashConfigPath = path.join(cwd, 'schemas', 'panel.yaml');
+    // Fall back to legacy dash.yaml
+    final cwd = Directory.current.path;
+    final dashConfigPath = path.join(cwd, 'dash.yaml');
     if (File(dashConfigPath).existsSync()) {
       return _loadFromFile(dashConfigPath);
     }
@@ -82,10 +89,91 @@ class ConfigLoader {
   }
 }
 
+/// Database configuration.
+class DatabaseConfig {
+  const DatabaseConfig({
+    required this.driver,
+    required this.path,
+    this.host,
+    this.port,
+    this.database,
+    this.username,
+    this.password,
+  });
+
+  /// Default SQLite configuration.
+  factory DatabaseConfig.defaults() => const DatabaseConfig(driver: 'sqlite', path: 'storage/app.db');
+
+  /// Load database configuration from YAML.
+  factory DatabaseConfig.fromYaml(YamlMap? yaml) {
+    if (yaml == null) return DatabaseConfig.defaults();
+
+    final driver = yaml['driver'] as String? ?? 'sqlite';
+
+    // For SQLite, path is relative to storage directory
+    String dbPath;
+    if (driver == 'sqlite') {
+      final configPath = yaml['path'] as String? ?? 'app.db';
+      // If path doesn't include storage, prepend it
+      if (configPath.startsWith('storage/') || configPath.startsWith('/')) {
+        dbPath = configPath;
+      } else {
+        dbPath = 'storage/$configPath';
+      }
+    } else {
+      dbPath = yaml['path'] as String? ?? '';
+    }
+
+    return DatabaseConfig(
+      driver: driver,
+      path: dbPath,
+      host: yaml['host'] as String?,
+      port: yaml['port'] as int?,
+      database: yaml['database'] as String?,
+      username: yaml['username'] as String?,
+      password: yaml['password'] as String?,
+    );
+  }
+
+  /// The database driver (sqlite, postgres, mysql).
+  final String driver;
+
+  /// Path to database file (for SQLite) or socket path.
+  final String path;
+
+  /// Database host (for postgres, mysql).
+  final String? host;
+
+  /// Database port (for postgres, mysql).
+  final int? port;
+
+  /// Database name (for postgres, mysql).
+  final String? database;
+
+  /// Database username (for postgres, mysql).
+  final String? username;
+
+  /// Database password (for postgres, mysql).
+  final String? password;
+
+  /// Convert to a map suitable for DatabaseConnectorFactory.
+  Map<String, dynamic> toMap() {
+    return {
+      'driver': driver,
+      'path': path,
+      'host': host,
+      'port': port,
+      'database': database,
+      'username': username,
+      'password': password,
+    };
+  }
+}
+
 /// Dash CLI configuration.
 class DashConfig {
   const DashConfig({
-    required this.databasePath,
+    required this.databaseConfig,
     required this.schemasPath,
     required this.outputPath,
     required this.serverUrl,
@@ -94,8 +182,8 @@ class DashConfig {
   });
 
   /// Default configuration.
-  factory DashConfig.defaults() => const DashConfig(
-    databasePath: 'storage/app.db',
+  factory DashConfig.defaults() => DashConfig(
+    databaseConfig: DatabaseConfig.defaults(),
     schemasPath: 'schemas/models',
     outputPath: 'lib',
     serverUrl: 'http://localhost',
@@ -107,18 +195,34 @@ class DashConfig {
   factory DashConfig.fromYaml(YamlMap yaml) {
     final defaults = DashConfig.defaults();
 
+    // Parse database config from 'database' key
+    final dbConfig = DatabaseConfig.fromYaml(yaml['database'] as YamlMap?);
+
+    // Parse panel config if present
+    final panelConfig = yaml['panel'] as YamlMap?;
+    final basePath = panelConfig?['path'] as String? ?? defaults.basePath;
+
+    // Parse server config if present
+    final serverConfig = yaml['server'] as YamlMap?;
+
     return DashConfig(
-      databasePath: yaml['database']?['path'] as String? ?? defaults.databasePath,
+      databaseConfig: dbConfig,
       schemasPath: yaml['schemas']?['path'] as String? ?? defaults.schemasPath,
       outputPath: yaml['output']?['path'] as String? ?? defaults.outputPath,
-      serverUrl: yaml['server']?['url'] as String? ?? defaults.serverUrl,
-      serverPort: yaml['server']?['port'] as int? ?? defaults.serverPort,
-      basePath: yaml['server']?['basePath'] as String? ?? defaults.basePath,
+      serverUrl: serverConfig?['url'] as String? ?? defaults.serverUrl,
+      serverPort: serverConfig?['port'] as int? ?? defaults.serverPort,
+      basePath: basePath,
     );
   }
 
-  /// Path to the database file.
-  final String databasePath;
+  /// Database configuration.
+  final DatabaseConfig databaseConfig;
+
+  /// Path to the database file (convenience getter).
+  String get databasePath => databaseConfig.path;
+
+  /// Database driver type.
+  String get databaseDriver => databaseConfig.driver;
 
   /// Path to schema YAML files.
   final String schemasPath;

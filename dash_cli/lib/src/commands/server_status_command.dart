@@ -1,24 +1,31 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:args/command_runner.dart';
+import 'package:dash_cli/src/commands/base_command.dart';
+import 'package:dash_cli/src/commands/completion_configuration.dart';
+import 'package:dash_cli/src/commands/dcli_argument.dart';
 import 'package:dash_cli/src/utils/console_utils.dart';
 import 'package:http/http.dart' as http;
 
 /// Display server status and health information.
 ///
 /// Usage:
-///   dash server:status [options]
+///   dcli server:status [options]
 ///
 /// Options:
 ///   --url    Server URL (default: http://localhost:8080)
 ///   --path   Admin panel base path (default: /admin)
-class ServerStatusCommand extends Command<int> {
+class ServerStatusCommand extends BaseCommand {
   ServerStatusCommand() {
-    argParser
-      ..addOption('url', help: 'Server URL', defaultsTo: 'http://localhost:8080')
-      ..addOption('path', help: 'Admin panel base path', defaultsTo: '/admin');
+    DcliArgument.addToParser(argParser, _arguments);
   }
+
+  /// Unified argument definitions.
+  static final _arguments = [
+    DcliArgument.option(name: 'url', help: 'Server URL', defaultsTo: 'http://localhost:8080'),
+    DcliArgument.option(name: 'path', help: 'Admin panel base path', defaultsTo: '/admin'),
+  ];
+
   @override
   final String name = 'server:status';
 
@@ -187,5 +194,15 @@ class ServerStatusCommand extends Command<int> {
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
+  }
+
+  @override
+  CompletionConfiguration getCompletionConfig() {
+    return DcliArgument.toCompletionConfig(
+      name: name,
+      description: description,
+      arguments: _arguments,
+      aliases: aliases,
+    );
   }
 }

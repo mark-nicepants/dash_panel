@@ -23,6 +23,7 @@ void main(List<String> args) async {
         ..addCommand(DbSchemaCommand())
         ..addCommand(DbSeedCommand())
         ..addCommand(DbClearCommand())
+        ..addCommand(DbCreateCommand())
         // Server commands
         ..addCommand(ServerLogCommand())
         ..addCommand(ServerStatusCommand())

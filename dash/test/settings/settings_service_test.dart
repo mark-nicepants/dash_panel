@@ -1,4 +1,4 @@
-import 'package:dash/src/database/connectors/sqlite_connector.dart';
+import 'package:dash/src/database/connectors/sqlite/sqlite_connector.dart';
 import 'package:dash/src/database/database_connector.dart';
 import 'package:dash/src/settings/settings_service.dart';
 import 'package:test/test.dart';

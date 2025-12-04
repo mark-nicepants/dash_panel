@@ -1,4 +1,5 @@
 import 'package:dash/dash.dart';
+import 'package:dash/src/database/connectors/sqlite/sqlite_schema_inspector.dart';
 import 'package:test/test.dart';
 
 void main() {

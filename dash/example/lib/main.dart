@@ -11,7 +11,7 @@ Future<void> main() async {
 
   // Create and configure the admin panel
   await Panel()
-      .applyConfig('schemas/panel.yaml')
+      .applyConfig()
       .authModel<User>()
       .registerPages([SettingsPage.make()])
       .plugin(

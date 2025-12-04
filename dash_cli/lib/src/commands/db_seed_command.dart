@@ -1,38 +1,65 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:args/command_runner.dart';
+import 'package:dash/dash.dart';
+import 'package:dash_cli/src/commands/base_command.dart';
+import 'package:dash_cli/src/commands/completion_configuration.dart';
+import 'package:dash_cli/src/commands/dcli_argument.dart';
 import 'package:dash_cli/src/generators/schema_parser.dart';
 import 'package:dash_cli/src/utils/console_utils.dart';
-import 'package:faker/faker.dart';
+import 'package:dash_cli/src/utils/field_generator.dart';
 import 'package:path/path.dart' as path;
-import 'package:sqlite3/sqlite3.dart';
 
 /// Seed the database with fake data.
 ///
 /// Usage:
-///   dash db:seed model [count] [options]
+///   dcli db:seed model [count] [options]
 ///
 /// Examples:
-///   dash db:seed User 100
-///   dash db:seed Post 50 --database storage/app.db
+///   dcli db:seed User 100
+///   dcli db:seed Post 50 --database storage/app.db
 ///
 /// Options:
-///   -d, --database    Path to SQLite database file
+///   -d, --database    Path to database file
 ///   -s, --schemas     Path to schema YAML files
-class DbSeedCommand extends Command<int> {
+class DbSeedCommand extends BaseCommand with DatabaseCommandMixin {
   DbSeedCommand() {
-    argParser
-      ..addOption('database', abbr: 'd', help: 'Path to SQLite database file', defaultsTo: 'storage/app.db')
-      ..addOption(
-        'schemas',
-        abbr: 's',
-        help: 'Path to directory containing schema YAML files',
-        defaultsTo: 'schemas/models',
-      )
-      ..addFlag('verbose', abbr: 'v', help: 'Show detailed output', defaultsTo: false)
-      ..addFlag('list', abbr: 'l', help: 'List available models to seed', defaultsTo: false);
+    DcliArgument.addToParser(argParser, _arguments);
   }
+
+  /// Unified argument definitions for both argParser and completion.
+  static final _arguments = [
+    // Positional arguments
+    DcliArgument.positional(
+      name: 'model',
+      help: 'Model name to seed (e.g., User, Post)',
+      completionType: CompletionType.model,
+    ),
+    DcliArgument.positional(
+      name: 'count',
+      help: 'Number of records to create (default: 10)',
+      completionType: CompletionType.number,
+    ),
+    // Options
+    DcliArgument.option(
+      name: 'database',
+      abbr: 'd',
+      help: 'Path to database file',
+      completionType: CompletionType.file,
+      filePattern: '*.db',
+    ),
+    DcliArgument.option(
+      name: 'schemas',
+      abbr: 's',
+      help: 'Path to directory containing schema YAML files',
+      defaultsTo: 'schemas/models',
+      completionType: CompletionType.directory,
+    ),
+    // Flags
+    DcliArgument.flag(name: 'verbose', abbr: 'v', help: 'Show detailed output'),
+    DcliArgument.flag(name: 'list', abbr: 'l', help: 'List available models to seed'),
+  ];
+
   @override
   final String name = 'db:seed';
 
@@ -43,14 +70,13 @@ class DbSeedCommand extends Command<int> {
   final List<String> aliases = ['seed'];
 
   @override
-  final String invocation = 'dash db:seed <model> [count]';
+  final String invocation = 'dcli db:seed <model> [count]';
 
-  final _faker = Faker();
+  final _fieldGenerator = FieldGenerator();
   final _random = Random();
 
   @override
   Future<int> run() async {
-    final databasePath = argResults!['database'] as String;
     final schemasPath = argResults!['schemas'] as String;
     final verbose = argResults!['verbose'] as bool;
     final listModels = argResults!['list'] as bool;
@@ -103,7 +129,7 @@ class DbSeedCommand extends Command<int> {
         );
       }
       print('');
-      print('Usage: dash db:seed <model> [count]');
+      print('Usage: dcli db:seed <model> [count]');
       return 0;
     }
 
@@ -111,7 +137,7 @@ class DbSeedCommand extends Command<int> {
     if (rest.isEmpty) {
       ConsoleUtils.error('Please specify a model to seed');
       print('');
-      print('Usage: dash db:seed <model> [count]');
+      print('Usage: dcli db:seed <model> [count]');
       print('');
       print('Available models:');
       for (final name in schemas.keys) {
@@ -136,8 +162,8 @@ class DbSeedCommand extends Command<int> {
     }
 
     // Check database exists
-    if (!File(databasePath).existsSync()) {
-      ConsoleUtils.error('Database not found: $databasePath');
+    if (!File(effectiveDatabasePath).existsSync()) {
+      ConsoleUtils.error('Database not found: $effectiveDatabasePath');
       print('');
       print('Make sure the database file exists. Run your Dash server first to create it.');
       return 1;
@@ -145,18 +171,17 @@ class DbSeedCommand extends Command<int> {
 
     ConsoleUtils.info('Model: ${schema.modelName}');
     ConsoleUtils.info('Table: ${schema.config.table}');
+    ConsoleUtils.info('Database: $effectiveDatabasePath (${config.databaseDriver})');
     ConsoleUtils.info('Count: $count');
     print('');
 
     try {
-      final db = sqlite3.open(databasePath);
+      final db = await getDatabase(databasePath: effectiveDatabasePath);
 
       // Verify table exists
-      final tables = db.select("SELECT name FROM sqlite_master WHERE type='table' AND name=?", [schema.config.table]);
-
-      if (tables.isEmpty) {
+      if (!await db.tableExists(schema.config.table)) {
         ConsoleUtils.error('Table "${schema.config.table}" not found in database');
-        db.close();
+        await db.close();
         return 1;
       }
 
@@ -169,7 +194,7 @@ class DbSeedCommand extends Command<int> {
           final pluralTable = '${relatedTable}s';
 
           try {
-            final rows = db.select('SELECT id FROM "$pluralTable" LIMIT 1000');
+            final rows = await db.query('SELECT id FROM "$pluralTable" LIMIT 1000');
             if (rows.isNotEmpty) {
               foreignKeyValues[field.columnName] = rows.map((r) => r['id'] as int).toList();
             }
@@ -178,6 +203,9 @@ class DbSeedCommand extends Command<int> {
           }
         }
       }
+
+      // Disable foreign key checks during bulk insert
+      await db.disableForeignKeys();
 
       // Generate and insert records
       var inserted = 0;
@@ -188,16 +216,12 @@ class DbSeedCommand extends Command<int> {
 
         if (data.isEmpty) continue;
 
-        final columns = data.keys.toList();
-        final values = data.values.toList();
-        final placeholders = List.filled(columns.length, '?').join(', ');
-
         try {
-          db.execute('INSERT INTO "${schema.config.table}" (${columns.join(', ')}) VALUES ($placeholders)', values);
+          final lastId = await db.insert(schema.config.table, data);
           inserted++;
 
           if (verbose) {
-            ConsoleUtils.success('Created ${schema.modelName} #${db.lastInsertRowId}');
+            ConsoleUtils.success('Created ${schema.modelName} #$lastId');
           } else {
             ConsoleUtils.progressBar(i + 1, count, prefix: 'Seeding');
           }
@@ -208,8 +232,11 @@ class DbSeedCommand extends Command<int> {
         }
       }
 
+      // Re-enable foreign key checks
+      await db.enableForeignKeys();
+
       final duration = DateTime.now().difference(startTime);
-      db.close();
+      await db.close();
 
       print('');
       ConsoleUtils.line();
@@ -259,184 +286,34 @@ class DbSeedCommand extends Command<int> {
         continue; // Skip (will be null)
       }
 
-      // Generate value based on type and constraints
-      final value = _generateFieldValue(field, schema.modelName);
+      // Generate value using FieldGenerator
+      final value = _fieldGenerator.generateValue(field, schema.modelName, hashPasswords: true);
       if (value != null) {
-        data[field.columnName] = value;
+        // Convert booleans to SQLite integers
+        if (value is bool) {
+          data[field.columnName] = value ? 1 : 0;
+        } else {
+          data[field.columnName] = value;
+        }
       }
     }
 
     return data;
   }
 
-  dynamic _generateFieldValue(SchemaField field, String modelName) {
-    // Handle enum values
-    if (field.enumValues != null && field.enumValues!.isNotEmpty) {
-      return field.enumValues![_random.nextInt(field.enumValues!.length)];
-    }
-
-    // Handle default values
-    if (field.defaultValue != null && _random.nextDouble() < 0.3) {
-      return field.defaultValue;
-    }
-
-    // Generate based on field name hints and type
-    final name = field.name.toLowerCase();
-    final type = field.dartType;
-
-    // String fields - use field name hints
-    if (type == 'String') {
-      return _generateStringValue(name, field);
-    }
-
-    // Integer fields
-    if (type == 'int') {
-      final min = field.min?.toInt() ?? 0;
-      final max = field.max?.toInt() ?? 1000;
-      return min + _random.nextInt(max - min + 1);
-    }
-
-    // Double fields
-    if (type == 'double') {
-      final min = field.min?.toDouble() ?? 0.0;
-      final max = field.max?.toDouble() ?? 1000.0;
-      return min + _random.nextDouble() * (max - min);
-    }
-
-    // Boolean fields
-    if (type == 'bool') {
-      // Handle common boolean patterns
-      if (name.contains('active') || name.contains('enabled') || name.contains('published')) {
-        return _random.nextDouble() < 0.8 ? 1 : 0; // 80% true
-      }
-      if (name.contains('deleted') || name.contains('archived') || name.contains('hidden')) {
-        return _random.nextDouble() < 0.1 ? 1 : 0; // 10% true
-      }
-      return _random.nextBool() ? 1 : 0;
-    }
-
-    // DateTime fields
-    if (type == 'DateTime') {
-      final now = DateTime.now();
-      if (name.contains('birth') || name.contains('dob')) {
-        // Birth date: 18-80 years ago
-        return now.subtract(Duration(days: 365 * (18 + _random.nextInt(62)))).toIso8601String();
-      }
-      // Default: within last year
-      return now.subtract(Duration(days: _random.nextInt(365))).toIso8601String();
-    }
-
-    return null;
-  }
-
-  String _generateStringValue(String fieldName, SchemaField field) {
-    // Email fields
-    if (fieldName.contains('email')) {
-      return _faker.internet.email();
-    }
-
-    // Name fields
-    if (fieldName == 'name' || fieldName == 'fullname' || fieldName == 'full_name') {
-      return _faker.person.name();
-    }
-    if (fieldName == 'firstname' || fieldName == 'first_name') {
-      return _faker.person.firstName();
-    }
-    if (fieldName == 'lastname' || fieldName == 'last_name') {
-      return _faker.person.lastName();
-    }
-
-    // Username
-    if (fieldName.contains('username') || fieldName.contains('user_name')) {
-      return _faker.internet.userName();
-    }
-
-    // Password (hashed placeholder - should be replaced with actual hash)
-    if (fieldName.contains('password')) {
-      // Return a bcrypt-like hash placeholder
-      return '\$2b\$10\$${_faker.lorem.word()}${_faker.lorem.word()}${_faker.lorem.word()}';
-    }
-
-    // Title fields
-    if (fieldName == 'title') {
-      return _faker.lorem.sentence();
-    }
-
-    // Slug fields
-    if (fieldName == 'slug') {
-      return _faker.lorem.words(3).join('-').toLowerCase().replaceAll(RegExp(r'[^a-z0-9-]'), '');
-    }
-
-    // Content/body/description
-    if (fieldName == 'content' || fieldName == 'body' || fieldName == 'text') {
-      return _faker.lorem.sentences(_random.nextInt(5) + 3).join(' ');
-    }
-    if (fieldName == 'description' || fieldName == 'summary' || fieldName == 'excerpt') {
-      return _faker.lorem.sentence();
-    }
-
-    // URL fields
-    if (fieldName.contains('url') || fieldName.contains('link') || fieldName.contains('website')) {
-      return _faker.internet.httpsUrl();
-    }
-
-    // Avatar/image fields
-    if (fieldName.contains('avatar') || fieldName.contains('image') || fieldName.contains('photo')) {
-      return 'https://i.pravatar.cc/150?u=${_faker.internet.email()}';
-    }
-
-    // Phone fields
-    if (fieldName.contains('phone') || fieldName.contains('mobile') || fieldName.contains('tel')) {
-      return _faker.phoneNumber.us();
-    }
-
-    // Address fields
-    if (fieldName.contains('address')) {
-      return _faker.address.streetAddress();
-    }
-    if (fieldName == 'city') {
-      return _faker.address.city();
-    }
-    if (fieldName == 'country') {
-      return _faker.address.country();
-    }
-    if (fieldName.contains('zip') || fieldName.contains('postal')) {
-      return _faker.address.zipCode();
-    }
-
-    // Company fields
-    if (fieldName.contains('company') || fieldName.contains('organization')) {
-      return _faker.company.name();
-    }
-
-    // Color fields
-    if (fieldName.contains('color')) {
-      return '#${_random.nextInt(0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
-    }
-
-    // IP address
-    if (fieldName.contains('ip')) {
-      return '${_random.nextInt(256)}.${_random.nextInt(256)}.${_random.nextInt(256)}.${_random.nextInt(256)}';
-    }
-
-    // Default: lorem words with length constraint
-    final maxLen = field.max?.toInt() ?? 255;
-    final minLen = field.min?.toInt() ?? 1;
-    var result = _faker.lorem.words(_random.nextInt(3) + 1).join(' ');
-
-    if (result.length > maxLen) {
-      result = result.substring(0, maxLen);
-    }
-    if (result.length < minLen) {
-      result = result.padRight(minLen, 'x');
-    }
-
-    return result;
-  }
-
   String _toSnakeCase(String input) {
     return input
         .replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}')
         .replaceFirst(RegExp(r'^_'), '');
+  }
+
+  @override
+  CompletionConfiguration getCompletionConfig() {
+    return DcliArgument.toCompletionConfig(
+      name: name,
+      description: description,
+      arguments: _arguments,
+      aliases: aliases,
+    );
   }
 }
