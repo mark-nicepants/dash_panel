@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dash/dash.dart';
+import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
 
@@ -23,7 +25,7 @@ class PanelRouter {
   PanelRouter(this._config, this._resourceLoader);
 
   /// Creates a DashLayout with all required properties from config.
-  /// Optionally wraps with page assets. Gets user info from RequestSession.
+  /// Optionally wraps with page assets. Gets user info from RequestContext.
   _PageWithAssets _wrapInLayout({required String title, required Component child, PageAssetCollector? pageAssets}) {
     return _PageWithAssets(
       DashLayout(
@@ -78,10 +80,21 @@ class PanelRouter {
   }
 
   /// Handles form submissions for create, update, delete, and action operations.
+  ///
+  /// Validates CSRF token before processing any form submission.
   Future<Response> _handleFormSubmission(Request request, String path) async {
     // Parse form data
     final formData = await _parseFormData(request);
     final method = formData['_method']?.toString().toUpperCase() ?? 'POST';
+
+    // Validate CSRF token for all form submissions
+    final sessionId = SessionHelper.parseSessionId(request);
+    if (!_validateCsrfToken(formData, sessionId)) {
+      return Response.forbidden(
+        'Invalid or expired CSRF token. Please refresh the page and try again.',
+        headers: {'content-type': 'text/plain'},
+      );
+    }
 
     // Handle custom page POST submissions
     if (path.contains('pages/')) {
@@ -176,6 +189,7 @@ class PanelRouter {
       final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath);
     } catch (e) {
+      cliLogException(e, context: 'Create record');
       // Handle error - re-render create page
       final page = resource.buildCreatePage(
         errors: {
@@ -219,6 +233,7 @@ class PanelRouter {
       final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath);
     } catch (e) {
+      cliLogException(e, context: 'Update record');
       // Handle error
       final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found('$basePath/$recordId/edit');
@@ -284,8 +299,7 @@ class PanelRouter {
       final basePath = '${_config.path}/resources/$resourceSlug';
       return Response.found(basePath);
     } catch (e, stack) {
-      print('[Router] Action error: $e');
-      print(stack);
+      cliLogException(e, stackTrace: stack, context: 'Router action');
       final basePath = '${_config.path}/resources/$resourceSlug';
       return Response.found(basePath);
     }
@@ -304,6 +318,7 @@ class PanelRouter {
       final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath);
     } catch (e) {
+      cliLogException(e, context: 'Delete record');
       final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath);
     }
@@ -518,6 +533,68 @@ class PanelRouter {
   Future<Response> _renderPage(Component page, {PageAssetCollector? pageAssets}) async {
     final rendered = await renderComponent(page);
 
+    // Collect all asset URLs for CSP
+    final scriptDomains = <String>{};
+    final styleDomains = <String>{};
+
+    // Global assets
+    for (final jsAsset in _config.assets.jsAssets) {
+      if (jsAsset.isUrl) {
+        try {
+          final uri = Uri.parse(jsAsset.content);
+          scriptDomains.add(uri.origin);
+        } catch (_) {
+          // Invalid URL, skip
+        }
+      }
+    }
+    for (final cssAsset in _config.assets.cssAssets) {
+      if (cssAsset.isUrl) {
+        try {
+          final uri = Uri.parse(cssAsset.content);
+          styleDomains.add(uri.origin);
+        } catch (_) {
+          // Invalid URL, skip
+        }
+      }
+    }
+
+    // Page-specific assets
+    if (pageAssets != null) {
+      for (final jsAsset in pageAssets.jsAssets) {
+        if (jsAsset.isUrl) {
+          try {
+            final uri = Uri.parse(jsAsset.content);
+            scriptDomains.add(uri.origin);
+          } catch (_) {
+            // Invalid URL, skip
+          }
+        }
+      }
+      for (final cssAsset in pageAssets.cssAssets) {
+        if (cssAsset.isUrl) {
+          try {
+            final uri = Uri.parse(cssAsset.content);
+            styleDomains.add(uri.origin);
+          } catch (_) {
+            // Invalid URL, skip
+          }
+        }
+      }
+    }
+
+    // Build dynamic CSP
+    final isProduction = Platform.environment['DASH_ENV'] == 'production';
+    final scriptSrcParts = ["'self'", "'unsafe-inline'", "'unsafe-eval'"];
+    if (!isProduction) {
+      scriptSrcParts.add('https://cdn.tailwindcss.com');
+    }
+    scriptSrcParts.addAll(scriptDomains);
+    final scriptSrc = scriptSrcParts.join(' ');
+    final styleSrc = ["'self'", "'unsafe-inline'", ...styleDomains].join(' ');
+    final csp =
+        "default-src 'self'; script-src $scriptSrc; style-src $styleSrc; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+
     // Render the template with pre-loaded resources
     final html = _resourceLoader.renderTemplate(
       title: 'DASH Admin',
@@ -527,7 +604,7 @@ class PanelRouter {
       pageBodyAssets: pageAssets?.renderBodyAssets() ?? '',
     );
 
-    return Response.ok(html, headers: {'content-type': 'text/html; charset=utf-8'});
+    return Response.ok(html, headers: {'content-type': 'text/html; charset=utf-8', 'Content-Security-Policy': csp});
   }
 
   /// Handles Server-Sent Events (SSE) connections for real-time updates.
@@ -571,5 +648,14 @@ class PanelRouter {
         'X-Accel-Buffering': 'no', // Disable nginx buffering
       },
     );
+  }
+
+  /// Validates a CSRF token from form data against the session.
+  ///
+  /// Returns true if the token is valid, false otherwise.
+  /// If the session ID is null, validation fails.
+  bool _validateCsrfToken(Map<String, dynamic> formData, String? sessionId) {
+    final token = formData[CsrfProtection.tokenFieldName]?.toString();
+    return CsrfProtection.validateToken(token, sessionId);
   }
 }

@@ -465,8 +465,13 @@ abstract class Model {
   /// - Session-scoped SSE broadcasting (events only go to the right user)
   /// - Activity logging (tracking who made changes)
   /// - Security (preventing cross-session data leakage)
+  ///
+  /// If no session ID is available (e.g., during unauthenticated requests,
+  /// migrations, or background tasks), uses a fallback 'system' identifier
+  /// to ensure events are still dispatched.
   Future<void> _dispatchWithSession(Event event) async {
-    await EventDispatcher.instance.dispatch(event, RequestContext.sessionId!);
+    final sessionId = RequestContext.sessionId ?? 'system';
+    await EventDispatcher.instance.dispatch(event, sessionId);
   }
 
   /// Saves the model to the database.

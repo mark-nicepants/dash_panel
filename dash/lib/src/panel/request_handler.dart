@@ -8,6 +8,7 @@ import 'package:dash/src/auth/session_helper.dart';
 import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash/src/storage/file_upload_validator.dart';
 import 'package:dash/src/storage/storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:shelf/shelf.dart';
@@ -91,6 +92,18 @@ class RequestHandler {
   }
 
   /// Handles file upload via multipart form data.
+  ///
+  /// Validates uploaded files for:
+  /// - File size limits
+  /// - Allowed/blocked file extensions
+  /// - MIME type validation
+  /// - Filename sanitization
+  ///
+  /// Security measures:
+  /// - Blocks executable and script files
+  /// - Prevents double extension attacks
+  /// - Sanitizes filenames to prevent path traversal
+  /// - Generates unique filenames for storage
   Future<Response> _handleFileUpload(Request request) async {
     try {
       // Check if storage is configured
@@ -124,6 +137,9 @@ class RequestHandler {
       String? fileType;
       String? diskName;
       String? directory;
+      String? uploadType;
+      int? maxSizeKb;
+      List<String>? acceptedTypes;
 
       for (final part in parts) {
         if (part.filename != null) {
@@ -134,6 +150,12 @@ class RequestHandler {
           diskName = String.fromCharCodes(part.data);
         } else if (part.name == 'directory') {
           directory = String.fromCharCodes(part.data);
+        } else if (part.name == 'uploadType') {
+          uploadType = String.fromCharCodes(part.data);
+        } else if (part.name == 'maxSize') {
+          maxSizeKb = int.tryParse(String.fromCharCodes(part.data));
+        } else if (part.name == 'acceptedTypes') {
+          acceptedTypes = String.fromCharCodes(part.data).split(',').map((t) => t.trim()).toList();
         }
       }
 
@@ -141,11 +163,27 @@ class RequestHandler {
         return _jsonError('No file provided', 400);
       }
 
+      // Build validation configuration based on upload type and field settings
+      final validationConfig = _buildValidationConfig(
+        uploadType: uploadType,
+        maxSizeKb: maxSizeKb,
+        acceptedTypes: acceptedTypes,
+      );
+
+      // Validate the file
+      final validationError = validationConfig.validate(fileData, fileName, fileType);
+      if (validationError != null) {
+        return _jsonError(validationError, 400);
+      }
+
+      // Sanitize the filename
+      final sanitizedName = sanitizeFilename(fileName);
+
       // Get storage disk
       final storage = _storageManager!.disk(diskName);
 
-      // Generate unique filename
-      final extension = p.extension(fileName);
+      // Generate unique filename with sanitized original name
+      final extension = p.extension(sanitizedName);
       final uniqueId = _generateUniqueId();
       final storedFileName = '$uniqueId$extension';
 
@@ -160,7 +198,8 @@ class RequestHandler {
       return Response.ok(
         jsonEncode({
           'id': uniqueId,
-          'name': fileName,
+          'name': sanitizedName,
+          'originalName': fileName,
           'path': storagePath,
           'url': url,
           'size': fileData.length,
@@ -170,9 +209,69 @@ class RequestHandler {
       );
     } catch (e) {
       cliLogException(e);
-      print('File upload error: $e');
-      return _jsonError('Upload failed: $e', 500);
+      return _jsonError('Upload failed. Please try again.', 500);
     }
+  }
+
+  /// Builds validation configuration based on upload type and field settings.
+  FileUploadValidationConfig _buildValidationConfig({String? uploadType, int? maxSizeKb, List<String>? acceptedTypes}) {
+    // Calculate max size in bytes
+    final maxSizeBytes = maxSizeKb != null ? maxSizeKb * 1024 : 10 * 1024 * 1024;
+
+    // Use predefined configs for known upload types
+    if (uploadType == 'image') {
+      return FileUploadValidationConfig.images(maxFileSizeBytes: maxSizeBytes);
+    } else if (uploadType == 'document') {
+      return FileUploadValidationConfig.documents(maxFileSizeBytes: maxSizeBytes);
+    }
+
+    // Build custom config from field settings
+    final List<String> allowedExtensions = [];
+    final List<String> allowedMimeTypes = [];
+
+    if (acceptedTypes != null && acceptedTypes.isNotEmpty) {
+      for (final type in acceptedTypes) {
+        if (type.contains('/')) {
+          // It's a MIME type
+          allowedMimeTypes.add(type);
+          // Also extract extensions from common MIME types
+          allowedExtensions.addAll(_mimeTypeToExtensions(type));
+        } else if (type.startsWith('.')) {
+          // It's an extension
+          allowedExtensions.add(type.substring(1).toLowerCase());
+        } else {
+          // Assume it's an extension without dot
+          allowedExtensions.add(type.toLowerCase());
+        }
+      }
+    }
+
+    return FileUploadValidationConfig(
+      maxFileSizeBytes: maxSizeBytes,
+      allowedExtensions: allowedExtensions,
+      allowedMimeTypes: allowedMimeTypes,
+    );
+  }
+
+  /// Maps MIME types to common file extensions.
+  List<String> _mimeTypeToExtensions(String mimeType) {
+    final mapping = {
+      'image/jpeg': ['jpg', 'jpeg'],
+      'image/png': ['png'],
+      'image/gif': ['gif'],
+      'image/webp': ['webp'],
+      'image/svg+xml': ['svg'],
+      'image/*': ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico', 'bmp'],
+      'application/pdf': ['pdf'],
+      'application/msword': ['doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['docx'],
+      'application/vnd.ms-excel': ['xls'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['xlsx'],
+      'text/plain': ['txt'],
+      'text/csv': ['csv'],
+    };
+
+    return mapping[mimeType] ?? [];
   }
 
   /// Parses multipart form data.

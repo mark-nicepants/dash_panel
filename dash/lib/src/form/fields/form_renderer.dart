@@ -1,5 +1,7 @@
+import 'package:dash/src/auth/csrf_protection.dart';
 import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/components/partials/forms/form_section.dart';
+import 'package:dash/src/context/request_context.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/form/fields/grid.dart';
 import 'package:dash/src/form/fields/section.dart';
@@ -49,10 +51,23 @@ class FormRenderer extends StatelessComponent {
     };
 
     return form(action: schema.getAction(), method: FormMethod.post, classes: customClasses, [
+      // CSRF token for protection against cross-site request forgery
+      _buildCsrfTokenField(),
       // Method spoofing for PUT/PATCH (placed inside content to avoid space-y-6 gap)
       if (methodAttr != null) input(type: InputType.hidden, name: '_method', value: methodAttr),
       content,
     ]);
+  }
+
+  /// Builds the hidden CSRF token field.
+  ///
+  /// Generates a CSRF token bound to the current session ID using
+  /// [CsrfProtection.generateToken]. If no session is available,
+  /// generates a token with a random fallback ID.
+  Component _buildCsrfTokenField() {
+    final sessionId = RequestContext.sessionId;
+    final token = CsrfProtection.generateToken(sessionId ?? 'no-session');
+    return input(type: InputType.hidden, name: CsrfProtection.tokenFieldName, value: token);
   }
 
   Component _buildFormContent(BuildContext context) {

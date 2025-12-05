@@ -79,9 +79,13 @@ class PanelServer {
     Jaspr.initializeApp();
 
     // Build request pipeline
+    // Error handling is added first to catch exceptions from all middleware and handlers
+    // Security headers are added next to ensure all responses have them
     // Static assets are served BEFORE auth middleware to avoid redirects
     // CLI API is also served before auth for CLI tool access
     final pipeline = const Pipeline()
+        .addMiddleware(_errorHandlingMiddleware())
+        .addMiddleware(securityHeadersMiddleware())
         .addMiddleware(_conditionalLogRequests())
         .addMiddleware(_staticAssetsMiddleware())
         .addMiddleware(_storageAssetsMiddleware())
@@ -266,6 +270,20 @@ class PanelServer {
         } on StateError catch (e) {
           cliLogException(e);
           return Response.notFound('Storage error: ${e.message}');
+        }
+      };
+    };
+  }
+
+  /// Middleware that catches and logs unhandled exceptions in request handlers.
+  Middleware _errorHandlingMiddleware() {
+    return (Handler innerHandler) {
+      return (Request request) async {
+        try {
+          return await innerHandler(request);
+        } catch (e, stackTrace) {
+          cliLogException(e, stackTrace: stackTrace, context: 'Request handler');
+          return Response.internalServerError(body: 'Internal Server Error');
         }
       };
     };

@@ -22,6 +22,7 @@ export 'src/actions/prebuilt/view_action.dart';
 // Auth
 export 'src/auth/auth_service.dart' show AuthService, Session;
 export 'src/auth/authenticatable.dart';
+export 'src/auth/csrf_protection.dart';
 export 'src/auth/session_helper.dart';
 export 'src/auth/session_store.dart' show SessionStore, FileSessionStore, InMemorySessionStore, SessionData;
 // Components
@@ -91,6 +92,7 @@ export 'src/panel/panel_config_loader.dart';
 export 'src/panel/panel_router.dart';
 export 'src/panel/panel_server.dart';
 export 'src/panel/request_handler.dart';
+export 'src/panel/security_headers_middleware.dart';
 // Plugins
 export 'src/plugin/asset.dart';
 export 'src/plugin/navigation_item.dart';
@@ -102,6 +104,7 @@ export 'src/service_locator.dart' show inject, modelInstanceFromSlug, trackModel
 // Settings
 export 'src/settings/settings_service.dart';
 // Storage
+export 'src/storage/file_upload_validator.dart';
 export 'src/storage/storage.dart';
 // Table
 export 'src/table/columns/boolean_column.dart';

@@ -40,7 +40,7 @@ Before building many of these plugins, the following core features need to be ad
 | ~~**Custom Pages**~~ | ~~Ability to register arbitrary pages beyond resources (settings, dashboards, custom forms)~~ | ~~SEO, Settings, Activity Log, Backup, Media, Blog, Documentation~~ | ✅ Complete |
 | **Middleware Stack** | Ordered, configurable middleware with before/after hooks and plugin integration | Multi-Tenancy, API, Audit Log, Rate Limiting | ❌ Not Started |
 | **Email Service** | Abstract email provider interface with template support |  Notifications, Auth (password reset), Activity, Backup | ❌ Not Started |
-| **Event System** | Named events with listener registration beyond model hooks | Audit Log, Notifications, Webhooks, Activity | ❌ Not Started |
+| ~~**Event System**~~ | ~~Named events with listener registration beyond model hooks~~ | ~~Audit Log, Notifications, Webhooks, Activity~~ | ✅ Complete |
 | **API Route Generation** | Automatic REST/GraphQL API generation from resources | API Plugin, Mobile SDKs, Headless CMS | ❌ Not Started |
 | **Background Jobs** | Queue system for deferred processing | Email, Backup, Import/Export, Media Processing | ❌ Not Started |
 | **Role/Permission System** | Fine-grained RBAC beyond simple auth | Most plugins need permission checks | ❌ Not Started |
