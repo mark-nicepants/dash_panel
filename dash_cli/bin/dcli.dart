@@ -15,7 +15,8 @@ void main(List<String> args) async {
               'Available command groups:\n'
               '  generate:*  Code generation commands\n'
               '  db:*        Database commands\n'
-              '  server:*    Server monitoring commands',
+              '  server:*    Server monitoring commands\n'
+              '  mcp-server  MCP server for LLM integration',
         )
         // Code generation commands
         ..addCommand(GenerateModelsCommand())
@@ -27,6 +28,8 @@ void main(List<String> args) async {
         // Server commands
         ..addCommand(ServerLogCommand())
         ..addCommand(ServerStatusCommand())
+        // MCP Server command
+        ..addCommand(McpServerCommand())
         // Utility commands
         ..addCommand(CompletionCommand());
 

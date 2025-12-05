@@ -4,6 +4,7 @@
 /// - Code generation (models, resources)
 /// - Database management (schema inspection, seeding, record creation)
 /// - Server monitoring (logs, status)
+/// - MCP server for LLM integration
 library;
 
 // Re-export database connector from Dash
@@ -20,6 +21,7 @@ export 'src/commands/db_schema_command.dart';
 export 'src/commands/db_seed_command.dart';
 export 'src/commands/dcli_argument.dart';
 export 'src/commands/generate_models_command.dart';
+export 'src/commands/mcp_server_command.dart';
 export 'src/commands/server_log_command.dart';
 export 'src/commands/server_status_command.dart';
 export 'src/utils/config_loader.dart';
