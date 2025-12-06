@@ -4351,14 +4351,6 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
           window.history.pushState({}, "", payload.url);
           continue;
         }
-        if (name === "action-success" && payload.message) {
-          showToast(payload.message, "success");
-          continue;
-        }
-        if (name === "action-error" && payload.message) {
-          showToast(payload.message, "error");
-          continue;
-        }
         for (const wrapper of allComponents) {
           if (wrapper.getAttribute("wire:id") === sourceComponentId) continue;
           const componentData = getComponentData(wrapper);

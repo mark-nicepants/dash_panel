@@ -98,45 +98,6 @@ class UserResource extends Resource<User> {
               .handler(ActivateUserHandler())
               .visible((user) => user.isActive != true),
 
-          // Action with form fields - opens a modal with form inputs
-          // Demonstrates .schema() for adding form fields to action modals
-          Action.make<User>('changeRole')
-              .label('Role')
-              .icon(HeroIcons.userCircle)
-              .color(ActionColor.info)
-              .handler(ChangeRoleHandler())
-              .schema([
-                Select.make('role')
-                    .label('New Role')
-                    .options([
-                      const SelectOption('admin', 'Admin'),
-                      const SelectOption('user', 'User'),
-                      const SelectOption('guest', 'Guest'),
-                    ])
-                    .required()
-                    .helperText('Select the new role for this user'),
-              ])
-              .fillForm((user) => {'role': user.role})
-              .confirmationHeading('Change User Role')
-              .confirmationButtonLabel('Change Role')
-              .modalSize(ModalSize.sm),
-
-          // Action that sends notification
-          // Demonstrates info-style modal with custom icon
-          Action.make<User>('resetPassword')
-              .label('')
-              .hiddenLabel()
-              .icon(HeroIcons.key)
-              .tooltip('Reset Password')
-              .color(ActionColor.secondary)
-              .handler(ResetPasswordHandler())
-              .requiresConfirmation()
-              .confirmationHeading('Send Password Reset?')
-              .confirmationDescription('A password reset email will be sent to the user.')
-              .confirmationButtonLabel('Send Email')
-              .modalIcon(HeroIcons.envelopeOpen)
-              .modalIconColor(ActionColor.info),
-
           // Standard delete action with confirmation
           DeleteAction.make<User>('user'),
         ]);
@@ -147,10 +108,7 @@ class UserResource extends Resource<User> {
   List<Action<User>> indexHeaderActions() => [
     CreateAction.make(singularLabel),
     // You can add more header actions here, e.g.:
-    // Action.make<User>('export')
-    //   .label('Export')
-    //   .icon(HeroIcons.arrowDownTray)
-    //   .color(ActionColor.secondary),
+    Action.make<User>('export').label('Export').icon(HeroIcons.arrowDownTray).color(ActionColor.secondary),
   ];
 
   // Form actions - override to customize the submit/cancel buttons
@@ -168,46 +126,69 @@ class UserResource extends Resource<User> {
   @override
   FormSchema<User> form(FormSchema<User> form) {
     return form.columns(2).fields([
-      FileUpload.make('avatar') //
-          .label('Avatar')
-          .avatar()
-          .disk('public')
-          .directory('avatars')
-          .maxSize(2048) // 2MB
-          .columnSpanFull(),
+      Grid.make(2).schema([
+        Grid.make(1).schema([
+          Section.make() //
+              .heading('General')
+              .description('Information about the user')
+              .schema([
+                TextInput.make('name') //
+                    .label('Full Name')
+                    .placeholder('Enter full name')
+                    .minLength(2)
+                    .maxLength(255)
+                    .required()
+                    .columnSpanFull(),
+                TextInput.make('email') //
+                    .email()
+                    .placeholder('user@example.com')
+                    .required(),
 
-      TextInput.make('name') //
-          .label('Full Name')
-          .placeholder('Enter full name')
-          .minLength(2)
-          .maxLength(255)
-          .required()
-          .columnSpanFull(),
-      TextInput.make('email') //
-          .email()
-          .placeholder('user@example.com')
-          .required(),
+                TextInput.make('password') //
+                    .password()
+                    .label('Password')
+                    .placeholder('Enter password')
+                    .minLength(8)
+                    .required(),
+              ]),
 
-      TextInput.make('password') //
-          .password()
-          .label('Password')
-          .placeholder('Enter password')
-          .minLength(8)
-          .required(),
+          Section.make() //
+              .heading('Avatar')
+              .description('Upload an avatar for the user')
+              .collapsed()
+              .schema([
+                FileUpload.make('avatar') //
+                    .label('Avatar')
+                    .avatar()
+                    .disk('public')
+                    .directory('avatars')
+                    .maxSize(2048) // 2MB
+                    .columnSpanFull(),
+              ]),
+        ]),
 
-      Select.make('role') //
-          .label('User Role')
-          .options([
-            const SelectOption('admin', 'Admin'),
-            const SelectOption('user', 'User'),
-            const SelectOption('guest', 'Guest'),
-          ])
-          .required(),
+        Grid.make(1).schema([
+          Section.make() //
+              .heading('Permissions')
+              .description('Permissions for the user')
+              .schema([
+                Toggle.make('is_active') //
+                    .label('Active')
+                    .helperText('Whether this user can access the system')
+                    .defaultValue(true),
 
-      Toggle.make('is_active') //
-          .label('Active')
-          .helperText('Whether this user can access the system')
-          .defaultValue(true),
+                HasManySelect('roles') //
+                    .label('Roles')
+                    .helperText('Roles for the user')
+                    .required(),
+
+                HasManySelect('permissions') //
+                    .label('Permissions')
+                    .helperText('Permissions for the user')
+                    .required(),
+              ]),
+        ]),
+      ]),
     ]);
   }
 }

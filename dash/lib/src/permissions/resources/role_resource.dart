@@ -11,6 +11,12 @@ class RoleResource extends Resource<Role> {
   String get singularLabel => 'Role';
 
   @override
+  String? get navigationGroup => 'Security';
+
+  @override
+  int get navigationSort => 1;
+
+  @override
   Heroicon get iconComponent => const Heroicon(HeroIcons.userGroup);
 
   @override
@@ -27,20 +33,38 @@ class RoleResource extends Resource<Role> {
   @override
   FormSchema<Role> form(FormSchema<Role> form) {
     return form.fields([
-      TextInput.make('name').label('Name').placeholder('e.g., Administrator').required(),
-      TextInput.make(
-        'slug',
-      ).label('Slug').placeholder('e.g., admin').helperText('Unique identifier used in code').required(),
-      Textarea.make('description').label('Description').placeholder('Describe the purpose of this role...'),
-      Toggle.make('is_default').label('Default Role').helperText('New users will be assigned this role automatically'),
-      HasManySelect.make('permissions')
-          .relationship('permissions', 'Permission')
-          .label('Permissions')
-          .displayColumn('name')
-          .valueColumn('id')
-          .searchable()
-          .preload(limit: 100)
-          .helperText('Select the permissions granted to this role'),
+      Section.make() //
+          .heading('General')
+          .description('Information about the role')
+          .schema([
+            TextInput.make('name') //
+                .label('Name')
+                .placeholder('e.g., Administrator')
+                .required(),
+
+            TextInput.make('slug') //
+                .label('Slug')
+                .placeholder('e.g., admin')
+                .helperText('Unique identifier used in code')
+                .required(),
+
+            Textarea.make('description') //
+                .label('Description')
+                .placeholder('Describe the purpose of this role...'),
+
+            Toggle.make('is_default') //
+                .label('Default Role')
+                .helperText('New users will be assigned this role automatically'),
+
+            HasManySelect.make('permissions')
+                .relationship('permissions', 'Permission')
+                .label('Permissions')
+                .displayColumn('name')
+                .valueColumn('id')
+                .searchable()
+                .preload(limit: 100)
+                .helperText('Select the permissions granted to this role'),
+          ]),
     ]);
   }
 }

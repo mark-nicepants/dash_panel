@@ -38,18 +38,6 @@ class TestModel extends Model {
   TableSchema get schema => throw UnimplementedError();
 }
 
-/// Test resource for service locator tests
-class TestResource extends Resource<TestModel> {
-  @override
-  String get label => 'Tests';
-
-  @override
-  String get singularLabel => 'Test';
-
-  @override
-  String get slug => 'tests';
-}
-
 void main() {
   group('getStorageUrl', () {
     test('returns http URLs unchanged', () {

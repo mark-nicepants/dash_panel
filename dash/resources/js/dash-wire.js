@@ -59,17 +59,17 @@ export function initDashWire() {
 
   function showToast(message, type = 'success', duration = 4000) {
     const container = getOrCreateToastContainer();
-    
+
     const toast = document.createElement('div');
     toast.className = `
       flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border
       transform transition-all duration-300 ease-out
       translate-x-full opacity-0
-      ${type === 'success' 
-        ? 'bg-green-900/90 border-green-700 text-green-100' 
+      ${type === 'success'
+        ? 'bg-green-900/90 border-green-700 text-green-100'
         : 'bg-red-900/90 border-red-700 text-red-100'}
     `;
-    
+
     // Icon
     const icon = type === 'success'
       ? `<svg class="w-5 h-5 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +78,7 @@ export function initDashWire() {
       : `<svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
          </svg>`;
-    
+
     toast.innerHTML = `
       ${icon}
       <span class="text-sm font-medium">${message}</span>
@@ -88,15 +88,15 @@ export function initDashWire() {
         </svg>
       </button>
     `;
-    
+
     container.appendChild(toast);
-    
+
     // Trigger animation
     requestAnimationFrame(() => {
       toast.classList.remove('translate-x-full', 'opacity-0');
       toast.classList.add('translate-x-0', 'opacity-100');
     });
-    
+
     // Auto remove
     setTimeout(() => {
       toast.classList.add('translate-x-full', 'opacity-0');
@@ -141,10 +141,10 @@ export function initDashWire() {
       if (attr.name.startsWith('wire:model')) {
         const property = attr.value;
         const parts = attr.name.split('.');
-        
+
         let modifier = 'live';
         let debounceMs = config.modelDebounce;
-        
+
         if (parts.includes('lazy')) {
           modifier = 'lazy';
         } else if (parts.includes('blur')) {
@@ -157,7 +157,7 @@ export function initDashWire() {
             debounceMs = parseInt(parts[timeIndex].replace('ms', ''), 10);
           }
         }
-        
+
         return { property, modifier, debounceMs };
       }
     }
@@ -177,33 +177,33 @@ export function initDashWire() {
    */
   function parseAction(value, element) {
     log('parseAction called with:', value);
-    
+
     // Check if this action includes $formData marker
     const hasFormData = value.includes('$formData');
     // Remove $formData from the string for regex matching
     const cleanedValue = value.replace(/,\s*\$formData/, '');
-    
+
     const match = cleanedValue.match(/^(\w+)(?:\(([^)]*)\))?$/);
     if (!match) {
       log('parseAction regex did not match for:', cleanedValue);
       return null;
     }
-    
+
     const [, method, argsStr] = match;
     log('parseAction matched method:', method, 'argsStr:', argsStr, 'hasFormData:', hasFormData);
-    const params = argsStr 
+    const params = argsStr
       ? argsStr.split(',').map(arg => {
-          const trimmed = arg.trim();
-          // Try to parse as JSON value
-          try {
-            return JSON.parse(trimmed);
-          } catch {
-            // Return as string (strip quotes if present)
-            return trimmed.replace(/^['"]|['"]$/g, '');
-          }
-        })
+        const trimmed = arg.trim();
+        // Try to parse as JSON value
+        try {
+          return JSON.parse(trimmed);
+        } catch {
+          // Return as string (strip quotes if present)
+          return trimmed.replace(/^['"]|['"]$/g, '');
+        }
+      })
       : [];
-    
+
     // If this action needs form data, collect it from the modal
     if (hasFormData && element) {
       const formData = collectModalFormData(element);
@@ -213,7 +213,7 @@ export function initDashWire() {
     log('parseAction final params:', params);
     return { method, params };
   }
-  
+
   /**
    * Collect form data from a modal's form element
    * The button might be in the footer which is a sibling of the content area,
@@ -226,21 +226,21 @@ export function initDashWire() {
       log('collectModalFormData: No modal container found');
       return {};
     }
-    
+
     // Find form within the modal
     const form = modal.querySelector('form');
     if (!form) {
       log('collectModalFormData: No form found in modal');
       return {};
     }
-    
+
     const formData = {};
     const elements = form.elements;
-    
+
     for (let i = 0; i < elements.length; i++) {
       const el = elements[i];
       if (!el.name) continue;
-      
+
       if (el.type === 'checkbox') {
         formData[el.name] = el.checked;
       } else if (el.type === 'radio') {
@@ -253,7 +253,7 @@ export function initDashWire() {
         formData[el.name] = el.value;
       }
     }
-    
+
     log('collectModalFormData: Collected form data:', formData);
     return formData;
   }
@@ -264,7 +264,7 @@ export function initDashWire() {
    */
   function collectModelValues(wrapper) {
     const models = {};
-    
+
     // Find all elements and check for any wire:model attribute
     wrapper.querySelectorAll('input, select, textarea').forEach(el => {
       const modelInfo = getWireModelInfo(el);
@@ -272,7 +272,7 @@ export function initDashWire() {
         models[modelInfo.property] = getInputValue(el);
       }
     });
-    
+
     return models;
   }
 
@@ -301,7 +301,7 @@ export function initDashWire() {
    */
   async function sendWireRequest(componentData, payload) {
     const url = `${config.basePath}/${componentData.id}`;
-    
+
     log('Sending request:', url, payload);
 
     const response = await fetch(url, {
@@ -336,27 +336,16 @@ export function initDashWire() {
 
     // Find all components that listen to these events
     const allComponents = getAllComponents();
-    
+
     for (const event of events) {
       const { name, payload } = event;
-      
+
       log(`Broadcasting event "${name}" with payload:`, payload);
 
       // Handle system events
       if (name === 'update-url' && payload.url) {
         log('Updating URL to:', payload.url);
         window.history.pushState({}, '', payload.url);
-        continue;
-      }
-      
-      // Handle toast notifications
-      if (name === 'action-success' && payload.message) {
-        showToast(payload.message, 'success');
-        continue;
-      }
-      
-      if (name === 'action-error' && payload.message) {
-        showToast(payload.message, 'error');
         continue;
       }
 
@@ -366,21 +355,21 @@ export function initDashWire() {
         if (wrapper.getAttribute('wire:id') === sourceComponentId) continue;
 
         const componentData = getComponentData(wrapper);
-        
+
         // Check if this component listens to this event
         if (componentData.listeners.includes(name)) {
           log(`Component "${componentData.id}" is listening to "${name}"`);
-          
+
           // Send the event to this component
           try {
             wrapper.setAttribute('wire:loading', '');
-            
+
             const response = await sendWireRequest(componentData, {
               event: { name, payload },
             });
 
             morphComponent(wrapper, response.html);
-            
+
             // Recursively broadcast any events from this component
             if (response.events && response.events.length > 0) {
               await broadcastEvents(response.events, componentData.id);
@@ -411,19 +400,19 @@ export function initDashWire() {
     }
 
     const wireId = wrapper.getAttribute('wire:id');
-    
+
     // Capture focus state before morphing
     const activeElement = document.activeElement;
     const hadFocus = wrapper.contains(activeElement);
     let focusSelector = null;
     let selectionStart = null;
     let selectionEnd = null;
-    
+
     if (hadFocus && activeElement) {
       // Build a selector to find the element after morphing
       // Try to use wire:model attribute first, then name, then generate a path
       const modelInfo = getWireModelInfo(activeElement);
-      
+
       if (modelInfo) {
         // Find by any wire:model attribute with this property value
         for (const attr of activeElement.attributes) {
@@ -439,13 +428,13 @@ export function initDashWire() {
       } else if (activeElement.id) {
         focusSelector = `#${activeElement.id}`;
       }
-      
+
       // Preserve cursor position for text inputs
       if (activeElement.setSelectionRange) {
         selectionStart = activeElement.selectionStart;
         selectionEnd = activeElement.selectionEnd;
       }
-      
+
       log('Captured focus state:', { focusSelector, selectionStart, selectionEnd });
     }
 
@@ -479,7 +468,7 @@ export function initDashWire() {
   async function handleAction(element, action) {
     log('handleAction called with action:', action);
     log('handleAction element:', element);
-    
+
     const wrapper = findComponent(element);
     if (!wrapper) {
       log('handleAction: No wire component wrapper found');
@@ -489,14 +478,14 @@ export function initDashWire() {
 
     const componentData = getComponentData(wrapper);
     log('handleAction: Component data:', componentData);
-    
+
     const parsed = parseAction(action, element);
-    
+
     if (!parsed) {
       console.error('[DashWire] Invalid action:', action);
       return;
     }
-    
+
     log('handleAction: Parsed action - method:', parsed.method, 'params:', parsed.params);
 
     // Show loading state
@@ -511,12 +500,12 @@ export function initDashWire() {
         params: parsed.params,
       };
       log('handleAction: Sending wire request with payload:', requestPayload);
-      
+
       const response = await sendWireRequest(componentData, requestPayload);
       log('handleAction: Received response:', response);
 
       morphComponent(wrapper, response.html);
-      
+
       // Broadcast any dispatched events to other components
       if (response.events && response.events.length > 0) {
         log('Response contains events:', response.events);
@@ -565,7 +554,7 @@ export function initDashWire() {
     // Debounce the request (use custom debounce time if specified)
     modelDebounceTimers.set(timerId, setTimeout(async () => {
       modelDebounceTimers.delete(timerId);
-      
+
       const componentData = getComponentData(wrapper);
       const value = getInputValue(element);
 
@@ -577,7 +566,7 @@ export function initDashWire() {
         });
 
         morphComponent(wrapper, response.html);
-        
+
         // Broadcast any dispatched events
         if (response.events && response.events.length > 0) {
           await broadcastEvents(response.events, componentData.id);
@@ -612,7 +601,7 @@ export function initDashWire() {
       });
 
       morphComponent(wrapper, response.html);
-      
+
       // Broadcast any dispatched events
       if (response.events && response.events.length > 0) {
         await broadcastEvents(response.events, componentData.id);
@@ -631,7 +620,7 @@ export function initDashWire() {
 
     const componentData = getComponentData(wrapper);
     const parsed = parseAction(action, form);
-    
+
     if (!parsed) {
       console.error('[DashWire] Invalid submit action:', action);
       return;
@@ -642,7 +631,7 @@ export function initDashWire() {
 
     try {
       const modelValues = collectModelValues(wrapper);
-      
+
       const response = await sendWireRequest(componentData, {
         action: parsed.method,
         params: parsed.params,
@@ -650,7 +639,7 @@ export function initDashWire() {
       });
 
       morphComponent(wrapper, response.html);
-      
+
       // Broadcast any dispatched events
       if (response.events && response.events.length > 0) {
         await broadcastEvents(response.events, componentData.id);
@@ -681,20 +670,20 @@ export function initDashWire() {
       log('Click event detected (capture phase), target:', e.target);
       log('Target tag:', e.target.tagName);
       log('Target classes:', e.target.className);
-      
+
       const target = e.target.closest('[wire\\:click]');
       if (target) {
         log('Found wire:click target:', target);
         log('wire:click attribute value:', target.getAttribute('wire:click'));
         log('Target also has @click:', target.hasAttribute('@click'));
-        
+
         // Get the wire component before any Alpine processing might remove it
         const wrapper = findComponent(target);
         log('Wire component wrapper found:', !!wrapper);
         if (wrapper) {
           log('Wire component id:', wrapper.getAttribute('wire:id'));
         }
-        
+
         e.preventDefault();
         const action = target.getAttribute('wire:click');
         handleAction(target, action);
@@ -723,10 +712,10 @@ export function initDashWire() {
         const modelInfo = getWireModelInfo(target);
         // Always update on change for non-text inputs or lazy models
         if (modelInfo && (
-            modelInfo.modifier === 'lazy' || 
-            target.type === 'checkbox' || 
-            target.type === 'radio' ||
-            target.tagName === 'SELECT')) {
+          modelInfo.modifier === 'lazy' ||
+          target.type === 'checkbox' ||
+          target.type === 'radio' ||
+          target.tagName === 'SELECT')) {
           handleModelUpdate(target);
         }
       }
@@ -755,7 +744,7 @@ export function initDashWire() {
       const key = e.key.toLowerCase();
       const selector = `[wire\\:keydown\\.${key}]`;
       const target = e.target.closest(selector);
-      
+
       if (target) {
         e.preventDefault();
         const action = target.getAttribute(`wire:keydown.${key}`);
@@ -792,7 +781,7 @@ export function initDashWire() {
           // Call a server action
           async call(method, ...params) {
             const modelValues = collectModelValues(wrapper);
-            
+
             const response = await sendWireRequest(componentData, {
               action: method,
               params: params,
@@ -800,7 +789,7 @@ export function initDashWire() {
             });
 
             morphComponent(wrapper, response.html);
-            
+
             // Broadcast any dispatched events
             if (response.events && response.events.length > 0) {
               await broadcastEvents(response.events, componentData.id);
@@ -833,7 +822,7 @@ export function initDashWire() {
             });
 
             morphComponent(wrapper, response.html);
-            
+
             // Broadcast any dispatched events
             if (response.events && response.events.length > 0) {
               await broadcastEvents(response.events, componentData.id);
@@ -877,7 +866,7 @@ export function initDashWire() {
           components[id] = wrapper.outerHTML;
         }
       });
-      
+
       try {
         sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify({
           timestamp: Date.now(),
@@ -894,14 +883,14 @@ export function initDashWire() {
       // event.persisted is true if loaded from BFCache
       // performance.navigation.type === 2 is BACK_FORWARD (deprecated but useful fallback)
       // performance.getEntriesByType("navigation")[0].type === 'back_forward' is modern way
-      
+
       let isBackForward = event.persisted;
-      
+
       if (!isBackForward && window.performance) {
-        const nav = window.performance.getEntriesByType 
-          ? window.performance.getEntriesByType("navigation")[0] 
+        const nav = window.performance.getEntriesByType
+          ? window.performance.getEntriesByType("navigation")[0]
           : null;
-          
+
         if (nav && nav.type === 'back_forward') {
           isBackForward = true;
         } else if (window.performance.navigation && window.performance.navigation.type === 2) {
@@ -915,11 +904,11 @@ export function initDashWire() {
           if (!raw) return;
 
           const snapshot = JSON.parse(raw);
-          
+
           // Only restore if we have components
           if (snapshot && snapshot.components) {
             log('Restoring snapshot from sessionStorage');
-            
+
             Object.entries(snapshot.components).forEach(([id, html]) => {
               const wrapper = document.querySelector(`[wire\\:id="${id}"]`);
               if (wrapper) {

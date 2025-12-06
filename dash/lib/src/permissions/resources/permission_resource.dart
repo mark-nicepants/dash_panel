@@ -11,6 +11,12 @@ class PermissionResource extends Resource<Permission> {
   String get singularLabel => 'Permission';
 
   @override
+  String? get navigationGroup => 'Security';
+
+  @override
+  int get navigationSort => 2;
+
+  @override
   Heroicon get iconComponent => const Heroicon(HeroIcons.key);
 
   @override
@@ -26,11 +32,25 @@ class PermissionResource extends Resource<Permission> {
   @override
   FormSchema<Permission> form(FormSchema<Permission> form) {
     return form.fields([
-      TextInput.make('name').label('Name').placeholder('e.g., Create Posts').required(),
-      TextInput.make(
-        'slug',
-      ).label('Slug').placeholder('e.g., create_posts').helperText('Unique identifier used in code').required(),
-      Textarea.make('description').label('Description').placeholder('Describe what this permission allows...'),
+      Section.make() //
+          .heading('General')
+          .description('Information about the permission')
+          .schema([
+            TextInput.make('name') //
+                .label('Name')
+                .placeholder('e.g., Create Posts')
+                .required(),
+
+            TextInput.make('slug') //
+                .label('Slug')
+                .placeholder('e.g., create_posts')
+                .helperText('Unique identifier used in code')
+                .required(),
+
+            Textarea.make('description') //
+                .label('Description')
+                .placeholder('Describe what this permission allows...'),
+          ]),
     ]);
   }
 }
