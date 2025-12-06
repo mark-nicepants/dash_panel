@@ -9,6 +9,7 @@ import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/events/events.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/page/page.dart';
+import 'package:dash/src/panel/middleware_stack.dart';
 import 'package:dash/src/panel/panel_auth.dart';
 import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -405,6 +406,78 @@ class Panel {
   /// ```
   Panel registerCustomRoute(String path, CustomRouteHandler handler) {
     _config.registerCustomRoute(path, handler);
+    return this;
+  }
+
+  // ============================================================
+  // Middleware Methods
+  // ============================================================
+
+  /// Registers a middleware entry in the request pipeline.
+  ///
+  /// Middleware is sorted by stage and priority, allowing fine-grained
+  /// control over request processing order. Built-in middleware uses
+  /// priority 500 by default.
+  ///
+  /// **Priority Convention:**
+  /// - Default priority is 500
+  /// - Use < 500 to run before built-in middleware in a stage
+  /// - Use > 500 to run after built-in middleware
+  ///
+  /// Example:
+  /// ```dart
+  /// // Add rate limiting before auth
+  /// panel.middleware(MiddlewareEntry.make(
+  ///   id: 'rate-limiter',
+  ///   stage: MiddlewareStage.auth,
+  ///   priority: 100,  // Before default auth (500)
+  ///   middleware: rateLimitMiddleware(),
+  /// ));
+  ///
+  /// // Add tenant resolution after auth but before routing
+  /// panel.middleware(MiddlewareEntry.make(
+  ///   id: 'tenant-resolver',
+  ///   stage: MiddlewareStage.application,
+  ///   priority: 100,
+  ///   middleware: tenantMiddleware(),
+  /// ));
+  /// ```
+  Panel middleware(MiddlewareEntry entry) {
+    _config.addMiddleware(entry);
+    return this;
+  }
+
+  /// Registers middleware that runs before built-in middleware in a stage.
+  ///
+  /// Convenience method that sets priority to 100.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.middlewareBefore(
+  ///   MiddlewareStage.auth,
+  ///   rateLimitMiddleware(),
+  ///   id: 'rate-limiter',
+  /// );
+  /// ```
+  Panel middlewareBefore(MiddlewareStage stage, Middleware middlewareFunc, {String? id}) {
+    _config.addMiddleware(MiddlewareEntry.before(stage: stage, middleware: middlewareFunc, id: id));
+    return this;
+  }
+
+  /// Registers middleware that runs after built-in middleware in a stage.
+  ///
+  /// Convenience method that sets priority to 900.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.middlewareAfter(
+  ///   MiddlewareStage.auth,
+  ///   auditLogMiddleware(),
+  ///   id: 'audit-log',
+  /// );
+  /// ```
+  Panel middlewareAfter(MiddlewareStage stage, Middleware middlewareFunc, {String? id}) {
+    _config.addMiddleware(MiddlewareEntry.after(stage: stage, middleware: middlewareFunc, id: id));
     return this;
   }
 

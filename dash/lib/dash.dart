@@ -84,7 +84,9 @@ export 'src/model/model_query_builder.dart';
 export 'src/model/soft_deletes.dart';
 // Pages (Custom Pages)
 export 'src/page/page.dart';
+export 'src/panel/middleware/security_headers_middleware.dart';
 // Panel
+export 'src/panel/middleware_stack.dart';
 export 'src/panel/panel.dart' show Panel, RequestCallback, CustomRouteHandler, ModelCallback;
 export 'src/panel/panel_colors.dart';
 export 'src/panel/panel_config.dart';
@@ -92,7 +94,6 @@ export 'src/panel/panel_config_loader.dart';
 export 'src/panel/panel_router.dart';
 export 'src/panel/panel_server.dart';
 export 'src/panel/request_handler.dart';
-export 'src/panel/security_headers_middleware.dart';
 // Plugins
 export 'src/plugin/asset.dart';
 export 'src/plugin/navigation_item.dart';

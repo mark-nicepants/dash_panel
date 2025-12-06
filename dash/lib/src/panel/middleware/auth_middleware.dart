@@ -2,7 +2,8 @@ import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/auth/session_helper.dart';
 import 'package:dash/src/context/request_context.dart';
 import 'package:dash/src/model/model.dart';
-import 'package:shelf/shelf.dart';
+import 'package:dash/src/panel/middleware_stack.dart';
+import 'package:shelf/shelf.dart' hide Middleware;
 
 /// Middleware to protect routes that require authentication.
 ///
@@ -23,10 +24,16 @@ import 'package:shelf/shelf.dart';
 /// final sessionId = RequestContext.sessionId;
 /// final user = RequestContext.user;
 /// ```
-Middleware authMiddleware(AuthService<Model> authService, {required String basePath}) {
-  final baseSegment = basePath.startsWith('/') ? basePath.substring(1) : basePath;
+class AuthMiddleware implements Middleware {
+  final AuthService<Model> authService;
+  final String basePath;
 
-  return (Handler innerHandler) {
+  AuthMiddleware(this.authService, {required this.basePath});
+
+  @override
+  Handler call(Handler innerHandler) {
+    final baseSegment = basePath.startsWith('/') ? basePath.substring(1) : basePath;
+
     return (Request request) async {
       // Skip auth for login page and login POST
       final path = request.url.path;
@@ -52,5 +59,10 @@ Middleware authMiddleware(AuthService<Model> authService, {required String baseP
       // async operations and deep call stacks.
       return RequestContext.run(sessionId: sessionId, user: user, callback: () async => innerHandler(request));
     };
-  };
+  }
+
+  @override
+  MiddlewareEntry toEntry() {
+    return MiddlewareEntry.make(stage: MiddlewareStage.auth, middleware: this, id: 'auth');
+  }
 }

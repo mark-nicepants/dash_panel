@@ -38,7 +38,7 @@ Before building many of these plugins, the following core features need to be ad
 | Feature | Description | Plugins Blocked | Status |
 |---------|-------------|-----------------|--------|
 | ~~**Custom Pages**~~ | ~~Ability to register arbitrary pages beyond resources (settings, dashboards, custom forms)~~ | ~~SEO, Settings, Activity Log, Backup, Media, Blog, Documentation~~ | ✅ Complete |
-| **Middleware Stack** | Ordered, configurable middleware with before/after hooks and plugin integration | Multi-Tenancy, API, Audit Log, Rate Limiting | ❌ Not Started |
+| ~~**Middleware Stack**~~ | ~~Ordered, configurable middleware with before/after hooks and plugin integration~~ | ~~Multi-Tenancy, API, Audit Log, Rate Limiting~~ | ✅ Complete |
 | **Email Service** | Abstract email provider interface with template support |  Notifications, Auth (password reset), Activity, Backup | ❌ Not Started |
 | ~~**Event System**~~ | ~~Named events with listener registration beyond model hooks~~ | ~~Audit Log, Notifications, Webhooks, Activity~~ | ✅ Complete |
 | **API Route Generation** | Automatic REST/GraphQL API generation from resources | API Plugin, Mobile SDKs, Headless CMS | ❌ Not Started |
@@ -48,38 +48,131 @@ Before building many of these plugins, the following core features need to be ad
 
 ### Middleware Stack Implementation Guide
 
-The current request pipeline is assembled in `dash/lib/src/panel/panel_server.dart`. `PanelServer.start` builds a `shelf.Pipeline` that wires together:
-1. `_errorHandlingMiddleware`
-2. `securityHeadersMiddleware`
-3. `_conditionalLogRequests`
-4. `_staticAssetsMiddleware`
-5. `_storageAssetsMiddleware`
-6. `_cliApiMiddleware`
-7. `authMiddleware`
-8. `_handleRequest` (which fires callbacks, handles wires/custom routes, and finally routes to `PanelRouter`).
+**Status:** ✅ Complete (December 2025)
 
-That works, but the middleware stack is currently hard-coded and opaque to plugins. The middleware stack refactor must deliver the roadmap requirement for "ordered, configurable middleware with before/after hooks and plugin integration" so that the missing plugins (multi-tenancy, API, audit log, rate limiting) can plug their own behavior into the request flow.
+The current request pipeline is assembled in `dash/lib/src/panel/panel_server.dart`. The refactored middleware stack uses a `MiddlewareStack` abstraction that provides ordered, configurable middleware with plugin integration.
 
-#### Goals
+#### Architecture Overview
 
-- Introduce a dedicated `MiddlewareStack` abstraction (e.g., `lib/src/panel/middleware_stack.dart`) that owns the list of middleware entries, each annotated with a stage, order, and optional identifier.
-- Keep the high-level stages that the server currently relies on (error handling → security headers → logging → asset serving → CLI → auth → request handler) but make them explicit hooks (`MiddlewareStage.errorHandling`, `MiddlewareStage.security`, `MiddlewareStage.asset`, `MiddlewareStage.auth`, `MiddlewareStage.application`, etc.).
-- Give plugins an API to register middleware at a named stage and specify whether they want to run before or after other middleware in that stage (e.g., `PanelMiddlewareRegistration.before(MiddlewareStage.auth, order: 100)`), so we can guarantee deterministic order even when multiple plugins register middleware.
-- Let middleware control the response lifecycle (returning early or mutating the request) while keeping the existing `RequestContext` zone semantics in `authMiddleware`.
+**MiddlewareStage** - Defines the high-level stages in the request pipeline:
+```dart
+enum MiddlewareStage {
+  errorHandling,  // Stage 0: Catch exceptions from all downstream middleware
+  security,       // Stage 1: Add security headers (CORS, CSP, etc.)
+  logging,        // Stage 2: Request logging  
+  asset,          // Stage 3: Serve static assets (before auth to avoid redirects)
+  cli,            // Stage 4: Handle CLI API requests (before auth for CLI tool access)
+  auth,           // Stage 5: Authentication and session management
+  application,    // Stage 6: Application-level middleware (routing, custom handlers)
+}
+```
 
-#### Proposed Refactor Steps
+**MiddlewareEntry** - Represents a single middleware with ordering metadata:
+```dart
+class MiddlewareEntry {
+  final String? id;           // Optional identifier for debugging
+  final MiddlewareStage stage;
+  final int priority;         // Lower runs first within a stage (default: 500)
+  final Middleware middleware;
+  final String? pluginId;     // Which plugin registered this (null for built-in)
+}
+```
 
-1. **Middleware registry infrastructure.** Define `MiddlewareStage`, `MiddlewareEntry`, and `MiddlewareStack.build(Handler)`. Entries should include stage, base order, optional plugin ID, and whether they wrap `RequestContext.run`. Provide helpers for built-in stages (error handling, assets, auth, request handling).
-2. **PanelConfig ownership.** Store the stack in `PanelConfig` to capture plugin registrations. Add methods such as `PanelConfig.addMiddleware(MiddlewareEntry entry)` and `PanelConfig.middlewareEntries` for inspection.
-3. **Panel API surface.** Expose fluent helpers (`panel.middleware(...)`, `panel.middlewareBefore(...)`, `panel.middlewareAfterStage(...)`) so plugins can register middleware during `register()` and `boot()` (boot time registrations may toggle enablement). Document that plugin middleware should return `null` to continue the chain.
-4. **PanelServer rework.** Replace the hard-coded `Pipeline` construction with `_middlewareStack.build(_handleRequest)`. The stack should automatically insert the existing security/logging/static/storage/CLI/auth middleware with deterministic stage/order values. Keep `_handleRequest` unchanged; it becomes the final handler at the `application` stage.
-5. **Plugin integration examples.** Multi-tenancy will register middleware in the `MiddlewareStage.auth` stage so tenant resolution runs after authentication but before request handling. API key validation can hook into `MiddlewareStage.application` (before routing) and short-circuit with JSON responses. Audit log middleware can wrap the application stage with before/after hooks to record inputs and outputs.
-6. **Testing & validation.** Add unit tests for `MiddlewareStack` ordering and plugin registration (e.g., verifying `order` + stage ensures predictable order). Run existing integration tests to confirm assets and CLI routes are still served before auth.
+**MiddlewareStack** - Manages and builds the middleware pipeline:
+```dart
+class MiddlewareStack {
+  // Add middleware at a specific stage
+  void add(MiddlewareEntry entry);
+  
+  // Convenience methods for common patterns
+  void addBefore(MiddlewareStage stage, Middleware middleware, {String? id});
+  void addAfter(MiddlewareStage stage, Middleware middleware, {String? id});
+  
+  // Build the final handler chain
+  Handler build(Handler innerHandler);
+  
+  // Inspection
+  List<MiddlewareEntry> get entries;
+}
+```
 
-#### Questions for Middleware Design
+#### Built-in Middleware and Default Priorities
 
-1. Should plugin middleware run inside the `RequestContext.run` zone established by `authMiddleware`, or can some middleware (e.g., CLI or storage middleware) execute before the context boundary?
-2. Would it make sense to publish the stage order as part of the API so plugin authors can request "run before CLI API handling" without relying on hard-coded numbers?
+| Stage | Middleware | Default Priority | Description |
+|-------|-----------|-----------------|-------------|
+| `errorHandling` | Error handler | 500 | Catches unhandled exceptions |
+| `security` | Security headers | 500 | Adds OWASP security headers |
+| `logging` | Request logger | 500 | Logs requests (excludes CLI) |
+| `asset` | Static assets | 400 | Serves CSS/JS/images |
+| `asset` | Storage assets | 600 | Serves uploaded files |
+| `cli` | CLI API handler | 500 | Handles /_cli/* endpoints |
+| `auth` | Auth middleware | 500 | Session validation, redirects |
+| `application` | Request handler | 500 | Routes to resources/pages |
+
+#### Plugin Integration API
+
+Plugins can register middleware during `register()` or `boot()`:
+
+```dart
+class RateLimitPlugin implements Plugin {
+  @override
+  void register(Panel panel) {
+    // Add before auth to rate limit all requests including login
+    panel.middleware(
+      MiddlewareEntry.make(
+        id: 'rate-limiter',
+        stage: MiddlewareStage.auth,
+        priority: 100,  // Runs before default auth (500)
+        middleware: rateLimitMiddleware(),
+      ),
+    );
+  }
+}
+
+class TenantPlugin implements Plugin {
+  @override  
+  void register(Panel panel) {
+    // Resolve tenant after auth but before application routing
+    panel.middleware(
+      MiddlewareEntry.make(
+        id: 'tenant-resolver',
+        stage: MiddlewareStage.application,
+        priority: 100,  // Runs before request handler (500)
+        middleware: tenantResolverMiddleware(),
+      ),
+    );
+  }
+}
+
+class AuditLogPlugin implements Plugin {
+  @override
+  void register(Panel panel) {
+    // Wrap application stage to log requests and responses
+    panel.middleware(
+      MiddlewareEntry.make(
+        id: 'audit-log',
+        stage: MiddlewareStage.application,
+        priority: 200,  // After tenant, before routing
+        middleware: auditLogMiddleware(),
+      ),
+    );
+  }
+}
+```
+
+#### Design Decisions
+
+1. **Shelf Middleware Compatibility**: Uses standard Shelf `Middleware` type (`Handler Function(Handler)`) for seamless integration with existing shelf middleware.
+
+2. **RequestContext Zone**: The `authMiddleware` establishes the `RequestContext` zone. Plugin middleware in the `application` stage runs inside this zone and can access `RequestContext.user` and `RequestContext.sessionId`.
+
+3. **Stage-based Ordering**: Middleware is sorted first by stage enum index, then by priority within each stage. This ensures predictable ordering while allowing fine-grained control.
+
+4. **Priority Convention**: Default priority is 500. Use < 500 to run before built-in middleware in a stage, > 500 to run after.
+
+5. **Early Response**: Middleware can return a response directly to short-circuit the chain (e.g., rate limiting returns 429, auth returns redirect to login).
+
+6. **No Context Before Auth**: Middleware in stages before `auth` cannot access `RequestContext` as it hasn't been established yet.
 
 ### Already Available Core Features
 

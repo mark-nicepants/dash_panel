@@ -32,6 +32,9 @@ class PanelConfig {
   final RenderHookRegistry _renderHookRegistry = RenderHookRegistry();
   final AssetRegistry _assetRegistry = AssetRegistry();
 
+  // Middleware system
+  final List<MiddlewareEntry> _middlewareEntries = [];
+
   /// The unique identifier for this panel.
   String get id => _id;
 
@@ -204,6 +207,35 @@ class PanelConfig {
   void registerAdditionalSchemas(List<TableSchema> schemas) {
     _additionalSchemas.addAll(schemas);
   }
+
+  // ============================================================
+  // Middleware Methods
+  // ============================================================
+
+  /// Registers a middleware entry to be included in the request pipeline.
+  ///
+  /// Middleware is sorted by stage and then by priority within each stage.
+  /// Use this to add custom middleware from plugins.
+  ///
+  /// Example:
+  /// ```dart
+  /// config.addMiddleware(MiddlewareEntry.make(
+  ///   id: 'rate-limiter',
+  ///   stage: MiddlewareStage.auth,
+  ///   priority: 100,  // Before default auth (500)
+  ///   middleware: rateLimitMiddleware(),
+  ///   pluginId: 'rate-limit',
+  /// ));
+  /// ```
+  void addMiddleware(MiddlewareEntry entry) {
+    _middlewareEntries.add(entry);
+  }
+
+  /// Returns all registered middleware entries.
+  ///
+  /// Note: These are plugin-registered entries only. Built-in middleware
+  /// is added by [PanelServer] when building the stack.
+  List<MiddlewareEntry> get middlewareEntries => List.unmodifiable(_middlewareEntries);
 
   /// Validates the configuration.
   void validate() {

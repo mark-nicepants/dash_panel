@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:shelf/shelf.dart';
+import 'package:dash/src/panel/middleware_stack.dart';
+import 'package:shelf/shelf.dart' hide Middleware;
 
 /// Middleware that adds security headers to all responses.
 ///
@@ -21,13 +22,16 @@ import 'package:shelf/shelf.dart';
 /// Example usage:
 /// ```dart
 /// final pipeline = Pipeline()
-///   .addMiddleware(securityHeadersMiddleware())
+///   .addMiddleware(SecurityHeadersMiddleware().call)
 ///   .addHandler(myHandler);
 /// ```
-Middleware securityHeadersMiddleware({SecurityHeadersConfig? config}) {
-  final effectiveConfig = config ?? SecurityHeadersConfig();
+class SecurityHeadersMiddleware implements Middleware {
+  final SecurityHeadersConfig config;
 
-  return (Handler innerHandler) {
+  SecurityHeadersMiddleware({SecurityHeadersConfig? config}) : config = config ?? SecurityHeadersConfig();
+
+  @override
+  Handler call(Handler innerHandler) {
     return (Request request) async {
       final response = await innerHandler(request);
 
@@ -37,32 +41,37 @@ Middleware securityHeadersMiddleware({SecurityHeadersConfig? config}) {
         'X-Content-Type-Options': 'nosniff',
 
         // Prevent clickjacking - deny all framing
-        'X-Frame-Options': effectiveConfig.frameOptions,
+        'X-Frame-Options': config.frameOptions,
 
         // Enable browser XSS filter (legacy but still useful)
         'X-XSS-Protection': '1; mode=block',
 
         // Control referrer information
-        'Referrer-Policy': effectiveConfig.referrerPolicy,
+        'Referrer-Policy': config.referrerPolicy,
 
         // Control browser features/permissions
-        'Permissions-Policy': effectiveConfig.permissionsPolicy,
+        'Permissions-Policy': config.permissionsPolicy,
       };
 
       // Add Content-Security-Policy if configured and not already set
-      if (effectiveConfig.contentSecurityPolicy != null && !response.headers.containsKey('Content-Security-Policy')) {
-        securityHeaders['Content-Security-Policy'] = effectiveConfig.contentSecurityPolicy!;
+      if (config.contentSecurityPolicy != null && !response.headers.containsKey('Content-Security-Policy')) {
+        securityHeaders['Content-Security-Policy'] = config.contentSecurityPolicy!;
       }
 
       // Add HSTS header in production (HTTPS enforcement)
-      if (_isProduction && effectiveConfig.enableHsts) {
-        securityHeaders['Strict-Transport-Security'] = 'max-age=${effectiveConfig.hstsMaxAge}; includeSubDomains';
+      if (_isProduction && config.enableHsts) {
+        securityHeaders['Strict-Transport-Security'] = 'max-age=${config.hstsMaxAge}; includeSubDomains';
       }
 
       // Merge with existing response headers
       return response.change(headers: {...response.headers, ...securityHeaders});
     };
-  };
+  }
+
+  @override
+  MiddlewareEntry toEntry() {
+    return MiddlewareEntry.make(stage: MiddlewareStage.security, middleware: this, id: 'security-headers');
+  }
 }
 
 /// Configuration for security headers middleware.
