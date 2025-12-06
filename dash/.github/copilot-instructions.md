@@ -4,7 +4,7 @@
 
 ## Quick Reference
 
-**What is Dash?** A server-side rendered admin panel framework for Dart, inspired by FilamentPHP. It provides CRUD operations, forms, tables, and authentication out of the box.
+**What is Dash?** A server-side rendered website framework for Dart, inspired by FilamentPHP. It provides CRUD operations, forms, tables, and authentication out of the box.
 
 **Key Concepts:**
 - **Resource** = Model + Table + Form (defines how an entity is managed in the admin)
@@ -12,32 +12,16 @@
 - **FormField** = Input component with `dehydrateValue()` for DB conversion and `hydrateValue()` for display
 - **Panel** = The main app orchestrator
 
-**Running the Example:**
-```bash
-cd /path/to/dash && dart run example/lib/main.dart
-```
-- Server runs on `http://localhost:8080`
-- If needed login: `admin@example.com` / `password` (from `example/lib/commands/seed_commands.dart`)
-- Sessions are saved between server restarts. So a simple refresh of the page after a restart should keep you logged in.
-- **Database location**: `storage/app.db` (relative to where the app runs, NOT in `example/storage/`)
-
-**Code Generation:**
-```bash
-cd /path/to/dash && dart run bin/generate.dart example/schemas/models example/lib
-```
-- Pass the **directory** containing schema YAML files (not individual files)
-- Second argument is the output directory for generated code
-
----
-
 ## Development Workflow
 
 ### Running & Testing with Playwright
 
 When fixing bugs or testing features interactively:
 
-1. **Start the server with the example project** (VSCode run configuration):
-   - You cant use `dart run example/lib/main.dart` directly because it blocks the terminal. Use the VSCode run config instead which supports hot reload.
+1. **Start the server with the example project** 
+ - Run via VSCode task: Start Dash Example Server
+ - Ensure it's running at `http://localhost:8080`.
+ - If you get port in use errors. use `lsof -i :8080` to find and kill the process using it and restart the server.
 
 2. **Use Playwright browser tools** to navigate and interact:
    - Navigate: `browser_navigate` to `http://localhost:8080/admin/login`
@@ -53,34 +37,29 @@ note: Sessions are saved between server restarts. So a simple refresh of the pag
 ### Bug Fixing Approach
 
 1. **Reproduce the bug** - Use Playwright to navigate and trigger the issue
-2. **Check the logs** - Read `storage/logs/dash_YYYYMMDD.log` for errors and debug info
+2. **Check the logs** - Read `storage/logs/dash_YYYYMMDD_HHMM.log` for errors and debug info
 3. **Add debug output** - Print statements in key locations (router, resource methods)
 4. **Trace the flow** - Follow data through: Form submission → Resource → Model → Database
 5. **Identify the layer** - Is it presentation, application, domain, or infrastructure?
-6. **Fix at the right level** - Each layer has specific responsibilities:
-   - **FormField.dehydrateValue()** - Type conversion for database storage
-   - **FormField.hydrateValue()** - Value transformation for display
-   - **Resource._applyDataToModel()** - Maps form fields to model properties
-   - **Model.fromMap()/toMap()** - Database serialization
 7. **Test the fix** - Use Playwright to verify, then write unit tests
 8. **Clean up debug output** - Remove print statements before committing
 
 ### Reading Application Logs
 
-Dash writes logs to daily log files in `storage/logs/`. Always check these logs when debugging:
+Dash writes logs to log files per server run in `storage/logs/`. Always check these logs when debugging:
 
 ```bash
 # Read today's logs
-cat storage/logs/dash_$(date +%Y%m%d).log
+cat storage/logs/dash_$(date +%Y%m%d_%H%M%S).log
 
 # Tail the logs for real-time monitoring
-tail -f storage/logs/dash_$(date +%Y%m%d).log
+tail -f storage/logs/dash_$(date +%Y%m%d_%H%M).log
 
 # Search for errors
 grep -i error storage/logs/dash_*.log
 
 # Show last 50 lines of today's log
-tail -50 storage/logs/dash_$(date +%Y%m%d).log
+tail -50 storage/logs/dash_$(date +%Y%m%d_%H%M%S).log
 ```
 
 **Log format:** `[YYYY-MM-DD HH:MM:SS] [LEVEL  ] message`
@@ -92,31 +71,6 @@ The logs contain:
 - Database queries (when query logging is enabled)
 - Errors and exceptions
 - Application events
-
-### Field Value Conversion
-
-Each form field type is responsible for its own type conversion via `dehydrateValue()`:
-- **Toggle/Checkbox** → converts strings ("true", "1", "on") to boolean
-- **DatePicker** → converts ISO strings to DateTime
-- **Select (multiple)** → ensures value is a List
-- **RelationshipSelect** → uses model schema to determine foreign key type (int/text)
-- **HasManySelect** → returns `List<int>` of related IDs for pivot table sync
-
-### Relationships
-
-**BelongsTo** (many-to-one):
-- Foreign key stored in the model's table
-- Use `RelationshipSelect` in forms
-- Load via `model.loadRelationship(name, foreignKeyValue)`
-
-**HasMany** (many-to-many via pivot):
-- Data stored in a pivot table (e.g., `post_tag`)
-- Use `HasManySelect` in forms
-- Pivot tables are auto-migrated when defined in model schema
-- Resource class handles sync via `_syncHasManyRelationships()`
-- Form loading uses `fillAsync()` to query pivot table for existing IDs
-
----
 
 ## Tech Stack
 
@@ -135,109 +89,6 @@ Each form field type is responsible for its own type conversion via `dehydrateVa
 5. **Type Safety** - Leverage Dart's type system with generics
 6. **Reusable Components** - Create and use Jaspr components for UI elements
 7. **Fields Own Their Conversion** - Each FormField type handles its own value conversion in `dehydrateValue()`
-
----
-
-## Architecture Overview
-
-### Layered Architecture
-
-Dash follows a layered architecture with clear separation of concerns:
-
-1. **Presentation Layer** - Jaspr components for rendering HTML
-2. **Application Layer** - Panel, Router, and Request handling
-3. **Domain Layer** - Resources, Models, and business logic
-4. **Infrastructure Layer** - Database connectors, storage, and external services
-
-### Core Domain Concepts
-
-- **Panel** - The central orchestrator that configures and runs the admin interface
-- **Resource** - Represents a model/entity with CRUD operations, tied to table and form configurations
-- **Model** - Active Record pattern ORM with fluent query builder
-- **Table** - Declarative configuration for list views with columns and actions
-- **FormSchema** - Declarative configuration for create/edit forms with fields and validation
-- **Action** - Reusable interactive elements for navigation and server-side operations
-
-### Dependency Flow
-
-Panel orchestrates Resources, which use Table, FormSchema, and Actions for UI configuration. Resources depend on Models, which use QueryBuilder to interact with DatabaseConnector. Validation Rules are applied at the form field level.
-
-### Service Locator Pattern
-
-Use GetIt-based dependency injection via `inject<T>()`:
-- Register singletons during `Panel.boot()`
-- Access `PanelConfig`, `DatabaseConnector`, `StorageManager` globally
-- Register resource factories with `registerResourceFactory<Model>()`
-
----
-
-## Project Structure
-
-```
-dash/lib/src/
-├── auth/           # Authentication (sessions, bcrypt, middleware)
-├── components/     # Jaspr UI components
-│   ├── layout.dart # Main admin layout
-│   ├── pages/      # Full page components (ResourceIndex, ResourceEdit, etc.)
-│   └── partials/   # Reusable UI elements (Button, Badge, Card, etc.)
-├── database/       # Database layer (connectors, query builder, migrations)
-├── form/           # Form builder system
-│   ├── form_schema.dart
-│   └── fields/     # Field types (TextInput, Select, Toggle, etc.)
-├── generators/     # Code generation (model generator)
-├── model/          # ORM layer (Model base, annotations, query builder)
-├── panel/          # Admin panel core (router, server, config)
-├── plugin/         # Plugin system
-│   ├── plugin.dart # Plugin interface
-│   ├── render_hook.dart # Render hooks for content injection
-│   ├── navigation_item.dart # Custom navigation items
-│   └── asset.dart  # CSS/JS asset management
-├── resources/      # Resource loading utilities
-├── table/          # Table builder system
-│   └── columns/    # Column types (TextColumn, BooleanColumn, etc.)
-├── utils/          # Utilities (sanitization)
-├── validation/     # Validation rules
-├── resource.dart   # Base Resource class
-└── service_locator.dart  # GetIt-based dependency injection
-```
-
----
-
-## Naming Conventions
-
-### Classes
-| Type | Pattern | Example |
-|------|---------|---------|
-| Resources | `<Model>Resource` | `UserResource`, `PostResource` |
-| Models | Singular noun | `User`, `Post`, `Comment` |
-| Components | Descriptive | `DashLayout`, `ResourceIndex`, `PageHeader` |
-| Table Columns | `<Type>Column` | `TextColumn`, `BooleanColumn`, `IconColumn` |
-| Form Fields | Descriptive | `TextInput`, `DatePicker`, `Toggle`, `Select`, `HasManySelect` |
-| Actions | `<Verb>Action` | `CreateAction`, `EditAction`, `DeleteAction` |
-| Plugins | `<Name>Plugin` | `BlogPlugin`, `AnalyticsPlugin` |
-| Validation Rules | Descriptive noun | `Required`, `Email`, `MinLength`, `Pattern` |
-
-### Methods
-| Purpose | Convention | Example |
-|---------|------------|---------|
-| Getters | `get` prefix | `getLabel()`, `getColumns()`, `getName()` |
-| Boolean checks | `is`/`should`/`has` | `isRequired()`, `shouldAutofocus()`, `hasOptions()` |
-| Fluent setters | Property name | `label()`, `sortable()`, `required()` |
-| Factory methods | `make()` | `TextInput.make('email')` |
-| Build methods | `build` prefix | `buildIndexPage()`, `buildCreatePage()` |
-
-### Files
-- Use **snake_case** for file names: `text_input.dart`, `query_builder.dart`
-- Generated files: `*.g.dart` (e.g., `user.model.g.dart`)
-- One primary class per file
-
-### Database
-- Column names: **snake_case** (`created_at`, `user_id`)
-- Table names: **plural** (`users`, `posts`, `comments`)
-- Pivot table names: **singular_singular** alphabetically sorted (`post_tag`, not `tag_post`)
-- Models auto-convert between camelCase (Dart) and snake_case (DB)
-
----
 
 ## Component Architecture
 
@@ -311,53 +162,6 @@ Fluent interface for database operations:
 - Execute with: `get()`, `first()`, `count()`, `insert()`, `update()`, `delete()`
 - `ModelQueryBuilder` wraps base builder to return typed model instances
 
-### 9. Plugin Pattern
-
-Plugins extend panel functionality with a two-phase lifecycle:
-
-**Plugin Interface:**
-```dart
-class MyPlugin implements Plugin {
-  static MyPlugin make() => MyPlugin();
-  
-  @override
-  String getId() => 'my-plugin';
-  
-  @override
-  void register(Panel panel) {
-    // Called immediately - configure resources, navigation, hooks
-    panel.registerResources([...]);
-    panel.navigationItems([...]);
-    panel.renderHook(RenderHook.sidebarFooter, () => ...);
-  }
-  
-  @override
-  void boot(Panel panel) {
-    // Called during Panel.boot() - runtime initialization
-  }
-}
-```
-
-**Plugin Capabilities:**
-- Register resources via `panel.registerResources()`
-- Add navigation items via `panel.navigationItems()`
-- Inject content via `panel.renderHook()`
-- Load assets via `panel.assets()`
-- Access panel config during boot
-
-**Render Hooks:** `sidebarNavStart`, `sidebarNavEnd`, `sidebarFooter`, `contentBefore`, `contentAfter`, `dashboardStart`, `dashboardEnd`, etc.
-
-### 10. Form Data Parsing
-
-The router parses form submissions with support for array fields:
-- Standard fields: `field=value`
-- Array fields: `field[]=value1&field[]=value2` → collected into a `List`
-- Used by multi-select fields like `HasManySelect`
-
----
-
-
-
 ## Do's and Don'ts
 
 ### ✅ Do
@@ -383,4 +187,4 @@ The router parses form submissions with support for array fields:
 
 ---
 
-*Last updated: 2025-12-03*
+*Last updated: 2025-12-06*

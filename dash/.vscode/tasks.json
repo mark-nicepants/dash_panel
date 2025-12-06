@@ -1,0 +1,20 @@
+{
+    // Dash: VSCode Task to start the example server
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start Dash Example Server",
+            "type": "shell",
+            "command": "cd example && dart run lib/main.dart",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
