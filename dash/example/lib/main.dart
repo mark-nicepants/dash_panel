@@ -7,7 +7,7 @@ import 'package:dash_example/pages/settings_page.dart';
 Future<void> main() async {
   print('🚀 Dash Example Admin Panel\n');
 
-  // Register all models (resources are auto-registered)
+  // Register all generated models
   registerAllModels();
 
   // Create and configure the admin panel
@@ -15,16 +15,16 @@ Future<void> main() async {
       .applyConfig()
       .authModel<User>()
       .registerPages([SettingsPage.make()])
-      .plugin(
-        AnalyticsPlugin.make() //
+      .plugins([
+        // Analytics
+        AnalyticsPlugin.make()
             .enableDashboardWidget(true)
             .trackPageViews(true)
             .trackModelEvents(true)
             .retentionDays(90),
-      )
-      .plugin(
-        ActivityLogPlugin.make() //
-            .logDescription(true),
-      )
+
+        // Audit trails
+        ActivityLogPlugin.make().logDescription(true),
+      ])
       .serve(host: 'localhost', port: 8080);
 }

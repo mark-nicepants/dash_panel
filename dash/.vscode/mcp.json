@@ -1,7 +1,7 @@
 {
   "servers": {
     "Dash CLI": {
-      "command": "/Users/mark/Developer/web/dash_board/dash_cli/build/cli/macos_arm64/bundle/bin/dcli",
+      "command": "/Users/mark.mooibroek/Developer/Dartboard/dash_cli/build/cli/macos_arm64/bundle/bin/dcli",
       "args": [
         "mcp-server"
       ]

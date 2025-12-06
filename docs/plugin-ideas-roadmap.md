@@ -46,6 +46,41 @@ Before building many of these plugins, the following core features need to be ad
 | **Role/Permission System** | Fine-grained RBAC beyond simple auth | Most plugins need permission checks | ❌ Not Started |
 | ~~**Settings Storage**~~ | ~~Key-value store for plugin configuration~~ | ~~All plugins need configuration persistence~~ | ✅ Complete |
 
+### Middleware Stack Implementation Guide
+
+The current request pipeline is assembled in `dash/lib/src/panel/panel_server.dart`. `PanelServer.start` builds a `shelf.Pipeline` that wires together:
+1. `_errorHandlingMiddleware`
+2. `securityHeadersMiddleware`
+3. `_conditionalLogRequests`
+4. `_staticAssetsMiddleware`
+5. `_storageAssetsMiddleware`
+6. `_cliApiMiddleware`
+7. `authMiddleware`
+8. `_handleRequest` (which fires callbacks, handles wires/custom routes, and finally routes to `PanelRouter`).
+
+That works, but the middleware stack is currently hard-coded and opaque to plugins. The middleware stack refactor must deliver the roadmap requirement for "ordered, configurable middleware with before/after hooks and plugin integration" so that the missing plugins (multi-tenancy, API, audit log, rate limiting) can plug their own behavior into the request flow.
+
+#### Goals
+
+- Introduce a dedicated `MiddlewareStack` abstraction (e.g., `lib/src/panel/middleware_stack.dart`) that owns the list of middleware entries, each annotated with a stage, order, and optional identifier.
+- Keep the high-level stages that the server currently relies on (error handling → security headers → logging → asset serving → CLI → auth → request handler) but make them explicit hooks (`MiddlewareStage.errorHandling`, `MiddlewareStage.security`, `MiddlewareStage.asset`, `MiddlewareStage.auth`, `MiddlewareStage.application`, etc.).
+- Give plugins an API to register middleware at a named stage and specify whether they want to run before or after other middleware in that stage (e.g., `PanelMiddlewareRegistration.before(MiddlewareStage.auth, order: 100)`), so we can guarantee deterministic order even when multiple plugins register middleware.
+- Let middleware control the response lifecycle (returning early or mutating the request) while keeping the existing `RequestContext` zone semantics in `authMiddleware`.
+
+#### Proposed Refactor Steps
+
+1. **Middleware registry infrastructure.** Define `MiddlewareStage`, `MiddlewareEntry`, and `MiddlewareStack.build(Handler)`. Entries should include stage, base order, optional plugin ID, and whether they wrap `RequestContext.run`. Provide helpers for built-in stages (error handling, assets, auth, request handling).
+2. **PanelConfig ownership.** Store the stack in `PanelConfig` to capture plugin registrations. Add methods such as `PanelConfig.addMiddleware(MiddlewareEntry entry)` and `PanelConfig.middlewareEntries` for inspection.
+3. **Panel API surface.** Expose fluent helpers (`panel.middleware(...)`, `panel.middlewareBefore(...)`, `panel.middlewareAfterStage(...)`) so plugins can register middleware during `register()` and `boot()` (boot time registrations may toggle enablement). Document that plugin middleware should return `null` to continue the chain.
+4. **PanelServer rework.** Replace the hard-coded `Pipeline` construction with `_middlewareStack.build(_handleRequest)`. The stack should automatically insert the existing security/logging/static/storage/CLI/auth middleware with deterministic stage/order values. Keep `_handleRequest` unchanged; it becomes the final handler at the `application` stage.
+5. **Plugin integration examples.** Multi-tenancy will register middleware in the `MiddlewareStage.auth` stage so tenant resolution runs after authentication but before request handling. API key validation can hook into `MiddlewareStage.application` (before routing) and short-circuit with JSON responses. Audit log middleware can wrap the application stage with before/after hooks to record inputs and outputs.
+6. **Testing & validation.** Add unit tests for `MiddlewareStack` ordering and plugin registration (e.g., verifying `order` + stage ensures predictable order). Run existing integration tests to confirm assets and CLI routes are still served before auth.
+
+#### Questions for Middleware Design
+
+1. Should plugin middleware run inside the `RequestContext.run` zone established by `authMiddleware`, or can some middleware (e.g., CLI or storage middleware) execute before the context boundary?
+2. Would it make sense to publish the stage order as part of the API so plugin authors can request "run before CLI API handling" without relying on hard-coded numbers?
+
 ### Already Available Core Features
 
 ✅ Plugin lifecycle (register/boot)  
