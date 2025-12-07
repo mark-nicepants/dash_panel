@@ -116,10 +116,9 @@ packages:
   dash_panel:
     dependency: "direct main"
     description:
-      name: dash_panel
-      sha256: "5e74849f15cab66b0ba0fc39b1eee1758b7153fd51b0c9e0f47884a1befbcfcc"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../../dash"
+      relative: true
+    source: path
     version: "0.1.0"
   ffi:
     dependency: transitive

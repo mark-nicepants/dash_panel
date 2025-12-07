@@ -8,7 +8,8 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  dash_panel: ^0.1.0
+  dash_panel: 
+    path: ../../dash
   jaspr: ^0.21.7
 
 dev_dependencies:
