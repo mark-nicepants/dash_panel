@@ -1,7 +1,7 @@
-import 'package:dash_board/src/database/connectors/sqlite/sqlite_connector.dart';
-import 'package:dash_board/src/database/connectors/sqlite/sqlite_migration_builder.dart';
-import 'package:dash_board/src/database/migrations/migration_runner.dart';
-import 'package:dash_board/src/database/migrations/schema_definition.dart';
+import 'package:dash_panel/src/database/connectors/sqlite/sqlite_connector.dart';
+import 'package:dash_panel/src/database/connectors/sqlite/sqlite_migration_builder.dart';
+import 'package:dash_panel/src/database/migrations/migration_runner.dart';
+import 'package:dash_panel/src/database/migrations/schema_definition.dart';
 import 'package:test/test.dart';
 
 void main() {

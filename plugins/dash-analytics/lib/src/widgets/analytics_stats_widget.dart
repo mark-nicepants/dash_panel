@@ -1,5 +1,5 @@
 import 'package:dash_analytics/src/metrics_service.dart';
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// Analytics stats widget showing page views, visitors, and more.
 ///

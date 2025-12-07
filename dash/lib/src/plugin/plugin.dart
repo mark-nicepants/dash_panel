@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dash_board/src/panel/panel.dart';
+import 'package:dash_panel/src/panel/panel.dart';
 
 /// Base contract for all Dash plugins.
 ///

@@ -1,5 +1,5 @@
-import 'package:dash_board/dash_board.dart';
 import 'package:dash_activity_log/src/models/activity.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// Resource for managing activity log entries in the admin panel.
 ///

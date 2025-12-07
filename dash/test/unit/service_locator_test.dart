@@ -1,6 +1,6 @@
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 // Import service_locator directly to test internal functions
-import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_panel/src/service_locator.dart';
 import 'package:meta/meta.dart';
 import 'package:test/test.dart';
 

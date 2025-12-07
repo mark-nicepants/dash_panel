@@ -1,9 +1,9 @@
-import 'package:dash_board/src/auth/authenticatable.dart';
-import 'package:dash_board/src/auth/session_store.dart';
-import 'package:dash_board/src/model/model.dart';
-import 'package:dash_board/src/panel/panel_auth.dart';
-import 'package:dash_board/src/panel/panel_config.dart';
-import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_panel/src/auth/authenticatable.dart';
+import 'package:dash_panel/src/auth/session_store.dart';
+import 'package:dash_panel/src/model/model.dart';
+import 'package:dash_panel/src/panel/panel_auth.dart';
+import 'package:dash_panel/src/panel/panel_config.dart';
+import 'package:dash_panel/src/service_locator.dart';
 import 'package:test/test.dart';
 
 /// Minimal test user model for auth manager tests.

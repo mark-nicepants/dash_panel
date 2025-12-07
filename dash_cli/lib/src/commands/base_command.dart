@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:dash_board/dash_board.dart';
 import 'package:dash_cli/src/commands/completion_configuration.dart';
 import 'package:dash_cli/src/generators/schema_parser.dart';
 import 'package:dash_cli/src/utils/config_loader.dart';
+import 'package:dash_panel/dash_panel.dart';
 import 'package:path/path.dart' as path;
 
 /// Base class for all Dash CLI commands.

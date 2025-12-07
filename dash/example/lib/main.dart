@@ -1,8 +1,8 @@
 import 'package:dash_activity_log/dash_activity_log.dart';
 import 'package:dash_analytics/dash_analytics.dart';
-import 'package:dash_board/dash_board.dart';
 import 'package:dash_example/models/models.dart';
 import 'package:dash_example/pages/settings_page.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 Future<void> main() async {
   print('🚀 Dash Example Admin Panel\n');

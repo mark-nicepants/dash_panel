@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:dash_board/src/database/database_connector.dart';
-import 'package:dash_board/src/database/migrations/schema_definition.dart';
-import 'package:dash_board/src/database/query_builder.dart';
-import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_panel/src/database/database_connector.dart';
+import 'package:dash_panel/src/database/migrations/schema_definition.dart';
+import 'package:dash_panel/src/database/query_builder.dart';
+import 'package:dash_panel/src/service_locator.dart';
 
 /// A cached setting with its value and type.
 class _CachedSetting {

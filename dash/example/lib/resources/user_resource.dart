@@ -1,6 +1,6 @@
-import 'package:dash_board/dash_board.dart';
 import 'package:dash_example/actions/deactivate_user_handler.dart';
 import 'package:dash_example/models/user.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// Resource for managing users in the admin panel.
 ///

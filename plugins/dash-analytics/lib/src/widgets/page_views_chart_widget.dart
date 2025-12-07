@@ -1,5 +1,5 @@
 import 'package:dash_analytics/src/metrics_service.dart';
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// Page views line chart widget showing weekly traffic trends.
 ///

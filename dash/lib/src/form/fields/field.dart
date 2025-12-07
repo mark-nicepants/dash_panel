@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 import 'package:jaspr/jaspr.dart';
 
 // Re-export validation rules for convenience
-export 'package:dash_board/src/validation/validation.dart'
+export 'package:dash_panel/src/validation/validation.dart'
     show
         ValidationRule,
         Required,

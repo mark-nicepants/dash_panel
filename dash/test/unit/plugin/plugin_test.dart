@@ -1,4 +1,4 @@
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:test/test.dart';
 

@@ -1,10 +1,10 @@
 import 'package:collection/collection.dart';
-import 'package:dash_board/src/actions/action.dart';
-import 'package:dash_board/src/form/fields/field.dart';
-import 'package:dash_board/src/form/fields/grid.dart';
-import 'package:dash_board/src/form/fields/section.dart';
-import 'package:dash_board/src/model/annotations.dart';
-import 'package:dash_board/src/model/model.dart';
+import 'package:dash_panel/src/actions/action.dart';
+import 'package:dash_panel/src/form/fields/field.dart';
+import 'package:dash_panel/src/form/fields/grid.dart';
+import 'package:dash_panel/src/form/fields/section.dart';
+import 'package:dash_panel/src/model/annotations.dart';
+import 'package:dash_panel/src/model/model.dart';
 
 /// A component that can be placed in a form schema.
 /// This can be either a [FormField] or a [Section].

@@ -183,7 +183,7 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
-  dash_board:
+  dash_panel:
     dependency: "direct main"
     description:
       path: ".."

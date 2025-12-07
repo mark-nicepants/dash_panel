@@ -1,5 +1,5 @@
-import 'package:dash_board/src/components/partials/heroicon.dart';
-import 'package:dash_board/src/form/fields/section.dart';
+import 'package:dash_panel/src/components/partials/heroicon.dart';
+import 'package:dash_panel/src/form/fields/section.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A form section component that groups related fields together.

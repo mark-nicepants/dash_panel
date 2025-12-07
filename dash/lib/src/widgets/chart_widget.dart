@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:dash_board/src/plugin/asset.dart';
-import 'package:dash_board/src/widgets/widget.dart';
+import 'package:dash_panel/src/plugin/asset.dart';
+import 'package:dash_panel/src/widgets/widget.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Chart types supported by Chart.js.

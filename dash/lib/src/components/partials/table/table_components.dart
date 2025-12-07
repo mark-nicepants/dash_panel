@@ -8,7 +8,7 @@
 ///
 /// Example:
 /// ```dart
-/// import 'package:dash_board/src/components/partials/table/table.dart';
+/// import 'package:dash_panel/src/components/partials/table/table.dart';
 ///
 /// DataTable<User>(
 ///   tableConfig: table,

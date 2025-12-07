@@ -1,7 +1,7 @@
-import 'package:dash_board/src/auth/auth_service.dart';
-import 'package:dash_board/src/components/partials/forms/form_components.dart';
-import 'package:dash_board/src/components/partials/heroicon.dart';
-import 'package:dash_board/src/form/fields/field.dart';
+import 'package:dash_panel/src/auth/auth_service.dart';
+import 'package:dash_panel/src/components/partials/forms/form_components.dart';
+import 'package:dash_panel/src/components/partials/heroicon.dart';
+import 'package:dash_panel/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A text input field.

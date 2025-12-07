@@ -1,5 +1,5 @@
-import 'package:dash_board/dash_board.dart';
-import 'package:dash_board/src/database/connectors/sqlite/sqlite_schema_inspector.dart';
+import 'package:dash_panel/dash_panel.dart';
+import 'package:dash_panel/src/database/connectors/sqlite/sqlite_schema_inspector.dart';
 import 'package:test/test.dart';
 
 void main() {

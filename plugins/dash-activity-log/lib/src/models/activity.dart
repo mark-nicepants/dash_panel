@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// Represents an activity log entry in the database.
 ///

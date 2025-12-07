@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:dash_board/src/components/partials/forms/form_components.dart';
-import 'package:dash_board/src/form/fields/field.dart';
-import 'package:dash_board/src/form/fields/relationship_select.dart';
-import 'package:dash_board/src/model/annotations.dart';
-import 'package:dash_board/src/panel/panel_config.dart';
-import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_panel/src/components/partials/forms/form_components.dart';
+import 'package:dash_panel/src/form/fields/field.dart';
+import 'package:dash_panel/src/form/fields/relationship_select.dart';
+import 'package:dash_panel/src/model/annotations.dart';
+import 'package:dash_panel/src/panel/panel_config.dart';
+import 'package:dash_panel/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:shelf/shelf.dart';
 

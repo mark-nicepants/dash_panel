@@ -1,6 +1,6 @@
-import 'package:dash_board/src/components/partials/card.dart';
-import 'package:dash_board/src/plugin/render_hook.dart';
-import 'package:dash_board/src/widgets/widget.dart';
+import 'package:dash_panel/src/components/partials/card.dart';
+import 'package:dash_panel/src/plugin/render_hook.dart';
+import 'package:dash_panel/src/widgets/widget.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Dashboard home page component.

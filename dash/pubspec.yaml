@@ -1,8 +1,8 @@
-name: dash_board
+name: dash_panel
 description: DASH (Dart Admin/System Hub) - A modern admin panel framework for
   Dart, inspired by FilamentPHP. Build beautiful admin interfaces with ease.
 version: 0.1.0
-homepage: https://github.com/mark-nicepants/dash_board
+homepage: https://github.com/mark-nicepants/dash_panel
 
 environment:
   sdk: ^3.10.1

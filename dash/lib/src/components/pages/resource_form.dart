@@ -1,11 +1,11 @@
-import 'package:dash_board/src/components/partials/breadcrumbs.dart';
-import 'package:dash_board/src/components/partials/page_scaffold.dart';
-import 'package:dash_board/src/form/fields/form_renderer.dart';
-import 'package:dash_board/src/form/form_schema.dart';
-import 'package:dash_board/src/model/model.dart';
-import 'package:dash_board/src/panel/panel_config.dart';
-import 'package:dash_board/src/resource.dart';
-import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_panel/src/components/partials/breadcrumbs.dart';
+import 'package:dash_panel/src/components/partials/page_scaffold.dart';
+import 'package:dash_panel/src/form/fields/form_renderer.dart';
+import 'package:dash_panel/src/form/form_schema.dart';
+import 'package:dash_panel/src/model/model.dart';
+import 'package:dash_panel/src/panel/panel_config.dart';
+import 'package:dash_panel/src/resource.dart';
+import 'package:dash_panel/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Resource form page that renders the form for creating or editing records.

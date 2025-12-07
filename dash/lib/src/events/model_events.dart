@@ -1,5 +1,5 @@
-import 'package:dash_board/src/events/event.dart';
-import 'package:dash_board/src/model/model.dart';
+import 'package:dash_panel/src/events/event.dart';
+import 'package:dash_panel/src/model/model.dart';
 
 /// Event fired when a model is about to be created (before save).
 ///

@@ -1,4 +1,4 @@
-import 'package:dash_board/src/cli/cli_logger.dart';
+import 'package:dash_panel/src/cli/cli_logger.dart';
 
 /// Enum representing supported database connector types.
 ///

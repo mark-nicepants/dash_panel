@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 import 'package:shelf/shelf.dart';
 
 /// Callback type for request hooks.

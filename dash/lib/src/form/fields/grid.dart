@@ -1,5 +1,5 @@
-import 'package:dash_board/src/form/fields/field.dart';
-import 'package:dash_board/src/form/fields/section.dart';
+import 'package:dash_panel/src/form/fields/field.dart';
+import 'package:dash_panel/src/form/fields/section.dart';
 
 /// A grid layout component for arranging form fields and sections.
 ///

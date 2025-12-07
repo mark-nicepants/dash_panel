@@ -1,7 +1,7 @@
-import 'package:dash_board/src/components/partials/heroicon.dart';
-import 'package:dash_board/src/model/model.dart';
-import 'package:dash_board/src/table/columns/column.dart';
-import 'package:dash_board/src/table/columns/icon_column.dart';
+import 'package:dash_panel/src/components/partials/heroicon.dart';
+import 'package:dash_panel/src/model/model.dart';
+import 'package:dash_panel/src/table/columns/column.dart';
+import 'package:dash_panel/src/table/columns/icon_column.dart';
 
 /// A column that displays a boolean value as an icon.
 ///

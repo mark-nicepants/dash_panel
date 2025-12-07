@@ -1,6 +1,6 @@
-import 'package:dash_board/src/cli/cli_api_handler.dart';
-import 'package:dash_board/src/panel/middleware_stack.dart';
-import 'package:dash_board/src/panel/panel_config.dart';
+import 'package:dash_panel/src/cli/cli_api_handler.dart';
+import 'package:dash_panel/src/panel/middleware_stack.dart';
+import 'package:dash_panel/src/panel/panel_config.dart';
 import 'package:shelf/shelf.dart' hide Middleware;
 
 /// Middleware that handles CLI API requests before auth.

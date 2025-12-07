@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 

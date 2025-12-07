@@ -1,8 +1,8 @@
-import 'package:dash_board/src/actions/action_color.dart';
-import 'package:dash_board/src/components/partials/button.dart';
-import 'package:dash_board/src/components/partials/heroicon.dart';
-import 'package:dash_board/src/components/partials/modal/modal_size.dart';
-import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_panel/src/actions/action_color.dart';
+import 'package:dash_panel/src/components/partials/button.dart';
+import 'package:dash_panel/src/components/partials/heroicon.dart';
+import 'package:dash_panel/src/components/partials/modal/modal_size.dart';
+import 'package:dash_panel/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Modal component with Alpine.js for open/close state management.

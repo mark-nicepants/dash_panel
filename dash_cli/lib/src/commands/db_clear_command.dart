@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:dash_board/dash_board.dart';
 import 'package:dash_cli/src/commands/base_command.dart';
 import 'package:dash_cli/src/commands/completion_configuration.dart';
 import 'package:dash_cli/src/commands/dcli_argument.dart';
 import 'package:dash_cli/src/utils/console_utils.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// Clear all data from database tables.
 ///

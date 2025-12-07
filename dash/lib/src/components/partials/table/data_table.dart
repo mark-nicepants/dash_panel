@@ -1,10 +1,10 @@
-import 'package:dash_board/src/components/partials/table/bulk_actions_toolbar.dart';
-import 'package:dash_board/src/components/partials/table/table_empty_state.dart';
-import 'package:dash_board/src/components/partials/table/table_header.dart';
-import 'package:dash_board/src/components/partials/table/table_row.dart';
-import 'package:dash_board/src/model/model.dart';
-import 'package:dash_board/src/table/columns/column.dart';
-import 'package:dash_board/src/table/table.dart';
+import 'package:dash_panel/src/components/partials/table/bulk_actions_toolbar.dart';
+import 'package:dash_panel/src/components/partials/table/table_empty_state.dart';
+import 'package:dash_panel/src/components/partials/table/table_header.dart';
+import 'package:dash_panel/src/components/partials/table/table_row.dart';
+import 'package:dash_panel/src/model/model.dart';
+import 'package:dash_panel/src/table/columns/column.dart';
+import 'package:dash_panel/src/table/table.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A reusable data table component that renders tabular data with sorting,

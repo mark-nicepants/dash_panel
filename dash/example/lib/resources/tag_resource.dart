@@ -1,8 +1,8 @@
 // GENERATED CODE - Customize as needed
 // Resource for Tag
 
-import 'package:dash_board/dash_board.dart';
 import 'package:dash_example/models/tag.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// Resource for managing Tags in the admin panel.
 class TagResource extends Resource<Tag> {

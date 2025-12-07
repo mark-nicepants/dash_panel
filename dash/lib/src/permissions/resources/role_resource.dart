@@ -1,6 +1,6 @@
 // Resource for Role
 
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// Resource for managing Roles in the admin panel.
 class RoleResource extends Resource<Role> {

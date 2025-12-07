@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dash_board/dash_board.dart';
-import 'package:dash_board/src/cli/cli_api_handler.dart';
-import 'package:dash_board/src/panel/middleware/auth_middleware.dart';
-import 'package:dash_board/src/panel/middleware/cli_api_middleware.dart';
-import 'package:dash_board/src/panel/middleware/conditional_log_requests_middleware.dart';
-import 'package:dash_board/src/panel/middleware/error_handling_middleware.dart';
-import 'package:dash_board/src/panel/middleware/static_assets_middleware.dart';
-import 'package:dash_board/src/panel/middleware/storage_assets_middleware.dart';
-import 'package:dash_board/src/utils/resource_loader.dart';
+import 'package:dash_panel/dash_panel.dart';
+import 'package:dash_panel/src/cli/cli_api_handler.dart';
+import 'package:dash_panel/src/panel/middleware/auth_middleware.dart';
+import 'package:dash_panel/src/panel/middleware/cli_api_middleware.dart';
+import 'package:dash_panel/src/panel/middleware/conditional_log_requests_middleware.dart';
+import 'package:dash_panel/src/panel/middleware/error_handling_middleware.dart';
+import 'package:dash_panel/src/panel/middleware/static_assets_middleware.dart';
+import 'package:dash_panel/src/panel/middleware/storage_assets_middleware.dart';
+import 'package:dash_panel/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 

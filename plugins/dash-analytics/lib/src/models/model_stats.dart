@@ -1,5 +1,5 @@
 import 'package:dash_analytics/src/models/period.dart';
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 /// A data point representing an aggregated metric value for a period.
 class MetricDataPoint {

@@ -1,6 +1,6 @@
-import 'package:dash_board/src/components/partials/button.dart';
-import 'package:dash_board/src/components/partials/heroicon.dart';
-import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_panel/src/components/partials/button.dart';
+import 'package:dash_panel/src/components/partials/heroicon.dart';
+import 'package:dash_panel/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Login page component for the admin panel.

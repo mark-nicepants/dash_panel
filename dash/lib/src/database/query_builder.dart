@@ -1,4 +1,4 @@
-import 'package:dash_board/src/database/database_connector.dart';
+import 'package:dash_panel/src/database/database_connector.dart';
 
 /// A fluent query builder for constructing database queries.
 ///

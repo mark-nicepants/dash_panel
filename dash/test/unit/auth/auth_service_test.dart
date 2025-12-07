@@ -1,4 +1,4 @@
-import 'package:dash_board/dash_board.dart';
+import 'package:dash_panel/dash_panel.dart';
 import 'package:test/test.dart';
 
 // Pre-computed bcrypt hashes with minimum rounds (4) for fast tests

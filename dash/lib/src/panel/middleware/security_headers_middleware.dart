@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dash_board/src/panel/middleware_stack.dart';
+import 'package:dash_panel/src/panel/middleware_stack.dart';
 import 'package:shelf/shelf.dart' hide Middleware;
 
 /// Middleware that adds security headers to all responses.
