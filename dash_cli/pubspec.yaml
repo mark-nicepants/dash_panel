@@ -16,10 +16,7 @@ dependencies:
   path: ^1.9.0
   yaml: ^3.1.2
   sqlite3: ^3.1.0
-  
-  # Local dependency for schema parsing
-  dash_panel:
-    path: ../dash
+  dash_panel: ^0.1.0
 
 dev_dependencies:
   lints: ^6.0.0
