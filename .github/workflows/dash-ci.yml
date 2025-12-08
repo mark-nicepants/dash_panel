@@ -132,15 +132,6 @@ jobs:
         working-directory: dash/test/e2e
         run: npx playwright install --with-deps chromium
 
-      - name: Start example server
-        working-directory: dash/example
-        run: |
-          dart run lib/main.dart &
-          # Wait for server to be ready
-          timeout 30 bash -c 'until curl -s http://localhost:8080/admin/login > /dev/null; do sleep 1; done'
-        env:
-          DASH_ENV: test
-
       - name: Run Playwright tests
         working-directory: dash/test/e2e
         run: npm run test:ci
